@@ -95,16 +95,21 @@ Do not enforce required type/client labels on updates, moves, or label assignmen
 
 ## Markdown descriptions
 
+New cards must use the description format in the heredoc below. Replace the placeholders with the card's requirements and agreed completion criteria.
+
 Use a temporary file outside the repository and a quoted heredoc. Choose a delimiter not present in the Markdown. This preserves newlines, backticks, dollar signs, and quotes without evaluating them:
 
 ```bash
 DESC_FILE=$(mktemp /tmp/trello-description.XXXXXX.md)
 cat > "$DESC_FILE" <<'TRELLO_MARKDOWN'
-## Goal
-Support the `example` operation.
+**Context/Goal:** <one or two sentences>
 
-- Preserve `$variable` literally.
-- Include the requested behavior.
+**Functional requirements:**
+- <requirement>
+
+**Definition of done:**
+- <agreed completion criterion>
+- The PR includes a handover explaining how the result works, using <textual explanation, reproduction/demo steps, screenshots, screen recording, or diagram as appropriate>.
 TRELLO_MARKDOWN
 ```
 
@@ -189,4 +194,4 @@ curl --silent --show-error --fail-with-body \
 
 Keep questions short and easy to confirm: “Move to Todo, correct? y/n/x”. `y` means yes, `n` means no, and `x` means ignore/use judgment; it never authorizes inventing resource IDs or labels.
 
-After successful operations, briefly state what changed and include the card URL. Report partial failures accurately, including any labels that were not applied. No archive, member, checklist, estimate, splitting, or prescribed task-format operations are part of this skill.
+After successful operations, briefly state what changed and include the card URL. Report partial failures accurately, including any labels that were not applied. No archive, member, checklist, estimate, or splitting operations are part of this skill.
