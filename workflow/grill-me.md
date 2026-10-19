@@ -10,18 +10,13 @@ Work the tree in **rounds**. The **frontier** is every decision whose prerequisi
 Format a round like so:
 
 ```
-❓ **Q1** - **<question title>**: <question body, might be multiple paragraphs, including multiple choices>
-
+❓ **1** - <question might be a few sentences, including multiple choices>
 ➡️ <your recommended answer>
-
----
-
-❓ **Q2** - **<question title>**: <question body, might be multiple paragraphs, including multiple choices>
-
+❓ **2** - <next question>
 ➡️ <your recommended answer>
 ```
 
-Word each question so "yes" accepts your recommended answer.
+Word each question so "y" accepts your recommended answer. Make questions easy to confirm with "y" (yes), "n" (no) or "x" (don't care/ignore). Do not over over-explain, but give us simple choices; If I want to know why a choice is needed I will ask.
 
 Each round the user answers reshapes the tree: settled decisions push the frontier outward and unblock questions that depended on them. Recompute the frontier and ask the next round. A question whose answer depends on another question still open in this round belongs to a _later_ round, not this one.
 
@@ -29,4 +24,4 @@ Finding _facts_ is your job, never the user's. When a frontier question needs a 
 
 The session is done when the frontier is empty: every branch of the design tree visited, nothing left silently assumed. Do not act on it until the user confirms you have reached a shared understanding.
 
-// Source: Matt Pocock's grill-me: https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md
+// Based on Matt Pocock's grill-me skill.
