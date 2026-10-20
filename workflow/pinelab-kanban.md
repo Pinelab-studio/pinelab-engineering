@@ -82,7 +82,7 @@ If the label limit is reached, retrieve remaining pages using Trello's `before` 
 
 Before creating a card, fetch the board labels:
 
-- **Type/feature:** use the board's feature label, usually named `Feature`. Trello's available blue variants include `blue`, `blue_dark`, `blue_light`, and `blue_subtle`; treat these as blue feature labels.
+- **Type/feature:** use one of the type labels, label color is `blue_dark`.
 - **Client:** label with color exactly `green`.
 
 Aim for one appropriate label of each category. Match client names case-insensitively and suggest relevant existing labels by name. Never invent labels or select ambiguous labels silently.
