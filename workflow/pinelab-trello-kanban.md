@@ -98,7 +98,7 @@ Do not enforce required type/client labels on updates, moves, or label assignmen
 When asked to refine a task, always fetch and follow the refinement workflow for question rounds, test scenarios, task content, and draft confirmation:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Pinelab-studio/pinelab-engineering/heads/main/workflow/refine-task.md
+curl -fsSL https://raw.githubusercontent.com/Pinelab-studio/pinelab-engineering/heads/main/workflow/refine.md
 ```
 
 ### Required estimate

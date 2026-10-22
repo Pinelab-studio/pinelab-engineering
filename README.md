@@ -5,6 +5,16 @@ Human and AI engineering principles used at Pinelab.studio
 * `recipes` - Feature specific guides that can be invoked on demand.
 * `workflow` - Way of working at Pinelab, used by developers at Pinelab, but also yours to view!
 
+# MCP server
+
+Expose workflow and knowledge articles as discoverable skills, plus bearer-authenticated Trello tools. See [MCP setup and deployment](docs/mcp.md).
+
+```sh
+npm ci
+# Export the required credentials and personal bearer tokens (see docs).
+npm start
+```
+
 # For Everyone
 
 Anyone, including external consumers, can reference [recipe_index.md](recipe_index.md) and [knowledge_index.md](knowledge_index.md) in their AI prompts when developing features. It lists the available recipes and best practices, so your agent can find and follow the relevant guides.
