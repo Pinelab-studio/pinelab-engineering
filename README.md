@@ -7,7 +7,7 @@ Human and AI engineering principles used at Pinelab.studio
 
 # For Everyone
 
-Anyone, including external consumers, can reference [recipe_index.md](recipe_index.md) in their AI prompts when developing features. It lists the available recipes and commands to fetch their instructions, so your agent can find and follow the relevant guides.
+Anyone, including external consumers, can reference [recipe_index.md](recipe_index.md) and [knowledge_index.md](knowledge_index.md) in their AI prompts when developing features. It lists the available recipes and best practices, so your agent can find and follow the relevant guides.
 
 For example:
 
@@ -32,10 +32,17 @@ The instructions in `workflow` are based on our kanban workflow:
 
 ## Optional: Create global prompts
 
+### /plan-adn-implement
 ```md
+---
+description: Implement a refined task
+argument-hint: "<topic to discuss>"
+---
 
+When invoked, always fetch the instructions from: `curl https://raw.githubusercontent.com/Pinelab-studio/pinelab-engineering/main/knowledge/plan-and-implement.md`
+
+Task to implement: $@
 ```
-
 
 
 ## Optional: Pinelab Kanban (Trello)

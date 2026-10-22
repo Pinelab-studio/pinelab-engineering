@@ -19,7 +19,7 @@ Before proposing implementation choices:
 
 - Read applicable project instructions and relevant engineering guidance.
 - Trace the affected public interfaces, code paths, dependencies, and existing tests. Read related code, not just filenames or search snippets.
-- Read `GLOSSARY.md` if it exists so interface vocabulary and test names match the project's domain language. Read and respect relevant architecture decision records (ADRs).
+- Read `AGENTS.md` if it exists so interface vocabulary and test names match the project's domain language. Read and respect relevant architecture decision records (ADRs).
 - Inspect test configuration, fixtures, external dependencies, and the commands for focused tests, relevant regression tests, and final checks.
 - Check the working tree and preserve unrelated changes. Run relevant existing checks when practical to establish a baseline; distinguish existing failures from new ones.
 
