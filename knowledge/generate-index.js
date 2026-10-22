@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-// Run with: node workflow/generate-index.js
-// Generates root workflow_index.md from Markdown frontmatter descriptions in workflow/.
+// Run with: node knowledge/generate-index.js
+// Generates root knowledge_index.md from Markdown frontmatter descriptions in knowledge/.
 // Lists references first, then workflows, with curl commands to fetch each file.
 // Always overwrites the index, but only after all descriptions pass validation.
 
@@ -43,8 +43,8 @@ async function main() {
   const files = (await findMarkdown(__dirname))
     .map((filename) => path.relative(root, filename).split(path.sep).join('/'))
     .sort((a, b) => {
-      const aReference = a.startsWith('workflow/references/');
-      const bReference = b.startsWith('workflow/references/');
+      const aReference = a.startsWith('knowledge/references/');
+      const bReference = b.startsWith('knowledge/references/');
       if (aReference !== bReference) return aReference ? -1 : 1;
       return a < b ? -1 : a > b ? 1 : 0;
     });
@@ -56,8 +56,8 @@ async function main() {
     return `* ${description} - always fetch \`curl ${baseUrl}${filename}\``;
   }));
 
-  await fs.writeFile(path.join(root, 'workflow_index.md'), `${bullets.join('\n')}\n`);
-  console.log(`Generated workflow_index.md with ${bullets.length} entries.`);
+  await fs.writeFile(path.join(root, 'knowledge_index.md'), `${bullets.join('\n')}\n`);
+  console.log(`Generated knowledge_index.md with ${bullets.length} entries.`);
 }
 
 main().catch((error) => {
