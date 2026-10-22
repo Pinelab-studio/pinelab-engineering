@@ -44,7 +44,11 @@ When the frontier is empty, present a concise proposed title and full task descr
 
 - **Context/Goal:** always begin the description with one short, human-readable paragraph explaining what should change, who it helps, and why. Prefer one or two plain-language sentences. Avoid jargon, unnecessary implementation details, and long explanations.
 - **Functional requirements:** describe specific expected behaviours and relevant boundaries or exclusions.
-- **Definition of done:** always include observable completion criteria and the agreed test scenarios and coverage. Group the test scenarios under a “Tests cover” bullet, stating expected outcomes and automated or manual coverage. Include any additional completion requirements supplied by the calling workflow.
+- **Definition of done:** always include observable completion criteria and the agreed test scenarios and coverage. Group the test scenarios under a “Tests cover” bullet, stating expected outcomes and automated or manual coverage. Include any additional completion requirements supplied by the calling workflow. Always include these PR requirements in the **Definition of done**:
+  - Describe **what changed and why** in functional, user-facing terms using bullet points.
+  - Summarize the code’s execution flow as a simple pseudocode diagram, using arrows and branches. Use at most 10 short steps. Focus on inputs, decisions, actions, and outcomes—not implementation details.
+  - Explain how a reviewer can validate the new functionality with numbered steps to reproduce and expected results. Include screenshots or other supporting material where needed to make validation quick and clear.
+  - Keep the **entire PR description at 200 words or fewer**.
 
 Do not invent requirements or drop relevant existing context. If drafting exposes an unresolved decision, return to question rounds.
 

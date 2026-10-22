@@ -1,9 +1,9 @@
 # Pinelab Engineering
 Human and AI engineering principles used at Pinelab.studio
 
-* `knowledge` - General engineering best practices use at Pinelab
-* `recipes` - Feature specific guides
-* `workflow` - Way of working at Pinelab
+* `knowledge` - General engineering guidelines at Pinelab that apply to all our projects.
+* `recipes` - Feature specific guides that can be invoked on demand.
+* `workflow` - Way of working at Pinelab, used by developers at Pinelab, but also yours to view!
 
 # For Everyone
 
@@ -36,8 +36,9 @@ These instructions are based on our kanban workflow:
 
 1. Refine a task (might be done already)
 2. Pick up and `/implement` a task
-3. Always `/review` your own implementation before creating a Pull Request
-4. Another developer will `/review` your Pull Request
+3. Create a Pull Request
+4. Always `/review <gh PR link>` your own implementation before creating a Pull Request
+5. Another developer will `/review` your Pull Request
 
 // TODO: Create PR review knowledge article
 

@@ -1,6 +1,6 @@
 ---
 name: vendure-best-practices
-description: Use this best practices when reviewing or implementing any code in Vendure, Vendure plugins or the Vendure React dashboard.
+description: Load this when implementing or reviewing any code in Vendure, Vendure plugins or the Vendure React dashboard
 ---
 
 # General guidelines

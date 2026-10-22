@@ -53,7 +53,7 @@ async function main() {
   const bullets = await Promise.all(files.map(async (filename) => {
     const content = await fs.readFile(path.join(root, filename), 'utf8');
     const description = getDescription(content, filename);
-    return `* ${description} - always fetch \`curl ${baseUrl}${filename}\``;
+    return `* ${description}: \`curl ${baseUrl}${filename}\``;
   }));
 
   await fs.writeFile(path.join(root, 'knowledge_index.md'), `${bullets.join('\n')}\n`);
