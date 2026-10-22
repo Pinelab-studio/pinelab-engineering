@@ -1,2 +1,1 @@
-* Refine a task through rounds of questions into an agreed summary, requirements, and Definition of Done with concrete test scenarios. - always fetch `curl https://raw.githubusercontent.com/Pinelab-studio/pinelab-engineering/heads/main/knowledge/refine-task.md`
 * Use this best practices when reviewing or implementing any code in Vendure, Vendure plugins or the Vendure React dashboard. - always fetch `curl https://raw.githubusercontent.com/Pinelab-studio/pinelab-engineering/heads/main/knowledge/vendure-best-practices.md`

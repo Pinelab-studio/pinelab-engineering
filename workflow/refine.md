@@ -1,6 +1,6 @@
 ---
 name: refine-task
-description: Refine a task through rounds of questions into an agreed summary, requirements, and Definition of Done with concrete test scenarios.
+description: Use this when asked to refine a given task/feature
 ---
 
 # Refine a task

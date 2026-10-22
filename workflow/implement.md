@@ -1,6 +1,6 @@
 ---
-name: plan-and-implement
-description: Plan technical implementation of a refined task through question rounds, then implement test-first in one-test-at-a-time RED → GREEN cycles, starting with the golden path.
+name: implement
+description: Use this to implement a refined task via Test Driven Development
 ---
 
 # Plan and implement
