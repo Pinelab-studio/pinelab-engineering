@@ -1,2 +1,7 @@
 node_modules/
 .env
+.env.*
+.dev.vars
+.dev.vars.*
+.wrangler/
+server/generated/

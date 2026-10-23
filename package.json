@@ -7,8 +7,14 @@
   },
   "scripts": {
     "start": "tsx server/index.ts",
+    "generate:skills": "node scripts/generate-skills.mjs",
+    "pretest": "npm run generate:skills",
     "test": "tsx --test server/*.test.ts",
-    "check": "tsc --noEmit"
+    "precheck": "npm run generate:skills",
+    "check": "tsc --noEmit",
+    "dev:worker": "wrangler dev",
+    "build:worker": "wrangler deploy --dry-run",
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
@@ -19,6 +25,7 @@
     "@types/express": "^5.0.0",
     "@types/node": "^24.0.0",
     "tsx": "^4.20.0",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "wrangler": "^4.152.0"
   }
 }

@@ -1,7 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { Config } from "./server.js";
+import type { Config } from "./mcp.js";
 
 const output = (value: unknown) => ({
   content: [{ type: "text" as const, text: JSON.stringify(value) }],

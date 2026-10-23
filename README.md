@@ -11,8 +11,9 @@ Expose workflow and knowledge articles as discoverable skills, plus bearer-authe
 
 ```sh
 npm ci
-# Export the required credentials and personal bearer tokens (see docs).
-npm start
+npm run dev:worker  # Cloudflare Workers; configure .dev.vars first (see docs).
+# npm run deploy   # Deploy using Wrangler after configuring Cloudflare secrets.
+# npm start        # Alternative: standalone Node server.
 ```
 
 # For Everyone

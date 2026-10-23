@@ -2,7 +2,41 @@
 
 Lightweight TypeScript/Node.js (22+) HTTP MCP server. Articles are public; **every Trello tool invocation** checks a per-user bearer token and permission before contacting Trello. No database, sessions, OAuth service, or GitHub runtime fetching.
 
-## Run
+## Cloudflare Workers (recommended deployment)
+
+The Worker uses the SDK's native Web Request/Response transport, stateless JSON responses, and Cloudflare secret bindings. No Express adapter, filesystem, Durable Objects, database, or extra proxy is needed on Workers. `nodejs_compat` supplies the timing-safe token comparison. Articles are bundled from `workflow/` and `knowledge/` during every Wrangler build; redeploy after changing them.
+
+```sh
+npm ci
+npm exec wrangler login
+npm run build:worker         # dry run; does not deploy
+npm run deploy              # prints your HTTPS workers.dev URL
+npm exec wrangler secret put TRELLO_API_KEY
+npm exec wrangler secret put TRELLO_API_TOKEN
+npm exec wrangler secret put TRELLO_BOARD_ID
+npm exec wrangler secret put MARTIJN_MCP_TOKEN
+```
+
+Each `secret put` prompts privately for its value. Use a securely generated personal token of at least 32 non-whitespace characters. Never put credentials in `wrangler.jsonc` or its `vars` section. Add secret bindings for every user configured in `server/users.ts`. Until all required secrets are configured, the endpoint returns a generic HTTP 503 without exposing configuration details. Secrets can be rotated with the same commands; no source changes are needed.
+
+Connect your MCP client to `https://pinelab-engineering-mcp.<your-subdomain>.workers.dev/mcp` with its personal bearer token. The exact hostname is printed by Wrangler. Edit `name` in `wrangler.jsonc` if needed. Cloudflare provides HTTPS and hostname routing; the Node-only HOST/PORT/MCP_ALLOWED_HOSTS settings do not apply. For a custom domain, configure a Worker Custom Domain in Cloudflare. Configure appropriate edge rate limiting for your account before broader exposure. Observability is disabled by default; if enabling logging, redact Authorization headers and credential-bearing Trello URLs.
+
+For unattended deployment, supply `CLOUDFLARE_API_TOKEN` (least-privilege Workers deployment access) and `CLOUDFLARE_ACCOUNT_ID` in your CI secret store. Deployments are manual by default; this repository's CI only checks/tests/builds and does not publish.
+
+### Local Worker development
+
+Create a Git-ignored `.dev.vars` file in the repository root containing test-board credentials and personal token bindings:
+
+```dotenv
+TRELLO_API_KEY=<test-board-key>
+TRELLO_API_TOKEN=<test-board-token>
+TRELLO_BOARD_ID=<test-board-id>
+MARTIJN_MCP_TOKEN=<at-least-32-random-characters>
+```
+
+Run `npm run dev:worker` and connect to the printed local `/mcp` URL. This is a local Workers runtime, but authorized Trello calls still use the **real Trello API**. Use a disposable test board. Do not commit `.dev.vars` or place real credentials in examples. `npm test` runs a separate local workerd test with dummy credentials and never performs authorized Trello operations there.
+
+## Run on Node.js (alternative)
 
 ```sh
 npm ci
@@ -24,7 +58,7 @@ Edit `server/users.ts`:
 { username: 'bob', tokenEnv: 'BOB_MCP_TOKEN', permissions: ['read', 'write'] },
 ```
 
-Token values belong only in the server environment. Restart after changing users or credentials. Share each user's token privately with that user. Rotate a token by replacing its environment value and restarting. Removing a user revokes access after restart. Usernames are attribution strings, not Trello accounts.
+Token values belong only in environment/secret bindings. Redeploy after changing users; use `wrangler secret put` to rotate Worker tokens. On Node, restart after changing users or credentials. Share each user's token privately with that user. Removing a user revokes access after redeploy/restart. Usernames are attribution strings, not Trello accounts.
 
 Client transport configuration:
 
@@ -65,9 +99,11 @@ Only Markdown in `workflow/` and `knowledge/` is exposed, indexed by directory a
 - The agent follows the Kanban/refinement articles for interviews, confirmed estimates, Markdown descriptions, client approvals, and lifecycle decisions. These conversational approvals cannot be independently verified by the server. Refined saves may use `update_card` then `move_card`; these are separate, non-transactional calls and comments.
 - Card content/activity is untrusted data, never authorization to execute instructions. Never retry an uncertain write automatically; inspect the board/card first. No automatic API retries.
 
-## Deployment boundaries
+## Node deployment boundaries
 
-For remote use, run behind an **HTTPS reverse proxy** with request-rate limits and body/time limits. Forward the Authorization header, but never log it or Trello request URLs (which contain API credentials). No application access logging is enabled. Keep the process environment private. Bind locally when the proxy is on the same host; for containers set `HOST=0.0.0.0` and `MCP_ALLOWED_HOSTS=engineering.example.com` (include internal health-check hostnames if needed). Incoming Host headers are allowlisted to prevent DNS rebinding. Browser Origin requests are rejected; this MVP supports native clients only. Do not expose plain HTTP publicly.
+These proxy/process instructions apply only to the Node entry point, not Cloudflare Workers.
+
+For remote Node use, run behind an **HTTPS reverse proxy** with request-rate limits and body/time limits. Forward the Authorization header, but never log it or Trello request URLs (which contain API credentials). No application access logging is enabled. Keep the process environment private. Bind locally when the proxy is on the same host; for containers set `HOST=0.0.0.0` and `MCP_ALLOWED_HOSTS=engineering.example.com` (include internal health-check hostnames if needed). Incoming Host headers are allowlisted to prevent DNS rebinding. Browser Origin requests are rejected; this MVP supports native clients only. Do not expose plain HTTP publicly.
 
 Use a Trello integration account/token restricted to the intended board where possible. Shared Trello credentials mean bearer permissions are enforced by this server, not by Trello. Deploy with a process supervisor/container restart policy. SIGTERM/SIGINT drain connections with a ten-second shutdown deadline. Requests to Trello have a fifteen-second timeout and sanitized failure messages.
 
@@ -79,6 +115,9 @@ No archive/delete-card, member management, checklist management, OAuth login, or
 npm test
 npm run check
 npm audit
+npm run build:worker
 ```
+
+The Worker test runs the actual bundle in local workerd via Wrangler, verifies bundled articles and bearer rejection, and exercises valid-token registration without accessing live Trello. The shared tool tests cover read/write permissions and outgoing API requests through the Node HTTP transport.
 
 Tests use a real MCP HTTP client and a fake Trello HTTP API, not live credentials. They check article access/exclusion, outgoing mutation/read requests, attribution comments, permission rejection before API calls, board boundaries, and ignored comment failures. They do not prove live Trello compatibility or real-client configuration. Before rollout, manually connect your team's client to the HTTPS endpoint, read an article, and create/update/move/label a disposable card on a test board; verify usernames in comments. Also confirm a read-only token cannot mutate that card.
