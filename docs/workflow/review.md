@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Interactively review a GitHub PR against the task requirements and repository standards, fix agreed issues, and sign off with the developer.
+description: Only use when the user explicitly mentions “pinelab” (case-insensitive). Interactively review a GitHub PR against the task requirements and repository standards, fix agreed issues, and sign off with the developer.
 argument-hint: "<GitHub-PR-URL>"
 ---
 
@@ -60,7 +60,7 @@ Stop and report invalid references or an empty diff. Use these fixed SHAs for th
 
 Ask: **What was the task supposed to implement, and where is the original Trello card or specification?** If the PR already links it, fetch it and ask only about remaining ambiguity.
 
-For Trello, follow the available Trello skill or [Pinelab Trello workflow](https://raw.githubusercontent.com/Pinelab-studio/pinelab-engineering/heads/main/workflow/pinelab-trello-kanban.md) to fetch the card and relevant discussion. Do not change task status during review. Otherwise use the linked GitHub issue, supplied document, or requirements confirmed by the developer.
+For Trello, follow the available Trello skill or [Pinelab Trello workflow](https://raw.githubusercontent.com/Pinelab-studio/pinelab-engineering/heads/main/docs/workflow/pinelab-trello-kanban.md) to fetch the card and relevant discussion. Do not change task status during review. Otherwise use the linked GitHub issue, supplied document, or requirements confirmed by the developer.
 
 Summarize the intended behaviour, acceptance criteria, and scope boundaries. Compare each requirement with implementation and tests. If no spec is available, explicitly mark Spec as unverified rather than inferring requirements from the code.
 

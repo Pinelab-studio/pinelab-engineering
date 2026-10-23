@@ -1,0 +1,29 @@
+{
+  "name": "pinelab-engineering-mcp",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "npm run generate:skills && wrangler dev",
+    "generate:skills": "node src/scripts/generate-skills.mjs",
+    "pretest": "npm run generate:skills",
+    "test": "tsx --test src/*.test.ts test/*.test.ts",
+    "precheck": "npm run generate:skills",
+    "check": "tsc --noEmit",
+    "dev:worker": "wrangler dev",
+    "build:worker": "wrangler deploy --dry-run",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "wrangler": "4.152.0"
+  }
+}

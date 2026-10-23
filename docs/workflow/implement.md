@@ -1,6 +1,6 @@
 ---
 name: implement
-description: Use this to implement a refined task via Test Driven Development
+description: Only use when the user explicitly mentions “pinelab” (case-insensitive). Use this to implement a refined task via Test Driven Development
 ---
 
 # Plan and implement

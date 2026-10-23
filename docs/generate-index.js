@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 
-// Run with: node recipes/generate-index.js
-// Generates root recipe_index.md from Markdown frontmatter descriptions in recipes/.
-// Lists references first, then recipes, with curl commands to fetch each file.
-// Always overwrites the index, but only after all descriptions pass validation.
+// Run with: node docs/generate-index.js
+// Generates root index.md from best-practice and recipe frontmatter descriptions.
+// Validates every description before overwriting the index.
 
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -39,25 +38,31 @@ function getDescription(content, filename) {
   return description;
 }
 
-async function main() {
-  const files = (await findMarkdown(__dirname))
+async function section(folder, heading) {
+  const files = (await findMarkdown(path.join(__dirname, folder)))
     .map((filename) => path.relative(root, filename).split(path.sep).join('/'))
     .sort((a, b) => {
-      const aReference = a.startsWith('recipes/references/');
-      const bReference = b.startsWith('recipes/references/');
+      const aReference = a.startsWith(`docs/${folder}/references/`);
+      const bReference = b.startsWith(`docs/${folder}/references/`);
       if (aReference !== bReference) return aReference ? -1 : 1;
       return a < b ? -1 : a > b ? 1 : 0;
     });
 
-  // Read and validate every description before touching the existing index.
   const bullets = await Promise.all(files.map(async (filename) => {
     const content = await fs.readFile(path.join(root, filename), 'utf8');
     const description = getDescription(content, filename);
     return `* ${description} - always fetch \`curl ${baseUrl}${filename}\``;
   }));
+  return `# ${heading}\n\n${bullets.join('\n')}`;
+}
 
-  await fs.writeFile(path.join(root, 'recipe_index.md'), `${bullets.join('\n')}\n`);
-  console.log(`Generated recipe_index.md with ${bullets.length} entries.`);
+async function main() {
+  const sections = await Promise.all([
+    section('best-practices', 'Pinelab General Best Practices'),
+    section('recipes', 'Feature Specific Recipes'),
+  ]);
+  await fs.writeFile(path.join(root, 'index.md'), `${sections.join('\n\n')}\n`);
+  console.log('Generated index.md with best practices and recipes.');
 }
 
 main().catch((error) => {

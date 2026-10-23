@@ -1,4 +1,0 @@
-* Troubleshoot domain certificates and enable HTTP compression on Dokploy-managed Traefik deployments. - always fetch `curl https://raw.githubusercontent.com/Pinelab-studio/pinelab-engineering/heads/main/recipes/dokploy.md`
-* Implement a non-modal marketing consent banner with optional-script gating and direct Google Consent Mode integration. - always fetch `curl https://raw.githubusercontent.com/Pinelab-studio/pinelab-engineering/heads/main/recipes/marketing-consent.md`
-* Audit product and collection page SEO and map missing storefront features to Vendure data integration. - always fetch `curl https://raw.githubusercontent.com/Pinelab-studio/pinelab-engineering/heads/main/recipes/storefront-seo.md`
-* Implement and configure Vendure EU reverse-charge tax zones, tax rates, VAT-format checks, and a custom TaxZoneStrategy. - always fetch `curl https://raw.githubusercontent.com/Pinelab-studio/pinelab-engineering/heads/main/recipes/vendure-tax.md`
