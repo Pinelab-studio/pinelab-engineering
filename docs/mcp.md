@@ -23,7 +23,24 @@ Each `secret put` prompts privately for its value. Use a securely generated pers
 
 Connect your MCP client to `https://pinelab-engineering-mcp.<your-subdomain>.workers.dev/mcp` with its personal bearer token. The exact hostname is printed by Wrangler. Edit `name` in `wrangler.jsonc` if needed. Cloudflare provides HTTPS and hostname routing; the Node-only HOST/PORT/MCP_ALLOWED_HOSTS settings do not apply. For a custom domain, configure a Worker Custom Domain in Cloudflare. Configure appropriate edge rate limiting for your account before broader exposure. Observability is disabled by default; if enabling logging, redact Authorization headers and credential-bearing Trello URLs.
 
-For unattended deployment, supply `CLOUDFLARE_API_TOKEN` (least-privilege Workers deployment access) and `CLOUDFLARE_ACCOUNT_ID` in your CI secret store. Deployments are manual by default; this repository's CI only checks/tests/builds and does not publish.
+### GitHub Actions setup
+
+Two workflows live in `.github/workflows/`:
+
+- `test-mcp-on-pr.yml`: runs install, TypeScript checks, all tests (including local workerd), and a Worker dry-run build on every pull request. It needs no GitHub/Cloudflare/Trello secrets and is safe for fork PRs. It runs on all PRs so its required status check is never skipped by path filters.
+- `deploy-to-cloudflare.yml`: repeats checks/tests, then deploys when changes to `mcp/`, `workflow/`, `knowledge/`, or the deploy workflow reach `main`. It also supports **Actions → Deploy MCP to Cloudflare → Run workflow**, selecting `main`. Manual runs of other branches are skipped. The workflow must be merged into `main` before the manual-run button is available.
+
+Configure deployment once:
+
+1. In Cloudflare, create an API token with **Account → Workers Scripts → Edit**, restricted to the account hosting this Worker. This is the GitHub deployment credential, not a Trello/MCP bearer token. No zone permissions are needed for the configured `workers.dev` deployment; custom domains/routes may need additional permissions. Copy the account ID from the Cloudflare dashboard.
+2. In GitHub, open **Settings → Environments → New environment**, name it **`production`**, and add these **environment secrets**:
+   - `CLOUDFLARE_API_TOKEN`: the Cloudflare deployment API token.
+   - `CLOUDFLARE_ACCOUNT_ID`: the Cloudflare account ID.
+3. Restrict the `production` environment to the `main` branch. Optionally require a reviewer to approve deployments (if supported by your GitHub plan).
+4. Configure the Worker's runtime secrets separately using the `wrangler secret put` commands above. GitHub does **not** need `TRELLO_API_KEY`, `TRELLO_API_TOKEN`, `TRELLO_BOARD_ID`, or personal MCP tokens. Existing Cloudflare secrets are preserved by deploys. On the first deployment, configure them immediately afterward; until then the endpoint fails closed with HTTP 503.
+5. Optionally add **`MCP checks`** as a required status check in the repository's `main` branch protection/ruleset. Enable GitHub Actions and allow the official `actions/checkout` and `actions/setup-node` actions if your organization restricts actions. The workflows only request read access to repository contents.
+
+After these workflows are merged, MCP/article changes merged into `main` deploy automatically. GitHub's environment approval, if enabled, gates publication.
 
 ### Local Worker development
 
