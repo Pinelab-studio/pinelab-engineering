@@ -33,7 +33,8 @@ Add the Pinelab MCP server to your harness:
 }
 ```
 
-_:warning: Always mention 'pinelab' in your first prompt message when working on Pinelab tasks, so the correct skills are loaded via the MCP_
+_:warning: Always mention 'pinelab' in your first prompt message when working on Pinelab tasks, so the correct skills are loaded via the MCP._
+
 Skills and tools are designed to only trigger when you explicitly mention Pinelab as to not affect any of your other workflows.
 
 These instructions are based on our kanban workflow:
