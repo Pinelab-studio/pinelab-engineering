@@ -2,14 +2,14 @@ import { readdir, readFile, mkdir, writeFile } from "node:fs/promises";
 
 /**
  * Build the Workers article catalogue from repository Markdown.
- * Only workflow/ and knowledge/ are included; recipes and arbitrary paths are excluded.
+ * Only docs/workflow/ and docs/best-practices/ are included; recipes and arbitrary paths are excluded.
  * Runs before checks/tests and during Wrangler builds; output is generated, not committed.
  * Paths use import.meta.url so generation does not depend on the invoking shell's cwd.
  */
-const root = new URL("../../../", import.meta.url);
+const root = new URL("../../../docs/", import.meta.url);
 const generated = new URL("../generated/", import.meta.url);
 const articles = [];
-for (const folder of ["workflow", "knowledge"]) {
+for (const folder of ["workflow", "best-practices"]) {
   for (const file of (await readdir(new URL(folder, root))).sort()) {
     if (!file.endsWith(".md")) continue;
     articles.push({

@@ -1,17 +1,29 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import express from "express";
+import { createServer } from "node:http";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { createApp } from "./server.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { createMcpServer } from "./mcp.js";
 
 // Observe outgoing HTTP requests at the external API boundary, not internal call sequences.
 const records: { method: string; path: string; body: any }[] = [];
 let failComments = false;
 let failWrites = false;
-const fake = express();
-fake.use(express.json());
-fake.use((req, res) => {
+const fake = createServer(async (request, response) => {
+  let text = "";
+  for await (const chunk of request) text += chunk;
+  const req = {
+    method: request.method!,
+    path: new URL(request.url!, "http://localhost").pathname,
+    body: text ? JSON.parse(text) : undefined,
+  };
+  const res = {
+    status(code: number) { response.statusCode = code; return this; },
+    json(value: unknown) {
+      response.setHeader("Content-Type", "application/json");
+      response.end(JSON.stringify(value));
+    },
+  };
   records.push({ method: req.method, path: req.path, body: req.body });
   if (failWrites && req.method !== "GET" && !req.path.endsWith("/comments"))
     return res.status(503).json({ error: "sensitive upstream response" });
@@ -41,15 +53,15 @@ fake.use((req, res) => {
   });
 });
 /** Bind an isolated HTTP fixture to an ephemeral loopback port. */
-async function listen(app: ReturnType<typeof express>) {
-  const server = app.listen(0, "127.0.0.1");
+async function listen(server: ReturnType<typeof createServer>) {
+  server.listen(0, "127.0.0.1");
   await new Promise<void>((resolve) => server.once("listening", resolve));
   return {
     server,
     url: `http://127.0.0.1:${(server.address() as { port: number }).port}`,
   };
 }
-/** Run a real MCP client against fresh HTTP servers with dummy identities and a fake Trello API. */
+/** Exercise MCP tool permissions in memory; only the external Trello boundary uses HTTP. */
 async function scenario(
   token: string | undefined,
   run: (client: Client) => Promise<void>,
@@ -58,8 +70,7 @@ async function scenario(
   failComments = false;
   failWrites = false;
   const trello = await listen(fake);
-  const app = await listen(
-    createApp({
+  const server = createMcpServer({
       apiBase: trello.url,
       board: "board",
       key: "key",
@@ -68,36 +79,29 @@ async function scenario(
         { username: "Reader", tokenEnv: "READ", permissions: ["read"] },
         { username: "Writer", tokenEnv: "WRITE", permissions: ["write"] },
       ],
-      env: { READ: "reader-secret", WRITE: "writer-secret" },
-    }),
-  );
+      env: { READ: "reader-secret".repeat(4), WRITE: "writer-secret".repeat(4) },
+    }, token ? `Bearer ${token.repeat(4)}` : undefined, async () => []);
   const client = new Client({ name: "test", version: "1" });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   try {
-    await client.connect(
-      new StreamableHTTPClientTransport(new URL(`${app.url}/mcp`), {
-        requestInit: {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        },
-      }),
-    );
+    await server.connect(serverTransport);
+    await client.connect(clientTransport);
     await run(client);
   } finally {
     await client.close();
-    app.server.close();
+    await server.close();
     trello.server.close();
   }
 }
 
-test("invalid tokens never reach Trello", async () =>
-  scenario("invalid", async (client) => {
-    const response = await client.callTool({
-      name: "get_board",
-      arguments: {},
-    });
-    assert.equal(response.isError, true);
-    assert.match(JSON.stringify(response), /Unauthorized/);
-    assert.equal(records.length, 0);
-  }));
+test("invalid tokens never reach Trello", async () => {
+  await scenario("invalid", async (client) => {
+    const result = await client.callTool({ name: "get_board", arguments: {} });
+    assert.equal(result.isError, true);
+    assert.match(JSON.stringify(result), /Unauthorized/);
+  });
+  assert.equal(records.length, 0);
+});
 
 test("writer creates a card with defaults and an attributed comment", async () =>
   scenario("writer-secret", async (client) => {

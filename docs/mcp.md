@@ -2,11 +2,11 @@
 
 Lightweight TypeScript/Node.js (22+) HTTP MCP server. Articles are public; **every Trello tool invocation** checks a per-user bearer token and permission before contacting Trello. No database, sessions, OAuth service, or GitHub runtime fetching.
 
-All implementation code and tests live in **`mcp/src/`**, including the bundling script at `mcp/src/scripts/generate-skills.mjs`. Package/config files and local secrets live in **`mcp/`**. Run the commands below from that directory (`cd mcp` from the repository root). Articles remain in the repository-level `workflow/` and `knowledge/` directories. The GitHub Actions workflow stays in `.github/workflows/` and runs commands inside `mcp/`.
+All implementation code and tests live in **`mcp/src/`**, including the bundling script at `mcp/src/scripts/generate-skills.mjs`. Package/config files and local secrets live in **`mcp/`**. Run the commands below from that directory (`cd mcp` from the repository root). Articles live in the `docs/workflow/` and `docs/best-practices/` directories. The GitHub Actions workflow stays in `.github/workflows/` and runs commands inside `mcp/`.
 
 ## Cloudflare Workers (recommended deployment)
 
-The Worker uses the SDK's native Web Request/Response transport, stateless JSON responses, and Cloudflare secret bindings. No Express adapter, filesystem, Durable Objects, database, or extra proxy is needed on Workers. `nodejs_compat` supplies the timing-safe token comparison. Articles are bundled from `workflow/` and `knowledge/` during every Wrangler build; redeploy after changing them.
+The Worker uses the SDK's native Web Request/Response transport, stateless JSON responses, and Cloudflare secret bindings. No Express adapter, filesystem, Durable Objects, database, or extra proxy is needed on Workers. `nodejs_compat` supplies the timing-safe token comparison. Articles are bundled from `docs/workflow/` and `docs/best-practices/` during every Wrangler build; redeploy after changing them.
 
 ```sh
 npm ci
@@ -19,7 +19,7 @@ npm exec wrangler secret put TRELLO_BOARD_ID
 npm exec wrangler secret put MARTIJN_MCP_TOKEN
 ```
 
-Each `secret put` prompts privately for its value. Use a securely generated personal token of at least 32 non-whitespace characters. Never put credentials in `wrangler.jsonc` or its `vars` section. Add secret bindings for every user configured in `mcp/src/users.ts`. Until all required secrets are configured, the endpoint returns a generic HTTP 503 without exposing configuration details. Secrets can be rotated with the same commands; no source changes are needed.
+Each `secret put` prompts privately for its value. Use a securely generated personal token of at least 32 non-whitespace characters. Never put credentials in `wrangler.jsonc` or its `vars` section. Add secret bindings for every user configured in `mcp/src/config.ts`. Missing or invalid authentication returns HTTP 403; missing Trello credentials produce tool-level errors. Secrets can be rotated with the same commands; no source changes are needed.
 
 Connect your MCP client to `https://pinelab-engineering-mcp.<your-subdomain>.workers.dev/mcp` with its personal bearer token. The exact hostname is printed by Wrangler. Edit `name` in `wrangler.jsonc` if needed. Cloudflare provides HTTPS and hostname routing; the Node-only HOST/PORT/MCP_ALLOWED_HOSTS settings do not apply. For a custom domain, configure a Worker Custom Domain in Cloudflare. Configure appropriate edge rate limiting for your account before broader exposure. Observability is disabled by default; if enabling logging, redact Authorization headers and credential-bearing Trello URLs.
 
@@ -28,7 +28,7 @@ Connect your MCP client to `https://pinelab-engineering-mcp.<your-subdomain>.wor
 Two workflows live in `.github/workflows/`:
 
 - `test-mcp-on-pr.yml`: runs install, TypeScript checks, all tests (including local workerd), and a Worker dry-run build on every pull request. It needs no GitHub/Cloudflare/Trello secrets and is safe for fork PRs. It runs on all PRs so its required status check is never skipped by path filters.
-- `deploy-to-cloudflare.yml`: repeats checks/tests, then deploys when changes to `mcp/`, `workflow/`, `knowledge/`, or the deploy workflow reach `main`. It also supports **Actions → Deploy MCP to Cloudflare → Run workflow**, selecting `main`. Manual runs of other branches are skipped. The workflow must be merged into `main` before the manual-run button is available.
+- `deploy-to-cloudflare.yml`: repeats checks/tests, then deploys when changes to `mcp/`, `docs/workflow/`, `docs/best-practices/`, or the deploy workflow reach `main`. It also supports **Actions → Deploy MCP to Cloudflare → Run workflow**, selecting `main`. Manual runs of other branches are skipped. The workflow must be merged into `main` before the manual-run button is available.
 
 Configure deployment once:
 
@@ -55,29 +55,20 @@ MARTIJN_MCP_TOKEN=<at-least-32-random-characters>
 
 Run `npm run dev:worker` and connect to the printed local `/mcp` URL. This is a local Workers runtime, but authorized Trello calls still use the **real Trello API**. Use a disposable test board. Do not commit `.dev.vars` or place real credentials in examples. `npm test` runs a separate local workerd test with dummy credentials and never performs authorized Trello operations there.
 
-## Run on Node.js (alternative)
+`npm start` also generates the bundled skills and starts Wrangler locally. There is no separate Node/Express server.
 
-```sh
-npm ci
-# Export these with your secret manager or shell; never commit their values:
-# TRELLO_API_KEY, TRELLO_API_TOKEN, TRELLO_BOARD_ID, MARTIJN_MCP_TOKEN
-npm start
-```
-
-Default endpoint: `http://127.0.0.1:3000/mcp`. Optional variables: `PORT`, `HOST`, `MCP_ALLOWED_HOSTS` (comma-separated hostnames, without ports). A board short link or full board ID is supported.
-
-Generate each bearer token with a secure generator, e.g. `openssl rand -hex 32`, and place it in the appropriate environment variable through your normal secret-management process. Startup requires configured user tokens of at least 32 non-whitespace characters and rejects duplicates. Missing Trello credentials also prevent startup. `.env` files are ignored by Git and are **not** automatically read.
+Generate each bearer token with a secure generator, e.g. `openssl rand -hex 32`. Tokens must be unique and at least 32 non-whitespace characters. Missing or invalid authentication returns HTTP 403. Missing Trello credentials are logged on the first request and produce tool-level errors; authenticated skill tools and prompts remain available. A board short link or full board ID is supported.
 
 ## Users and permissions
 
-Edit `mcp/src/users.ts`:
+Edit the `users` array in `mcp/src/config.ts`:
 
 ```ts
 { username: 'alice', tokenEnv: 'ALICE_MCP_TOKEN', permissions: ['read'] },
 { username: 'bob', tokenEnv: 'BOB_MCP_TOKEN', permissions: ['read', 'write'] },
 ```
 
-Token values belong only in environment/secret bindings. Redeploy after changing users; use `wrangler secret put` to rotate Worker tokens. On Node, restart after changing users or credentials. Share each user's token privately with that user. Removing a user revokes access after redeploy/restart. Usernames are attribution strings, not Trello accounts.
+Token values belong only in environment/secret bindings. Redeploy after changing users; use `wrangler secret put` to rotate Worker tokens. Restart local Wrangler after changing credentials. Share each user's token privately with that user. Removing a user revokes access after redeploy/restart. Usernames are attribution strings, not Trello accounts.
 
 Client transport configuration:
 
@@ -88,14 +79,14 @@ Client transport configuration:
 }
 ```
 
-The exact enclosing configuration differs by MCP client. Native clients must support Streamable HTTP and custom Authorization headers; automatic OAuth discovery is not supported. Article-only clients can omit the header. Invalid/missing authentication or insufficient permission produces an MCP tool error without any Trello requests, rather than an HTTP OAuth challenge. Tool discovery is public; the bearer check occurs on invocation, independently for every request.
+The exact enclosing configuration differs by MCP client. Native clients must support Streamable HTTP and custom Authorization headers; automatic OAuth discovery is not supported. All clients must supply the header, including for discovery, skills, and prompts. Invalid/missing authentication returns HTTP 403 without any Trello requests. Insufficient tool permission produces an MCP tool error.
 
 ## Tools
 
 | Tool | Permission | Inputs |
 | --- | --- | --- |
-| `list_skills` | Public | None |
-| `get_skill` | Public | `id`, e.g. `workflow/refine` |
+| `list_skills` | Authenticated | None |
+| `get_skill` | Authenticated | `id`, e.g. `workflow/refine` |
 | `get_board` | read | None; returns board, open lists, labels |
 | `list_cards` | read | Optional exact `list` name; returns open cards and assignees |
 | `get_card` | read | `card` ID/short link, optional activity `limit` (1–100) and `before` cursor |
@@ -106,7 +97,7 @@ The exact enclosing configuration differs by MCP client. Native clients must sup
 
 Use only the segment following `/c/` from a Trello URL, not the entire URL. `position` accepts `top`, `bottom`, or a positive number. Write-only users can mutate cards: internal reads needed to check boards, lists, labels, and existing values do not require a separate read permission.
 
-Only Markdown in `workflow/` and `knowledge/` is exposed, indexed by directory and filename. Recipes are excluded; arbitrary paths cannot be read. Articles ship with the checkout/deployment, with no runtime network fetch. `get_skill` adds MCP usage guidance so agents use authenticated tools instead of the original articles' curl examples. Load related articles through `list_skills`/`get_skill`.
+Only Markdown in `docs/workflow/` and `docs/best-practices/` is exposed, indexed by directory and filename. Recipes are excluded; arbitrary paths cannot be read. Articles ship with the checkout/deployment, with no runtime network fetch. `get_skill` adds MCP usage guidance so agents use authenticated tools instead of the original articles' curl examples. Load related articles through `list_skills`/`get_skill`.
 
 ## Kanban and attribution
 

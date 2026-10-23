@@ -1,9 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { registerTrello } from "./trello.js";
-import type { User } from "./users.js";
+import { registerTrello } from "./trello/trello-tools.js";
+import type { User } from "./config.js";
 
-/** Runtime dependencies shared by the Node and Workers adapters. Never log this object. */
+/** Runtime dependencies for the MCP server. Never log this object. */
 export type Config = {
   /** Override only in tests to target the fake Trello HTTP server. */
   apiBase?: string;
@@ -13,7 +13,6 @@ export type Config = {
   users: readonly User[];
   /** Maps each user's tokenEnv to its secret value; supplied per request on Workers. */
   env: Record<string, string | undefined>;
-  allowedHosts?: string[];
 };
 /** Approved Markdown document, identified by a directory/filename ID without its extension. */
 export type Article = { id: string; text: string };
@@ -29,11 +28,11 @@ const result = (value: unknown) => ({
 });
 
 /**
- * Create a request-scoped server: public article tools plus authenticated Trello tools.
+ * Create a request-scoped server with article and permission-checked Trello tools.
  * The caller owns transport connection/cleanup. Never share this instance between users.
  * @param config Trello configuration, identities, and secret bindings.
  * @param authorization Incoming Authorization header, not a username supplied by a tool.
- * @param articles Article provider: filesystem on Node, build-time bundle on Workers.
+ * @param articles Article provider: build-time bundle on Workers.
  */
 export function createMcpServer(
   config: Config,
@@ -48,7 +47,7 @@ export function createMcpServer(
     "list_skills",
     {
       description:
-        "List workflow and knowledge skills; load relevant skills before working.",
+        "Only use when the user explicitly mentions “pinelab” (case-insensitive). List workflow and knowledge skills; load relevant skills before working.",
       inputSchema: {},
     },
     async () =>
@@ -66,7 +65,7 @@ export function createMcpServer(
     "get_skill",
     {
       description:
-        "Read a skill. Resolve references to other articles with list_skills/get_skill, not shell commands.",
+        "Only use when the user explicitly mentions “pinelab” (case-insensitive). Read a skill. Resolve references to other articles with list_skills/get_skill, not shell commands.",
       inputSchema: { id: z.string() },
     },
     async ({ id }) => {

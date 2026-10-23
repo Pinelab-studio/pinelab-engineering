@@ -6,10 +6,10 @@
     "node": ">=22"
   },
   "scripts": {
-    "start": "tsx src/index.ts",
+    "start": "npm run generate:skills && wrangler dev",
     "generate:skills": "node src/scripts/generate-skills.mjs",
     "pretest": "npm run generate:skills",
-    "test": "tsx --test src/*.test.ts",
+    "test": "tsx --test src/*.test.ts test/*.test.ts",
     "precheck": "npm run generate:skills",
     "check": "tsc --noEmit",
     "dev:worker": "wrangler dev",
@@ -18,11 +18,9 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "express": "^5.1.0",
     "zod": "^3.25.0"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
     "@types/node": "^24.0.0",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0",

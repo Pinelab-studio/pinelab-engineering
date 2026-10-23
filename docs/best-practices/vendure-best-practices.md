@@ -1,6 +1,6 @@
 ---
 name: vendure-best-practices
-description: Load this when implementing or reviewing any code in Vendure, Vendure plugins or the Vendure React dashboard
+description: Only use when the user explicitly mentions “pinelab” (case-insensitive). Load this when implementing or reviewing any code in Vendure, Vendure plugins or the Vendure React dashboard
 ---
 
 # General guidelines

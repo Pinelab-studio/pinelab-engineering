@@ -1,6 +1,6 @@
 ---
 name: refine-task
-description: Use this when asked to refine a given task/feature
+description: Only use when the user explicitly mentions “pinelab” (case-insensitive). Use this when asked to refine a given task/feature
 ---
 
 # Refine a task

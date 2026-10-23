@@ -1,76 +1,95 @@
 # Pinelab Engineering
 Human and AI engineering principles used at Pinelab.studio
 
-* `knowledge` - General engineering guidelines at Pinelab that apply to all our projects.
-* `recipes` - Feature specific guides that can be invoked on demand.
-* `workflow` - Way of working at Pinelab, used by developers at Pinelab, but also yours to view!
-
-# MCP server
-
-Expose workflow and knowledge articles as discoverable skills, plus bearer-authenticated Trello tools. See [MCP setup and deployment](docs/mcp.md).
-
-```sh
-cd mcp
-npm ci
-npm run dev:worker  # Cloudflare Workers; configure .dev.vars first (see docs).
-# npm run deploy   # Deploy using Wrangler after configuring Cloudflare secrets.
-# npm start        # Alternative: standalone Node server.
+* [`docs/best-practices`](docs/best-practices) - General engineering guidelines at Pinelab that apply to all our projects.
+* [`docs/recipes`](docs/recipes) - Feature specific guides that can be invoked on demand.
+* [`docs/workflow`](docs/workflow) - Way of working at Pinelab, used by developers at Pinelab, but also yours to view!
 ```
 
 # For Everyone
 
-Anyone, including external consumers, can reference [recipe_index.md](recipe_index.md) and [knowledge_index.md](knowledge_index.md) in their AI prompts when developing features. It lists the available recipes and best practices, so your agent can find and follow the relevant guides.
-
-For example:
+Anyone, including external consumers, can reference [index.md](index.md) in their AI prompts when developing features. It lists general Pinelab best practices and feature-specific recipes, so your agent can find and follow the relevant guides. For example:
 
 ```text
-Implement this feature using the relevant recipes from: https://raw.githubusercontent.com/Pinelab-studio/pinelab-engineering/heads/main/recipe_index.md
+Implement this feature using the Pinelab Vendure best practices from: https://raw.githubusercontent.com/Pinelab-studio/pinelab-engineering/heads/main/index.md
 ```
 
 # For Pinelab Developers
 
-Create a prompt template for `pinelab-implement.md`:
+The Pinelab MCP exposes tools and coding standards and guidelines on how we work. The only real tool is for managing Trello cards, the rest are all skills that explain your local Codex/Pi/Opencode on how to handle tasks. 
+
+Add the Pinelab MCP server to your harness:
 
 ```md
----
-description: Implement a refined task
-argument-hint: "<topic to discuss>"
----
-
-Fetch the instructions from: `curl https://raw.githubusercontent.com/Pinelab-studio/pinelab-engineering/main/workflow/implement.md`
-
-Task to implement: $@
+{
+  "mcpServers": {
+    "pinelab": {
+      "url": "https:pinelab-engineering-mcp.worker.dev",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY"
+      }
+    }
+  }
+}
 ```
+
+_:warning: Always mention 'pinelab' in your first prompt message when working on Pinelab tasks, so the correct skills are loaded via the MCP_
+Skills and tools are designed to only trigger when you explicitly mention Pinelab as to not affect any of your other workflows.
 
 These instructions are based on our kanban workflow:
 
 ![Pinelab Kanban workflow](docs/workflow.png)
+
+Use these prompts to make your AI harness live up to Pinelab's way of working and quality standards:
+
+## Intake 
+Task intake happens automatically, no need to worry about this.
+
+## Refine
+
+_If a task is in "Todo" it is already refined, skip this step!_
+
+Start refining a task by prompting something like
+
+```text
+Start refining Pinelab task <Trello task link>
+```
+
+The `pinelab-refine` skill will trigger, fetch the task, start interviewing you and moves the task to "Waiting For Client Approval".
+
+
+## Implement 
+
+Start working on a task by prompting:
+
+```text
+Start planning Pinelab task <Trello task link> 
+```
+
+This will trigger the `pinelab-plan` skill, move the card to "Doing" and start the implementation flow: It will interview you for a plan, and ask you to implement. After implementation it will ask you to create a PR.
+
+:information_source: _You are free to use your own `/plan` prompt, just make sure to also mention Pinelab so it loads the Pinelab best practices._
+
+## Review
+
+**Always** review your own pull request:
+
+```text
+Please Pinelab review <link to PR>
+```
+
+This will trigger the `pinelab-code-review` flow: Read PR description and comments, checkout the branch locally and reviews the code. It will again interview you, and you can make modification during the review, and push the to the open PR.
+
+## Handover
+
+After a PR has been approved, you can use this prompt to start handover:
+
+```text
+Handover Pinelab task <link to PR>
+```
 
 1. Refine a task (might be done already)
 2. Pick up and `/implement` a task
 3. Create a Pull Request
 4. Always `/review <gh PR link>` your own implementation before creating a Pull Request
 5. Another developer will `/review` your Pull Request
-
-// TODO: Create PR review knowledge article
-
-## Optional: Pinelab Kanban (Trello)
-
-If you want your Pi/Codex/OpenCode to read/move/create tasks automatically in Trello, add this in your global `~/.pi/agents/AGENTS.md` (or a different directory depending on your harness). 
-
-Add this somewhere in your global `AGENTS.md`:
-
-```md
-# Pinelab Kanban (Trello)
-Always run `set -a; source ~/.pi/.env; set +a` to load ENV vars. Never print its contents or secret values.
-Whenever you need to refine, create, move tasks in Trello, always load `curl https://raw.githubusercontent.com/Pinelab-studio/pinelab-engineering/heads/main/workflow/pinelab-trello-kanban.md`
-
-```
-
-An env file should exist at the path above, with these variables:
-
-```.env
-TRELLO_API_KEY=xxx
-TRELLO_API_TOKEN=xxxx
-TRELLO_BOARD_ID=xxx
-```

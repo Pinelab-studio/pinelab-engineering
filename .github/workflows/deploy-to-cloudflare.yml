@@ -5,8 +5,8 @@ on:
     branches: [main]
     paths:
       - "mcp/**"
-      - "workflow/**"
-      - "knowledge/**"
+      - "docs/workflow/**"
+      - "docs/best-practices/**"
       - ".github/workflows/deploy-to-cloudflare.yml"
   workflow_dispatch:
 
