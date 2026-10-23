@@ -6,10 +6,10 @@
     "node": ">=22"
   },
   "scripts": {
-    "start": "tsx server/index.ts",
+    "start": "tsx index.ts",
     "generate:skills": "node scripts/generate-skills.mjs",
     "pretest": "npm run generate:skills",
-    "test": "tsx --test server/*.test.ts",
+    "test": "tsx --test *.test.ts",
     "precheck": "npm run generate:skills",
     "check": "tsc --noEmit",
     "dev:worker": "wrangler dev",

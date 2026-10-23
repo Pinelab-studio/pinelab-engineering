@@ -4,4 +4,4 @@ node_modules/
 .dev.vars
 .dev.vars.*
 .wrangler/
-server/generated/
+generated/

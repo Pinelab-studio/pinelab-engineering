@@ -10,6 +10,7 @@ Human and AI engineering principles used at Pinelab.studio
 Expose workflow and knowledge articles as discoverable skills, plus bearer-authenticated Trello tools. See [MCP setup and deployment](docs/mcp.md).
 
 ```sh
+cd mcp
 npm ci
 npm run dev:worker  # Cloudflare Workers; configure .dev.vars first (see docs).
 # npm run deploy   # Deploy using Wrangler after configuring Cloudflare secrets.

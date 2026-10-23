@@ -9,7 +9,7 @@ test(
   "Workers runtime serves bundled skills and rejects unauthorized Trello calls",
   { timeout: 60000 },
   async () => {
-    const worker = await unstable_dev("server/worker.ts", {
+    const worker = await unstable_dev("worker.ts", {
       config: "wrangler.jsonc",
       local: true,
       ip: "127.0.0.1",

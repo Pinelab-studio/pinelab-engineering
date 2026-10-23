@@ -2,6 +2,8 @@
 
 Lightweight TypeScript/Node.js (22+) HTTP MCP server. Articles are public; **every Trello tool invocation** checks a per-user bearer token and permission before contacting Trello. No database, sessions, OAuth service, or GitHub runtime fetching.
 
+All server code, scripts, package/config files, and local secrets live in **`mcp/`**. Run the commands below from that directory (`cd mcp` from the repository root). Articles remain in the repository-level `workflow/` and `knowledge/` directories. The GitHub Actions workflow stays in `.github/workflows/` and runs commands inside `mcp/`.
+
 ## Cloudflare Workers (recommended deployment)
 
 The Worker uses the SDK's native Web Request/Response transport, stateless JSON responses, and Cloudflare secret bindings. No Express adapter, filesystem, Durable Objects, database, or extra proxy is needed on Workers. `nodejs_compat` supplies the timing-safe token comparison. Articles are bundled from `workflow/` and `knowledge/` during every Wrangler build; redeploy after changing them.
@@ -17,7 +19,7 @@ npm exec wrangler secret put TRELLO_BOARD_ID
 npm exec wrangler secret put MARTIJN_MCP_TOKEN
 ```
 
-Each `secret put` prompts privately for its value. Use a securely generated personal token of at least 32 non-whitespace characters. Never put credentials in `wrangler.jsonc` or its `vars` section. Add secret bindings for every user configured in `server/users.ts`. Until all required secrets are configured, the endpoint returns a generic HTTP 503 without exposing configuration details. Secrets can be rotated with the same commands; no source changes are needed.
+Each `secret put` prompts privately for its value. Use a securely generated personal token of at least 32 non-whitespace characters. Never put credentials in `wrangler.jsonc` or its `vars` section. Add secret bindings for every user configured in `mcp/users.ts`. Until all required secrets are configured, the endpoint returns a generic HTTP 503 without exposing configuration details. Secrets can be rotated with the same commands; no source changes are needed.
 
 Connect your MCP client to `https://pinelab-engineering-mcp.<your-subdomain>.workers.dev/mcp` with its personal bearer token. The exact hostname is printed by Wrangler. Edit `name` in `wrangler.jsonc` if needed. Cloudflare provides HTTPS and hostname routing; the Node-only HOST/PORT/MCP_ALLOWED_HOSTS settings do not apply. For a custom domain, configure a Worker Custom Domain in Cloudflare. Configure appropriate edge rate limiting for your account before broader exposure. Observability is disabled by default; if enabling logging, redact Authorization headers and credential-bearing Trello URLs.
 
@@ -25,7 +27,7 @@ For unattended deployment, supply `CLOUDFLARE_API_TOKEN` (least-privilege Worker
 
 ### Local Worker development
 
-Create a Git-ignored `.dev.vars` file in the repository root containing test-board credentials and personal token bindings:
+Create a Git-ignored `mcp/.dev.vars` file containing test-board credentials and personal token bindings:
 
 ```dotenv
 TRELLO_API_KEY=<test-board-key>
@@ -51,7 +53,7 @@ Generate each bearer token with a secure generator, e.g. `openssl rand -hex 32`,
 
 ## Users and permissions
 
-Edit `server/users.ts`:
+Edit `mcp/users.ts`:
 
 ```ts
 { username: 'alice', tokenEnv: 'ALICE_MCP_TOKEN', permissions: ['read'] },
