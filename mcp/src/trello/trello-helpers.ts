@@ -80,8 +80,41 @@ export function createTrelloHelpers(
       },
     );
   }
+  /** Redact all configured credentials before logging; never log URLs or request bodies. */
+  function redact(text: string) {
+    const secrets = [config.key, config.token, ...Object.values(config.env)]
+      .filter((value): value is string => !!value)
+      .flatMap((value) => [value, encodeURIComponent(value), JSON.stringify(value).slice(1, -1)])
+      .sort((a, b) => b.length - a.length);
+    for (const secret of secrets) text = text.split(secret).join("[REDACTED]");
+    return text.replace(/[\u0000-\u001f\u007f]/g, " ");
+  }
+
+  /** Bound error-body reads as well as log size; do not consume an unbounded upstream body. */
+  async function errorBody(response: Response) {
+    const reader = response.body?.getReader();
+    if (!reader) return "";
+    const decoder = new TextDecoder();
+    let text = "";
+    let remaining = 8192;
+    try {
+      while (remaining > 0) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = value.subarray(0, remaining);
+        remaining -= chunk.length;
+        text += decoder.decode(chunk, { stream: true });
+      }
+      return redact(text).slice(0, 1024);
+    } catch {
+      return "[Unable to read error response]";
+    } finally {
+      await reader.cancel().catch(() => {});
+    }
+  }
+
   /**
-   * Make one bounded Trello request, without redirects, retries, or upstream error bodies.
+   * Make one bounded Trello request, without redirects, retries, or upstream error bodies in tool results.
    * URLs contain credentials: never log them or include raw fetch errors in tool results.
    * Uncertain writes must be inspected by the caller before another attempt.
    */
@@ -106,17 +139,26 @@ export function createTrelloHelpers(
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       });
     } catch {
+      console.error("Trello network error", { method, path: redact(url.pathname), error: "Request failed or timed out" });
       throw new Error(
         "Trello request failed or timed out. For writes, inspect the card before retrying.",
       );
     }
-    if (!response.ok)
+    if (!response.ok) {
+      console.error("Trello HTTP error", {
+        method,
+        path: redact(url.pathname),
+        status: response.status,
+        response: await errorBody(response),
+      });
       throw new Error(
         `Trello returned HTTP ${response.status}. For writes, inspect the card before retrying.`,
       );
+    }
     try {
       return await response.json();
     } catch {
+      console.error("Trello invalid JSON", { method, path: redact(url.pathname), status: response.status });
       throw new Error(
         "Invalid Trello response; inspect the card before retrying writes.",
       );
@@ -131,6 +173,10 @@ export function createTrelloHelpers(
     return api(
       `/boards/${encodeURIComponent(config.board)}/lists?filter=open&fields=name`,
     );
+  }
+  /** Only current board members are eligible assignees. */
+  async function members() {
+    return api(`/boards/${encodeURIComponent(config.board)}/members?fields=username,fullName`);
   }
   /** Read every label page before deciding that a requested label is missing. */
   async function labels() {
@@ -158,11 +204,11 @@ export function createTrelloHelpers(
     return value;
   }
   /** Require one exact name match; missing or duplicate names must never trigger a guess. */
-  function resolve(values: any[], requested: string, kind: string) {
-    const matches = values.filter((v) => v.name === requested);
+  function resolve(values: any[], requested: string, kind: string, field = "name") {
+    const matches = values.filter((v) => v[field] === requested);
     if (matches.length !== 1)
       throw new Error(
-        `Missing or ambiguous ${kind}: ${requested}. Choose an existing, unambiguous name.`,
+        `Missing or ambiguous ${kind}: ${requested}. Choose an existing, unambiguous ${field}.`,
       );
     return matches[0];
   }
@@ -179,5 +225,5 @@ export function createTrelloHelpers(
     }
   }
 
-  return { tool, api, board, lists, labels, card, resolve, comment };
+  return { tool, api, board, lists, labels, members, card, resolve, comment };
 }

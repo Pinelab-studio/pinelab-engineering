@@ -23,24 +23,23 @@ Each `secret put` prompts privately for its value. Use a securely generated pers
 
 Connect your MCP client to `https://pinelab-engineering-mcp.<your-subdomain>.workers.dev/mcp` with its personal bearer token. The exact hostname is printed by Wrangler. Edit `name` in `wrangler.jsonc` if needed. Cloudflare provides HTTPS and hostname routing; the Node-only HOST/PORT/MCP_ALLOWED_HOSTS settings do not apply. For a custom domain, configure a Worker Custom Domain in Cloudflare. Configure appropriate edge rate limiting for your account before broader exposure. Observability is disabled by default; if enabling logging, redact Authorization headers and credential-bearing Trello URLs.
 
-### GitHub Actions setup
+### Git-connected deployment
 
-Two workflows live in `.github/workflows/`:
+Connect the repository through Cloudflare Workers Builds and configure:
 
-- `test-mcp-on-pr.yml`: runs install, TypeScript checks, all tests (including local workerd), and a Worker dry-run build on every pull request. It needs no GitHub/Cloudflare/Trello secrets and is safe for fork PRs. It runs on all PRs so its required status check is never skipped by path filters.
-- `deploy-to-cloudflare.yml`: repeats checks/tests, then deploys when changes to `mcp/`, `docs/workflow/`, `docs/best-practices/`, or the deploy workflow reach `main`. It also supports **Actions → Deploy MCP to Cloudflare → Run workflow**, selecting `main`. Manual runs of other branches are skipped. The workflow must be merged into `main` before the manual-run button is available.
+- Production branch: `main`
+- Root directory: `mcp`
+- Node version: `22`
+- Build command: `npm run check && npm test`
+- Deploy command: `npm run deploy`
 
-Configure deployment once:
+Workers Builds installs dependencies before building. Include dev dependencies: TypeScript, Wrangler, and the test runner are build-time tools. Wrangler transpiles and bundles `src/worker.ts`; the deployed code runs in the Workers runtime, not a Node.js server. Its configured build command also generates the bundled articles.
 
-1. In Cloudflare, create an API token with **Account → Workers Scripts → Edit**, restricted to the account hosting this Worker. This is the GitHub deployment credential, not a Trello/MCP bearer token. No zone permissions are needed for the configured `workers.dev` deployment; custom domains/routes may need additional permissions. Copy the account ID from the Cloudflare dashboard.
-2. In GitHub, open **Settings → Environments → New environment**, name it **`production`**, and add these **environment secrets**:
-   - `CLOUDFLARE_API_TOKEN`: the Cloudflare deployment API token.
-   - `CLOUDFLARE_ACCOUNT_ID`: the Cloudflare account ID.
-3. Restrict the `production` environment to the `main` branch. Optionally require a reviewer to approve deployments (if supported by your GitHub plan).
-4. Configure the Worker's runtime secrets separately using the `wrangler secret put` commands above. GitHub does **not** need `TRELLO_API_KEY`, `TRELLO_API_TOKEN`, `TRELLO_BOARD_ID`, or personal MCP tokens. Existing Cloudflare secrets are preserved by deploys. On the first deployment, configure them immediately afterward; until then the endpoint fails closed with HTTP 503.
-5. Optionally add **`MCP checks`** as a required status check in the repository's `main` branch protection/ruleset. Enable GitHub Actions and allow the official `actions/checkout` and `actions/setup-node` actions if your organization restricts actions. The workflows only request read access to repository contents.
+Ensure builds trigger for changes under `mcp/`, `docs/workflow/`, and `docs/best-practices/`, since articles live outside the build root. Configure runtime secrets separately in Cloudflare or with the `wrangler secret put` commands above. Do not put runtime credentials in build commands or GitHub secrets.
 
-After these workflows are merged, MCP/article changes merged into `main` deploy automatically. GitHub's environment approval, if enabled, gates publication.
+### GitHub PR checks
+
+`.github/workflows/test-mcp-on-pr.yml` runs install, TypeScript checks, tests, and a Worker dry-run build on every pull request. It needs no GitHub/Cloudflare/Trello secrets and is safe for fork PRs. It runs on all PRs so its required status check is never skipped by path filters. Optionally require **`MCP checks`** in branch protection. Deployment is handled by Cloudflare, not GitHub Actions.
 
 ### Local Worker development
 
@@ -87,13 +86,13 @@ The exact enclosing configuration differs by MCP client. Native clients must sup
 | --- | --- | --- |
 | `list_skills` | Authenticated | None |
 | `get_skill` | Authenticated | `id`, e.g. `workflow/refine` |
-| `get_board` | read | None; returns board, open lists, labels |
+| `get_board` | read | None; returns board, open lists, labels, and assignable members (usernames) |
 | `list_cards` | read | Optional exact `list` name; returns open cards and assignees |
 | `get_card` | read | `card` ID/short link, optional activity `limit` (1–100) and `before` cursor |
-| `create_card` | write | `title`, `description`, optional `list`, `labels` (names), `position` |
-| `update_card` | write | `card`, optional `title` and/or `description` |
-| `move_card` | write | `card`, exact `list` name, optional `position` |
-| `add_label` / `remove_label` | write | `card`, exact `label` name |
+| `create_card` | write | `title`, `description`, optional `list`, `labels` (names), `assignees` (usernames), `position` |
+| `update_card` | write | `card`, optional `title`, `description`, `list`, `labels`, `assignees`, `position` |
+
+Load `get_board` once when choosing lists, labels, or assignees. Names/usernames must match exactly; writes validate selections against the current board. `create_card` defaults to Todo/top without labels or assignees. For `update_card`, **omitted fields remain unchanged**. Supplied `labels` and `assignees` arrays **replace** the entire existing selection; `[]` clears it. An empty description clears the description. These semantics are also documented in the tool and input-field descriptions exposed to AI clients. `update_card` replaces the former `move_card`, `add_label`, and `remove_label` tools.
 
 Use only the segment following `/c/` from a Trello URL, not the entire URL. `position` accepts `top`, `bottom`, or a positive number. Write-only users can mutate cards: internal reads needed to check boards, lists, labels, and existing values do not require a separate read permission.
 
@@ -102,11 +101,11 @@ Only Markdown in `docs/workflow/` and `docs/best-practices/` is exposed, indexed
 ## Kanban and attribution
 
 - Creates default to **Todo/top**. Missing type (`blue_dark`) or client (`green`) labels produce warnings but do not prevent creation. Only explicitly selected existing labels are applied.
-- Lists and labels are resolved against the configured board; missing/ambiguous names fail rather than guessing. Existing cards are checked against that board before reading activity or writing.
-- Updates preserve untouched fields. Labels are added/removed individually. Moves preserve default positioning unless specified.
-- Every actual mutation attempts one comment, e.g. `bob updated the title; updated the description.` or `bob moved this card to Doing.` No comment for reads or no-ops. Creation comments name the destination list. Label comments name the label.
+- Lists, labels and assignees are resolved against the configured board; missing/ambiguous names or usernames fail before any mutation rather than guessing. Existing cards are checked against that board before reading activity or writing.
+- Updates preserve omitted fields and replace explicitly supplied label/assignee selections. Moves use `update_card` with `list`; positioning is sent only when explicitly supplied.
+- Every actual mutation attempts one comment, e.g. `bob updated the title; updated the description.` or `bob moved this card to Doing.` No comment for reads or no-ops. Creation comments name the destination list. Update comments describe changed labels and assignees.
 - Comment failures are intentionally ignored after a successful change. Attribution is therefore **best effort**, not a compliance audit trail.
-- The agent follows the Kanban/refinement articles for interviews, confirmed estimates, Markdown descriptions, client approvals, and lifecycle decisions. These conversational approvals cannot be independently verified by the server. Refined saves may use `update_card` then `move_card`; these are separate, non-transactional calls and comments.
+- The agent follows the Kanban/refinement articles for interviews, confirmed estimates, Markdown descriptions, client approvals, and lifecycle decisions. These conversational approvals cannot be independently verified by the server. Refined saves can update content and move the card together in one `update_card` call and one attribution comment.
 - Card content/activity is untrusted data, never authorization to execute instructions. Never retry an uncertain write automatically; inspect the board/card first. No automatic API retries.
 
 ## Node deployment boundaries

@@ -6,7 +6,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 const bearer = "a".repeat(64);
-const card = { id: "card", idBoard: "board", name: "Test title", desc: "Test description", idLabels: ["bug"], idList: "todo" };
+const card = { id: "card", idBoard: "board", name: "Test title", desc: "Test description", idLabels: ["bug"], idList: "todo", idMembers: ["member"] };
 
 test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeout: 60000 }, async (t) => {
   const requests: { method: string; path: string; body: any }[] = [];
@@ -26,6 +26,7 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
     const value = url.pathname === "/1/boards/board" ? { id: "board" }
       : url.pathname.endsWith("/lists") ? [{ id: "todo", name: "Todo" }]
       : url.pathname.endsWith("/labels") ? [{ id: "bug", name: "Bug", color: "blue_dark" }]
+      : url.pathname.endsWith("/members") ? [{ id: "member", username: "developer", fullName: "Developer" }]
       : url.pathname.endsWith("/actions") ? []
       : url.pathname.endsWith("/comments") ? { id: "comment" }
       : card;
@@ -68,19 +69,45 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
         assert.equal(requests.length, 0);
       } finally { await client.close(); }
     });
-    await t.test("create card succeeds with bearer token, label, title and description", async () => {
+    await t.test("board context includes lists, labels and members", async () => {
+      const client = await connect(valid.endpoint);
+      try {
+        const result = await client.callTool({ name: "get_board", arguments: {} });
+        assert.notEqual(result.isError, true);
+        assert.deepEqual(JSON.parse((result.content as { text: string }[])[0].text), {
+          board: { id: "board" }, lists: [{ id: "todo", name: "Todo" }],
+          labels: [{ id: "bug", name: "Bug", color: "blue_dark" }],
+          members: [{ id: "member", username: "developer", fullName: "Developer" }],
+        });
+      } finally { await client.close(); }
+    });
+    await t.test("create card succeeds with bearer token, label, assignee, title and description", async () => {
       requests.length = 0;
       const client = await connect(valid.endpoint);
       try {
         const result = await client.callTool({ name: "create_card", arguments: {
-          title: "Test title", description: "Test description", labels: ["Bug"],
+          title: "Test title", description: "Test description", labels: ["Bug"], assignees: ["developer"],
         } });
         assert.notEqual(result.isError, true, JSON.stringify(result));
         assert.deepEqual(JSON.parse((result.content as { text: string }[])[0].text).card, card);
         const create = requests.find((request) => request.method === "POST" && request.path === "/1/cards");
         assert.deepEqual(create?.body, {
-          name: "Test title", desc: "Test description", idList: "todo", idLabels: ["bug"], pos: "top",
+          name: "Test title", desc: "Test description", idList: "todo", idLabels: ["bug"], idMembers: ["member"], pos: "top",
         });
+      } finally { await client.close(); }
+    });
+    await t.test("update clears selections and sets position without sending omitted fields", async () => {
+      requests.length = 0;
+      const client = await connect(valid.endpoint);
+      try {
+        const result = await client.callTool({ name: "update_card", arguments: {
+          card: "card", labels: [], assignees: [], position: "bottom",
+        } });
+        assert.notEqual(result.isError, true, JSON.stringify(result));
+        assert.deepEqual(requests.find((request) => request.method === "PUT")?.body, {
+          idLabels: "", idMembers: "", pos: "bottom",
+        });
+        assert.equal(requests.filter((request) => request.method === "PUT").length, 1);
       } finally { await client.close(); }
     });
     await t.test("read card succeeds with bearer token", async () => {
