@@ -1,7 +1,12 @@
 import { readdir, readFile, mkdir, writeFile } from "node:fs/promises";
 
-// Bundle only approved article directories. Workers have no runtime checkout/filesystem.
-const root = new URL("../../", import.meta.url);
+/**
+ * Build the Workers article catalogue from repository Markdown.
+ * Only workflow/ and knowledge/ are included; recipes and arbitrary paths are excluded.
+ * Runs before checks/tests and during Wrangler builds; output is generated, not committed.
+ * Paths use import.meta.url so generation does not depend on the invoking shell's cwd.
+ */
+const root = new URL("../../../", import.meta.url);
 const generated = new URL("../generated/", import.meta.url);
 const articles = [];
 for (const folder of ["workflow", "knowledge"]) {
@@ -13,6 +18,7 @@ for (const folder of ["workflow", "knowledge"]) {
     });
   }
 }
+// Replace the whole catalogue so removed/renamed articles cannot linger in the deployed bundle.
 await mkdir(generated, { recursive: true });
 await writeFile(
   new URL("skills.json", generated),

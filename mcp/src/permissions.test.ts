@@ -5,6 +5,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { createApp } from "./server.js";
 
+// Observe outgoing HTTP requests at the external API boundary, not internal call sequences.
 const records: { method: string; path: string; body: any }[] = [];
 let failComments = false;
 let failWrites = false;
@@ -39,6 +40,7 @@ fake.use((req, res) => {
     url: "https://trello.com/c/card",
   });
 });
+/** Bind an isolated HTTP fixture to an ephemeral loopback port. */
 async function listen(app: ReturnType<typeof express>) {
   const server = app.listen(0, "127.0.0.1");
   await new Promise<void>((resolve) => server.once("listening", resolve));
@@ -47,6 +49,7 @@ async function listen(app: ReturnType<typeof express>) {
     url: `http://127.0.0.1:${(server.address() as { port: number }).port}`,
   };
 }
+/** Run a real MCP client against fresh HTTP servers with dummy identities and a fake Trello API. */
 async function scenario(
   token: string | undefined,
   run: (client: Client) => Promise<void>,

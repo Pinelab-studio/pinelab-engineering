@@ -1,6 +1,7 @@
 import { createApp } from "./server.js";
 import { users } from "./users.js";
 
+/** Load a Node environment binding; errors identify missing names without exposing values. */
 function required(name: string): string {
   const value = process.env[name];
   if (!value?.trim())
@@ -8,6 +9,7 @@ function required(name: string): string {
   return value;
 }
 
+// Fail before listening: every configured identity needs a distinct, nontrivial bearer token.
 const tokens = new Set<string>();
 const usernames = new Set<string>();
 for (const user of users) {
@@ -24,6 +26,7 @@ for (const user of users) {
 const port = Number(process.env.PORT ?? 3000);
 if (!Number.isInteger(port) || port < 1 || port > 65535)
   throw new Error("PORT must be between 1 and 65535");
+// Bind locally by default. Public Node deployments need an HTTPS reverse proxy.
 const host = process.env.HOST ?? "127.0.0.1";
 const allowedHosts = (
   process.env.MCP_ALLOWED_HOSTS ?? "localhost,127.0.0.1,[::1]"
@@ -46,6 +49,7 @@ const server = app.listen(port, host, () =>
 );
 server.requestTimeout = 120000;
 server.headersTimeout = 15000;
+// Allow in-flight requests to drain, but do not block deployment shutdown indefinitely.
 for (const signal of ["SIGTERM", "SIGINT"]) {
   process.once(signal, () => {
     server.close(() => process.exit(0));

@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Config } from "./mcp.js";
 
+/** Format tool responses consistently; API failures must be sanitized before reaching here. */
 const output = (value: unknown) => ({
   content: [{ type: "text" as const, text: JSON.stringify(value) }],
 });
@@ -16,6 +17,11 @@ const pos = z.union([
 ]);
 const cardInput = { card: id };
 
+/**
+ * Register Trello tools bound to the identity in this HTTP request's bearer header.
+ * Discovery stays public; each invocation checks permissions before any API request.
+ * Mutation attribution always uses that identity, never caller-provided tool arguments.
+ */
 export function registerTrello(
   server: McpServer,
   config: Config,
@@ -28,6 +34,7 @@ export function registerTrello(
         if (!expected) return false;
         const actualBytes = Buffer.from(bearer);
         const expectedBytes = Buffer.from(expected);
+        // timingSafeEqual requires equal byte lengths; do not compare secret strings directly.
         return (
           actualBytes.length === expectedBytes.length &&
           timingSafeEqual(actualBytes, expectedBytes)
@@ -35,6 +42,7 @@ export function registerTrello(
       })
     : undefined;
 
+  /** Central permission gate. Internal safety lookups inherit the tool's authorization. */
   function tool(
     toolName: string,
     permission: "read" | "write",
@@ -80,6 +88,11 @@ export function registerTrello(
       },
     );
   }
+  /**
+   * Make one bounded Trello request, without redirects, retries, or upstream error bodies.
+   * URLs contain credentials: never log them or include raw fetch errors in tool results.
+   * Uncertain writes must be inspected by the caller before another attempt.
+   */
   async function api(
     path: string,
     method = "GET",
@@ -116,14 +129,17 @@ export function registerTrello(
       );
     }
   }
+  /** Resolve the configured board's full ID, including when configuration uses a short link. */
   async function board() {
     return api(`/boards/${encodeURIComponent(config.board)}?fields=id,name`);
   }
+  /** Fetch open lists only from the configured board; callers resolve destinations by name. */
   async function lists() {
     return api(
       `/boards/${encodeURIComponent(config.board)}/lists?filter=open&fields=name`,
     );
   }
+  /** Read every label page before deciding that a requested label is missing. */
   async function labels() {
     const all: any[] = [];
     let before = "";
@@ -138,6 +154,7 @@ export function registerTrello(
       before = next;
     }
   }
+  /** Fetch a card and verify board membership before returning data or allowing mutations. */
   async function card(cardId: string) {
     const resolved = await board();
     const value = await api(
@@ -147,6 +164,7 @@ export function registerTrello(
       throw new Error("Card is outside the configured board");
     return value;
   }
+  /** Require one exact name match; missing or duplicate names must never trigger a guess. */
   function resolve(values: any[], requested: string, kind: string) {
     const matches = values.filter((v) => v.name === requested);
     if (matches.length !== 1)
@@ -155,6 +173,7 @@ export function registerTrello(
       );
     return matches[0];
   }
+  /** Best-effort attribution after successful changes, not a transactional audit guarantee. */
   async function comment(cardId: string, changes: string[]) {
     if (!changes.length) return;
     // A failed audit comment must not turn a successful mutation into a failed tool result.
@@ -274,6 +293,7 @@ export function registerTrello(
     },
     async (args) => {
       const existing = await card(args.card);
+      // Build a patch from changed fields only: omitted inputs must preserve existing data.
       const body: Record<string, string> = {};
       const changes: string[] = [];
       if (args.title !== undefined && args.title !== existing.name) {
@@ -310,6 +330,7 @@ export function registerTrello(
       const selected = [...new Set<string>(args.labels)].map((label) =>
         resolve(available, label, "label"),
       );
+      // Labels are guidance, not creation prerequisites; never invent or auto-apply a label.
       const warnings = [];
       for (const [color, category] of [
         ["blue_dark", "type"],

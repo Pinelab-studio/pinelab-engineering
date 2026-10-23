@@ -5,7 +5,8 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { createMcpServer, type Config, type Article } from "./mcp.js";
 export type { Config } from "./mcp.js";
 
-const root = new URL("../", import.meta.url);
+const root = new URL("../../", import.meta.url);
+/** Read only approved Markdown directories relative to the checkout, not the shell's cwd. */
 async function articles(): Promise<Article[]> {
   const entries: Article[] = [];
   for (const folder of ["workflow", "knowledge"]) {
@@ -20,6 +21,10 @@ async function articles(): Promise<Article[]> {
   return entries;
 }
 
+/**
+ * Create the standalone Node HTTP adapter without starting a listener.
+ * Host validation prevents DNS rebinding; public skills and protected Trello tools share /mcp.
+ */
 export function createApp(config: Config) {
   const app = createMcpExpressApp({
     allowedHosts: config.allowedHosts ?? ["localhost", "127.0.0.1", "[::1]"],
@@ -38,6 +43,7 @@ export function createApp(config: Config) {
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
     });
+    // Node may stream responses: retain transport ownership until the response closes.
     res.on("close", () => {
       void transport.close();
       void server.close();
@@ -51,6 +57,7 @@ export function createApp(config: Config) {
     }
   });
   app.all("/mcp", (_req, res) => res.status(405).end());
+  // Do not let Express expose parser errors or development stack traces to clients.
   const handleError: express.ErrorRequestHandler = (
     error,
     _req,
@@ -63,16 +70,14 @@ export function createApp(config: Config) {
     }
     const status =
       error?.status === 413 ? 413 : error?.status === 400 ? 400 : 500;
-    res
-      .status(status)
-      .json({
-        error:
-          status === 413
-            ? "Request too large"
-            : status === 400
-              ? "Invalid request body"
-              : "Internal server error",
-      });
+    res.status(status).json({
+      error:
+        status === 413
+          ? "Request too large"
+          : status === 400
+            ? "Invalid request body"
+            : "Internal server error",
+    });
   };
   app.use(handleError);
   return app;

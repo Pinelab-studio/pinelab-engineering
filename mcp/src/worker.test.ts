@@ -4,12 +4,16 @@ import { unstable_dev } from "wrangler";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-// Run the actual bundle in local workerd, not an emulation of the fetch handler in Node.
+/**
+ * Exercise the actual bundle in local workerd, not a Node emulation of the fetch handler.
+ * Credentials are dummy values. Authorized cases load public articles only; Trello mutation
+ * cases deliberately use missing/invalid tokens, so this test must never change real cards.
+ */
 test(
   "Workers runtime serves bundled skills and rejects unauthorized Trello calls",
   { timeout: 60000 },
   async () => {
-    const worker = await unstable_dev("worker.ts", {
+    const worker = await unstable_dev("src/worker.ts", {
       config: "wrangler.jsonc",
       local: true,
       ip: "127.0.0.1",

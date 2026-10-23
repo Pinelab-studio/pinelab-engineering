@@ -3,9 +3,14 @@ import { createMcpServer } from "./mcp.js";
 import { users } from "./users.js";
 import articles from "./generated/skills.json" with { type: "json" };
 
+/** Cloudflare string bindings, including Trello credentials and per-user bearer secrets. */
 export type WorkerEnv = Record<string, string | undefined>;
 
 export default {
+  /**
+   * Handle one stateless MCP request. Cloudflare provides HTTPS and hostname routing.
+   * Native clients only: browser-origin requests and standalone SSE sessions are unsupported.
+   */
   async fetch(request: Request, env: WorkerEnv): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname !== "/mcp")
@@ -41,6 +46,7 @@ export default {
       request.headers.get("Authorization") ?? undefined,
       async () => articles,
     );
+    // JSON responses finish within this request, so no shared sessions or Durable Objects are needed.
     const transport = new WebStandardStreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
       enableJsonResponse: true,
@@ -52,6 +58,7 @@ export default {
     } catch {
       return Response.json({ error: "MCP request failed" }, { status: 500 });
     } finally {
+      // Request-scoped cleanup also prevents one user's authenticated server being reused.
       await server.close();
     }
   },
