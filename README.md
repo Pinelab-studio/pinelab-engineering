@@ -23,7 +23,7 @@ Add the Pinelab MCP server to your harness:
 {
   "mcpServers": {
     "pinelab": {
-      "url": "https:pinelab-engineering-mcp.worker.dev",
+      "url": "https:mcp.pinelab-studio.worker.dev",
       "headers": {
         "Authorization": "Bearer YOUR_API_KEY"
       }
