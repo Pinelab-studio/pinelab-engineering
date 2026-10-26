@@ -1,6 +1,6 @@
 ---
 name: sanitize-kanban
-description: Only use when the user explicitly mentions “pinelab” (case-insensitive). Recommend top 5 priorities for today from the kanban task board to keep the tasks flowing
+description: Recommend top 5 priorities todo's for today from the Pinelab Trello Kanban task board. 
 ---
 
 Read the current task board using the existing Trello skill/workflow instructions. Inspect Inbox, Waiting for Client Approval, Doing, Ready For Review, and Todo. Include Todo to verify how much ready-to-start work remains. Read relevant card details and recent activity before making recommendations.

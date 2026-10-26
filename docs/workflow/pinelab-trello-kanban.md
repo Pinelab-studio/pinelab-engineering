@@ -1,6 +1,6 @@
 ---
 name: pinelab-kanban
-description: "Only use when the user explicitly mentions “pinelab” (case-insensitive). Manage Pinelab’s kanban tasks in Trello: create, refine, move, and label cards from Inbox to Done"
+description: "Manage Pinelab’s kanban tasks in Trello: create, refine, move, and label cards from Inbox to Done. Only use when the user explicitly mentions “pinelab” (case-insensitive)"
 ---
 
 # Pinelab Kanban

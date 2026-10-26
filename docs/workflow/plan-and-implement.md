@@ -1,11 +1,11 @@
 ---
-name: implement
-description: Only use when the user explicitly mentions “pinelab” (case-insensitive). Use this to implement a refined task via Test Driven Development
+name: plan-and-implement
+description: Make a plan to implement a given task. Only use when the user explicitly mentions “pinelab” (case-insensitive).
 ---
 
 # Plan and implement
 
-Turn a refined task into a confirmed technical plan, then implement it with test-driven development. This workflow is independent of task storage and status changes; leave those to the calling workflow. Do not commit, push, or deploy unless explicitly requested.
+Turn a refined task into a confirmed technical plan, then implement it with test-driven development. This is the default planning flow for developers without their own plan mode. A developer's own planning flow may replace the interview mechanics, but must load Pinelab best practices and preserve applicable approval, testing, review, and handover requirements. This workflow is independent of task storage and status changes; leave those to the calling workflow. Do not commit, push, or deploy unless explicitly requested.
 
 ## 0. Start on a new branch
 

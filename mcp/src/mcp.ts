@@ -47,7 +47,7 @@ export function createMcpServer(
     "list_skills",
     {
       description:
-        "Only use when the user explicitly mentions “pinelab” (case-insensitive). List workflow and knowledge skills; load relevant skills before working.",
+        "List workflow and knowledge skills; load relevant best practices before working. Best practices do not require a Pinelab mention. Only load or follow workflow/* skills when the user explicitly mentions “pinelab” (case-insensitive).",
       inputSchema: {},
     },
     async () =>
@@ -65,7 +65,7 @@ export function createMcpServer(
     "get_skill",
     {
       description:
-        "Only use when the user explicitly mentions “pinelab” (case-insensitive). Read a skill. Resolve references to other articles with list_skills/get_skill, not shell commands.",
+        "Read a skill. Best practices do not require a Pinelab mention. Only load or follow workflow/* skills when the user explicitly mentions “pinelab” (case-insensitive). Resolve references to other articles with list_skills/get_skill, not shell commands.",
       inputSchema: { id: z.string() },
     },
     async ({ id }) => {

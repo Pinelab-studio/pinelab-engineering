@@ -120,19 +120,16 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
         });
       } finally { await client.close(); }
     });
-    await t.test("all tool and workflow/knowledge skill descriptions include pinelab", async () => {
+    await t.test("workflow skill descriptions include pinelab", async () => {
       const client = await connect(valid.endpoint);
       try {
-        const { tools } = await client.listTools();
-        assert.ok(tools.length > 0);
         const result = await client.callTool({ name: "list_skills", arguments: {} });
         assert.notEqual(result.isError, true);
         const skills = JSON.parse((result.content as { text: string }[])[0].text) as { id: string; description: string }[];
         assert.ok(skills.some((skill) => skill.id.startsWith("workflow/")));
         assert.ok(skills.some((skill) => skill.id.startsWith("best-practices/")));
         const missing = [
-          ...tools.filter((tool) => !/\bpinelab\b/i.test(tool.description ?? "")).map((tool) => `tool: ${tool.name}`),
-          ...skills.filter((skill) => !/\bpinelab\b/i.test(skill.description)).map((skill) => `skill: ${skill.id}`),
+          ...skills.filter((skill) => skill.id.startsWith("workflow/") && !/\bpinelab\b/i.test(skill.description)).map((skill) => `skill: ${skill.id}`),
         ];
         assert.deepEqual(missing, [], `Descriptions missing pinelab:\n${missing.join("\n")}`);
       } finally { await client.close(); }

@@ -92,6 +92,8 @@ The exact enclosing configuration differs by MCP client. Native clients must sup
 | `create_card` | write | `title`, `description`, optional `list`, `labels` (names), `assignees` (usernames), `position` |
 | `update_card` | write | `card`, optional `title`, `description`, `list`, `labels`, `assignees`, `position` |
 
+Best practices can be discovered with `list_skills` and read with `get_skill` without mentioning Pinelab. Only loading or following `workflow/*` skills and using the Trello tools requires an explicit “Pinelab” mention (case-insensitive). This is agent-facing guidance, not server-side prompt inspection; authentication remains required for all tools. The default planning workflow is `workflow/plan-and-implement`.
+
 Load `get_board` once when choosing lists, labels, or assignees. Names/usernames must match exactly; writes validate selections against the current board. `create_card` defaults to Todo/top without labels or assignees. For `update_card`, **omitted fields remain unchanged**. Supplied `labels` and `assignees` arrays **replace** the entire existing selection; `[]` clears it. An empty description clears the description. These semantics are also documented in the tool and input-field descriptions exposed to AI clients. `update_card` replaces the former `move_card`, `add_label`, and `remove_label` tools.
 
 Use only the segment following `/c/` from a Trello URL, not the entire URL. `position` accepts `top`, `bottom`, or a positive number. Write-only users can mutate cards: internal reads needed to check boards, lists, labels, and existing values do not require a separate read permission.

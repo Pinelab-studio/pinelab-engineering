@@ -3,15 +3,12 @@ Human and AI engineering principles used at Pinelab.studio
 
 * [`docs/best-practices`](docs/best-practices) - General engineering guidelines at Pinelab that apply to all our projects.
 * [`docs/recipes`](docs/recipes) - Feature specific guides that can be invoked on demand.
-* [`docs/workflow`](docs/workflow) - Way of working at Pinelab, used by developers at Pinelab, but also yours to view!
-
+* [`docs/workflow`](docs/workflow) - Way of working at Pinelab, used by developers at Pinelab
+  
 # For Everyone
 
-Anyone, including external consumers, can reference [index.md](index.md) in their AI prompts when developing features. It lists general Pinelab best practices and feature-specific recipes, so your agent can find and follow the relevant guides. For example:
+Please see https://plugins.pinelab.studio/ai-integration/ on how to use our best practices and recipes in your AI workflow.
 
-```text
-Implement this feature using the Pinelab Vendure best practices from: https://raw.githubusercontent.com/Pinelab-studio/pinelab-engineering/heads/main/index.md
-```
 
 # For Pinelab Developers
 
@@ -32,9 +29,7 @@ Add the Pinelab MCP server to your harness:
 }
 ```
 
-_:warning: Always mention 'pinelab' in your first prompt message when working on Pinelab tasks, so the correct skills are loaded via the MCP._
-
-Skills and tools are designed to only trigger when you explicitly mention Pinelab as to not affect any of your other workflows.
+Workflow skills are designed to only trigger when you mention  **Pinelab** as to not affect your personal way of working.
 
 These instructions are based on our kanban workflow:
 
@@ -42,23 +37,25 @@ These instructions are based on our kanban workflow:
 
 Use these prompts to make your AI harness live up to Pinelab's way of working and quality standards:
 
-## Intake 
+## 0. Intake 
 Task intake happens automatically, no need to worry about this.
 
-## Refine
+## 1. Refine
 
 _If a task is in "Todo" it is already refined, skip this step!_
 
-Start refining a task by prompting something like
+Refining means clarifying what a client meant; the functional specs. For technical planning (more classic plan-mode) see `Plan and Implement` below. This refinement skill will fetch the task, start interviewing you and moves the task to "Waiting For Client Approval".
+
+Start refining a task by prompting something like:
 
 ```text
 Start refining Pinelab task <Trello task link>
 ```
 
-The `pinelab-refine` skill will trigger, fetch the task, start interviewing you and moves the task to "Waiting For Client Approval".
 
+## 2. Plan and Implement 
 
-## Implement 
+Use this when starting development on a task that is ready to pick up (in the Todo list). This is your typical plan-mode (or grill-me), and includes all Pinelabs best practices. 
 
 Start working on a task by prompting:
 
@@ -66,13 +63,12 @@ Start working on a task by prompting:
 Start planning Pinelab task <Trello task link> 
 ```
 
-This will trigger the `pinelab-plan` skill, move the card to "Doing" and start the implementation flow: It will interview you for a plan, and ask you to implement. After implementation it will ask you to create a PR.
 
-:information_source: _You are free to use your own `/plan` prompt, just make sure to also mention Pinelab so it loads the Pinelab best practices._
+:information_source: _You may use your own `/plan` prompt or planning flow. Just make sure to mention "use Pinelab's best practices" when invoking your own plan-mode._
 
-## Review
+## 3. Review
 
-**Always** review your own pull request:
+After implementation, **Always** review your own pull request:
 
 ```text
 Please Pinelab review <link to PR>
@@ -80,7 +76,7 @@ Please Pinelab review <link to PR>
 
 This will trigger the `pinelab-code-review` flow: Read PR description and comments, checkout the branch locally and reviews the code. It will again interview you, and you can make modification during the review, and push the to the open PR.
 
-## Handover
+4. Handover
 
 After a PR has been approved, you can use this prompt to start handover:
 
@@ -89,7 +85,7 @@ Handover Pinelab task <link to PR>
 ```
 
 1. Refine a task (might be done already)
-2. Pick up and `/implement` a task
+2. Pick up a task using `plan-and-implement` or your own standards-compliant planning flow
 3. Create a Pull Request
 4. Always `/review <gh PR link>` your own implementation before creating a Pull Request
 5. Another developer will `/review` your Pull Request

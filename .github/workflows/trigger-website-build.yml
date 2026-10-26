@@ -1,0 +1,32 @@
+name: Trigger website build
+
+on:
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Request website build
+        env:
+          WEBSITE_BUILD_HOOK: ${{ secrets.WEBSITE_BUILD_HOOK }}
+        shell: bash
+        run: |
+          if [[ -z "${WEBSITE_BUILD_HOOK:-}" ]]; then
+            echo "::error::WEBSITE_BUILD_HOOK is not configured."
+            exit 1
+          fi
+          if ! status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            --proto '=https' --connect-timeout 10 --max-time 60 \
+            --request POST "$WEBSITE_BUILD_HOOK"); then
+            echo "::error::Website build request failed."
+            exit 1
+          fi
+          case "$status" in
+            2??) echo "Website build requested." ;;
+            *) echo "::error::Website build hook returned HTTP $status."; exit 1 ;;
+          esac

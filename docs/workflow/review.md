@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Only use when the user explicitly mentions “pinelab” (case-insensitive). Interactively review a GitHub PR against the task requirements and repository standards, fix agreed issues, and sign off with the developer.
+description: Interactively review a GitHub PR against the task requirements and repository standards, fix agreed issues, and sign off with the developer. Only use when the user explicitly mentions “pinelab” (case-insensitive)
 argument-hint: "<GitHub-PR-URL>"
 ---
 
