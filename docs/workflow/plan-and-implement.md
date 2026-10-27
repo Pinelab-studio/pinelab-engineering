@@ -43,14 +43,17 @@ Map the technical decisions as a **design tree**: each decision branches into de
 
 The **frontier** contains every unresolved decision whose prerequisites are settled. Ask the whole frontier in one round, numbering each question and giving a recommended answer. Then wait for the user's answers.
 
+When multiple meaningful choices exist, present lettered options (**a**, **b**, etc.) and mark the recommendation. Accept compact answers such as **1a, 2b**. Do not invent alternatives just to make a question multiple choice; keep simple approval questions yes/no.
+
 ```text
-❓ **1** - <technical question, with simple choices where useful>
-➡️ <recommended answer>
+❓ **1** - <technical question with multiple choices>
+a. <recommended option> (recommended)
+b. <alternative option>
 ❓ **2** - <next independent question>
 ➡️ <recommended answer>
 ```
 
-Word questions so **y** accepts the recommendation, **n** rejects it, and **x** means use your judgment or ignore an optional choice. Keep questions short. Record judgment calls in the plan; do not silently decide for the user.
+Also accept **y** for the recommendation, **n** to reject it, and **x** to use your judgment or ignore an optional choice. Keep questions short. Record judgment calls in the plan; do not silently decide for the user.
 
 Recompute the frontier after every round. A question depending on an unanswered question belongs in a later round. A pending investigation is an unsettled prerequisite: continue with unrelated questions while its dependent questions wait.
 
@@ -82,7 +85,7 @@ When the frontier is empty, present a concise plan containing:
 4. The ordered test cases, golden path first, including expected outcomes and how each will be implemented and run.
 5. Final verification commands, any manual checks, and how the work satisfies the DoD.
 
-Ask the user to confirm the full plan. If they request changes, revisit the affected decisions and present the revised plan. Do not write tests or implementation code before confirmation.
+End the full plan with the exact question: **Confirm and implement? (y/n)**. A **y** confirms the plan and authorizes implementation; a **n** means do not implement and ask what should change. If they request changes, revisit the affected decisions and present the revised plan with the same final question. Do not write tests or implementation code before confirmation.
 
 Once confirmed, begin implementation without another start-permission round. If implementation reveals a material scope, interface, or test-strategy change, pause and return to the relevant questions. Never silently add an unconfirmed seam or drop an agreed test.
 
