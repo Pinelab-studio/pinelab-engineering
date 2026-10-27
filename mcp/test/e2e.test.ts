@@ -36,14 +36,14 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
   await new Promise<void>((resolve) => trello.once("listening", resolve));
   t.after(() => { trello.close(); });
   const origin = `http://127.0.0.1:${(trello.address() as { port: number }).port}`;
-  const start = async (missingKeys = false) => {
+  const start = async (missingTrello = false, missingApiKeys = false) => {
     const worker = await unstable_dev("test/worker.ts", {
       config: "wrangler.jsonc", local: true, ip: "127.0.0.1", port: 0,
       logLevel: "error", persist: false,
       vars: {
-        TRELLO_API_KEY: missingKeys ? "" : "test-key",
-        TRELLO_API_TOKEN: missingKeys ? "" : "test-token",
-        TRELLO_BOARD_ID: "board", MARTIJN_MCP_TOKEN: bearer,
+        TRELLO_API_KEY: missingTrello ? "" : "test-key",
+        TRELLO_API_TOKEN: missingTrello ? "" : "test-token",
+        TRELLO_BOARD_ID: "board", API_KEYS: missingApiKeys ? "" : `martijn:${bearer},ayoub:${"b".repeat(64)}`,
         TEST_TRELLO_ORIGIN: origin,
       },
       experimental: { disableExperimentalWarning: true, watch: false },
@@ -60,6 +60,16 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
 
   const valid = await start();
   try {
+    await t.test("both configured API keys authenticate with read/write access", async () => {
+      for (const key of [bearer, "b".repeat(64)]) {
+        const response = await fetch(valid.endpoint, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
+          body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "get_skill", arguments: { id: "workflow/refine" } } }),
+        });
+        assert.equal(response.status, 200);
+      }
+    });
     await t.test("skill read succeeds with bearer token", async () => {
       const client = await connect(valid.endpoint);
       try {
@@ -200,4 +210,9 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
       });
     }
   } finally { await missing.worker.stop(); }
+
+  const noKeys = await start(false, true);
+  try {
+    assert.equal((await fetch(noKeys.endpoint, { method: "POST", headers: { Authorization: `Bearer ${bearer}` } })).status, 403);
+  } finally { await noKeys.worker.stop(); }
 });

@@ -84,10 +84,10 @@ async function scenario(
       key: "key",
       token: "token",
       users: [
-        { username: "Reader", tokenEnv: "READ", permissions: ["read"] },
-        { username: "Writer", tokenEnv: "WRITE", permissions: ["write"] },
+        { username: "Reader", token: "reader-secret".repeat(4), permissions: ["read"] },
+        { username: "Writer", token: "writer-secret".repeat(4), permissions: ["write"] },
       ],
-      env: { READ: "reader-secret".repeat(4), WRITE: "writer-secret".repeat(4) },
+      env: {},
     }, token ? `Bearer ${token.repeat(4)}` : undefined, async () => []);
   const client = new Client({ name: "test", version: "1" });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();

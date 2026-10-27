@@ -5,7 +5,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createMcpServer } from "../src/mcp.js";
 
-const key = "secret-api-key";
+const key = "test-api-key";
+const redactionKey = "redacted-key";
 const token = "secret-api-token";
 const bearer = "secret-bearer-value".repeat(3);
 
@@ -23,9 +24,9 @@ async function fixture(t: TestContext, mode: "http" | "json" | "network") {
   t.after(() => { upstream.close(); });
   const server = createMcpServer({
     apiBase: `http://127.0.0.1:${(upstream.address() as { port: number }).port}`,
-    board: "board", key, token,
-    users: [{ username: "test", tokenEnv: "TEST", permissions: ["read"] }],
-    env: { TEST: bearer },
+    board: "board", key: redactionKey, token,
+    users: [{ username: "test", token: bearer, permissions: ["read"] }],
+    env: {},
   }, `Bearer ${bearer}`, async () => []);
   const client = new Client({ name: "logging-test", version: "1" });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -74,6 +75,8 @@ test("Trello HTTP failures log bounded, redacted diagnostics but keep tool error
   assert.match(logged, /400/);
   assert.match(logged, /invalid board/);
   assert.match(logged, /REDACTED/);
-  for (const secret of [key, token, bearer]) assert.ok(!logged.includes(secret));
+  assert.ok(!logged.includes(token));
+  assert.ok(!logged.includes(bearer));
+  assert.ok(!logged.includes(redactionKey));
   assert.ok(logged.length < 2500);
 });

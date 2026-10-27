@@ -13,13 +13,13 @@ npm run generate:skills
 Create `.dev.vars` (Git-ignored):
 
 ```dotenv
-MARTIJN_MCP_TOKEN=<your-own-random-token-at-least-32-characters>
+API_KEYS=martijn:<random-key-at-least-32-characters>,ayoub:<another-random-key-at-least-32-characters>
 TRELLO_API_KEY=<trello-api-key>
 TRELLO_API_TOKEN=<trello-api-token>
 TRELLO_BOARD_ID=<test-board-id>
 ```
 
-Generate a personal MCP token with `openssl rand -hex 32`. This is separate from your Trello credentials; do not share or commit either.
+Generate each MCP key with `openssl rand -hex 32`. API_KEYS is a comma-separated list of `username:key` entries; all configured users have read/write access. Keep the value private and do not commit it.
 
 ```sh
 npm run dev:worker

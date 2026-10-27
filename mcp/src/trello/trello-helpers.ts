@@ -82,7 +82,7 @@ export function createTrelloHelpers(
   }
   /** Redact all configured credentials before logging; never log URLs or request bodies. */
   function redact(text: string) {
-    const secrets = [config.key, config.token, ...Object.values(config.env)]
+    const secrets = [config.key, config.token, ...config.users.map((user) => user.token), ...Object.values(config.env)]
       .filter((value): value is string => !!value)
       .flatMap((value) => [value, encodeURIComponent(value), JSON.stringify(value).slice(1, -1)])
       .sort((a, b) => b.length - a.length);

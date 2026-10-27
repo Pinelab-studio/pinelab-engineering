@@ -11,7 +11,7 @@ export type Config = {
   key: string;
   token: string;
   users: readonly User[];
-  /** Maps each user's tokenEnv to its secret value; supplied per request on Workers. */
+  /** Legacy configuration field retained for test and caller compatibility. */
   env: Record<string, string | undefined>;
 };
 /** Approved Markdown document, identified by a directory/filename ID without its extension. */
