@@ -1,5 +1,5 @@
 ---
-name: "Dokploy Best Practices"
+name: "Dokploy and Vendure"
 category: infrastructure
 description: "Troubleshoot domain certificates and enable HTTP compression on Dokploy-managed Traefik deployments."
 ---
