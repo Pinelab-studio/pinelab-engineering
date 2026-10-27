@@ -4,10 +4,6 @@ category: backend
 description: "Implement and configure Vendure EU reverse-charge tax zones, tax rates, VAT-format checks, and a custom TaxZoneStrategy."
 ---
 
-# Vendure EU reverse-charge tax
-
-## Scope
-
 Implement and configure Vendure so eligible intra-Community supplies use 0% VAT for EU destinations outside the merchant's home country. This recipe does not cover unrelated Vendure tax setups.
 
 ## Prerequisites and decisions

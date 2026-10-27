@@ -4,9 +4,6 @@ category: frontend
 description: "Audit product and collection page SEO and map missing storefront features to Vendure data integration."
 ---
 
-# Storefront SEO audit with Vendure
-
-## Scope
 Audit rendered product and collection pages. Give the user a prioritized list of missing or incorrect SEO features and explain how each should be implemented using Vendure data. Do not modify code unless separately requested.
 
 ## Ask first

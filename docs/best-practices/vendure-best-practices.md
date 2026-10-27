@@ -3,6 +3,8 @@ name: Vendure Best Practices
 description: Load this when implementing or reviewing any code in Vendure, Vendure plugins or the Vendure React dashboard
 ---
 
+Apply these guidelines when implementing or reviewing Vendure code, plugins, or React dashboard extensions. They cover code structure, event handling, logging, and other implementation constraints.
+
 # General guidelines
 
 - Place resolvers only in `resolvers: []`, not in `providers: []`

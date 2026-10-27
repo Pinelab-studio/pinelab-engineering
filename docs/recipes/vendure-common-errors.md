@@ -9,8 +9,6 @@ heroImageSmall: https://images.unsplash.com/photo-1516567832553-66232148f74c?q=8
 heroImageAlt: Warning sign on a road
 ---
 
-# Vendure Common Errors
-
 Common errors and how to fix them. Entries are kept short and concise because many more will be added over time.
 
 ## `Enum "Permission" cannot represent value: "MyCustomPermission"`
