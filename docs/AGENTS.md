@@ -40,8 +40,8 @@ Keep this file at 100 physical lines or fewer, including blank lines.
 ## Publication and metadata
 
 - Recipes and best practices are published on `plugins.pinelab.studio`; write for both human readers and agents.
-- Use a clear, specific title in frontmatter `name` and the first H1; make the topic or outcome understandable outside this repository.
-- Provide a non-empty, single-line frontmatter `description` explaining the guide's purpose and when to use it.
+- Every recipe and knowledge article (best practice) must have a clear, specific title in frontmatter `name` and a non-empty, single-line frontmatter `description` explaining its purpose and when to use it.
+- Make the title understandable outside this repository. Start the body with paragraph text, never a heading or a repeated title; use headings only after the introductory paragraph.
 - Preserve existing category metadata and stable paths unless a change is intentional; update references when renaming.
 - Workflow names are skill identifiers; their descriptions must retain the explicit Pinelab trigger.
 - Do not invent a new metadata schema or publish internal credentials, customer data, or environment-specific secrets.

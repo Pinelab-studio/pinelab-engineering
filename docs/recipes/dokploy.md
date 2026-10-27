@@ -1,12 +1,10 @@
 ---
-name: "Dokploy Best Practices"
+name: "Dokploy and Vendure"
 category: infrastructure
 description: "Troubleshoot domain certificates and enable HTTP compression on Dokploy-managed Traefik deployments."
 ---
 
-# Dokploy Best Practices
-
-A collections of best practices and caveats we ran into at Pinelab.
+Use these best practices and caveats from Pinelab to troubleshoot domain certificates and enable HTTP compression on Dokploy-managed Traefik deployments.
 
 ## Domain
 

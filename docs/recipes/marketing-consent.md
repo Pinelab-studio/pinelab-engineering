@@ -4,10 +4,6 @@ category: frontend
 description: "Implement a non-modal marketing consent banner with optional-script gating and direct Google Consent Mode integration."
 ---
 
-# Lightweight marketing consent without a consent library
-
-## Scope
-
 Build a portable non-modal consent banner that blocks all optional marketing scripts until acceptance and controls Google Consent Mode directly. This recipe does not cover general consent-management platforms or certify legal compliance.
 
 ## Prerequisites

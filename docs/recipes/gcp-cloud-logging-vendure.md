@@ -9,8 +9,6 @@ heroImageSmall: https://images.unsplash.com/photo-1623018035782-b269248df916?ixl
 heroImageAlt: Cloud computing dashboard with charts and logs
 ---
 
-# Send Vendure logs to Google Cloud Logging
-
 When you run Vendure on Google Cloud Run (or any GCP environment) the default `console.log` output is technically captured, but it shows up as plain text streams. To get structured logs, filtering by severity, service name, and trace correlation, you need a logger that talks directly to the Cloud Logging API.
 
 This guide walks through a minimal `CloudLogger` implementation using **Winston** and **`@google-cloud/logging-winston`**, plus the wiring needed to keep a local `DefaultLogger` for development.
