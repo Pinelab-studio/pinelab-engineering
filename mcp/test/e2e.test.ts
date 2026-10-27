@@ -10,6 +10,7 @@ const card = { id: "card", idBoard: "board", name: "Test title", desc: "Test des
 
 test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeout: 60000 }, async (t) => {
   const requests: { method: string; path: string; body: any }[] = [];
+  let cardList = "todo";
   const trello = createServer(async (req, res) => {
     let text = "";
     for await (const chunk of req) text += chunk;
@@ -24,12 +25,12 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
     }
     res.setHeader("Content-Type", "application/json");
     const value = url.pathname === "/1/boards/board" ? { id: "board" }
-      : url.pathname.endsWith("/lists") ? [{ id: "todo", name: "Todo" }]
+      : url.pathname.endsWith("/lists") ? [{ id: "todo", name: "Todo" }, { id: "done", name: "✨Done" }]
       : url.pathname.endsWith("/labels") ? [{ id: "bug", name: "Bug", color: "blue_dark" }]
       : url.pathname.endsWith("/members") ? [{ id: "member", username: "developer", fullName: "Developer" }]
       : url.pathname.endsWith("/actions") ? []
       : url.pathname.endsWith("/comments") ? { id: "comment" }
-      : card;
+      : { ...card, idList: cardList };
     res.end(JSON.stringify(value));
   });
   trello.listen(0, "127.0.0.1");
@@ -85,7 +86,7 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
         const result = await client.callTool({ name: "get_board", arguments: {} });
         assert.notEqual(result.isError, true);
         assert.deepEqual(JSON.parse((result.content as { text: string }[])[0].text), {
-          board: { id: "board" }, lists: [{ id: "todo", name: "Todo" }],
+          board: { id: "board" }, lists: [{ id: "todo", name: "Todo" }, { id: "done", name: "✨Done" }],
           labels: [{ id: "bug", name: "Bug", color: "blue_dark" }],
           members: [{ id: "member", username: "developer", fullName: "Developer" }],
         });
@@ -119,6 +120,24 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
         });
         assert.equal(requests.filter((request) => request.method === "PUT").length, 1);
       } finally { await client.close(); }
+    });
+    await t.test("Done cards reject all updates without writes but remain readable", async () => {
+      const client = await connect(valid.endpoint);
+      cardList = "done";
+      try {
+        for (const patch of [
+          { title: "Changed" }, { description: "Changed" }, { list: "Todo" },
+          { labels: [] }, { assignees: [] }, { position: "top" }, {},
+        ]) {
+          requests.length = 0;
+          const result = await client.callTool({ name: "update_card", arguments: { card: "card", ...patch } });
+          assert.equal(result.isError, true);
+          assert.match(JSON.stringify(result), /read-only/);
+          assert.ok(requests.every((request) => request.method === "GET"));
+        }
+        const result = await client.callTool({ name: "get_card", arguments: { card: "card" } });
+        assert.notEqual(result.isError, true);
+      } finally { cardList = "todo"; await client.close(); }
     });
     await t.test("read card succeeds with bearer token", async () => {
       const client = await connect(valid.endpoint);

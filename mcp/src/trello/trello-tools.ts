@@ -54,7 +54,7 @@ export function registerTrello(
   tool(
     "update_card",
     "write",
-    "Update a card in one operation. Omitted fields remain unchanged. Supplied labels/assignees replace the entire selection; [] clears it. Use get_board once for existing list/label names and assignee usernames. Never invent selections or infer client approval; follow the Kanban skill and never move completed implementation directly to Done. Preserve positioning unless supplied.",
+    "Update a card in one operation. Cards in ✨Done are read-only and cannot be updated or moved. Omitted fields remain unchanged. Supplied labels/assignees replace the entire selection; [] clears it. Use get_board once for existing list/label names and assignee usernames. Never invent selections or infer client approval; follow the Kanban skill and never move completed implementation directly to Done. Preserve positioning unless supplied.",
     {
       ...cardInput,
       title: name.optional().describe("New title; omitted preserves the current title."),
@@ -66,6 +66,12 @@ export function registerTrello(
     },
     async (args) => {
       const existing = await card(args.card);
+      const boardLists = await lists();
+      const currentList = boardLists.find((list: { id: string; name: string }) => list.id === existing.idList);
+      if (!currentList) throw new Error("Cannot verify the card's current list; update refused.");
+      if (currentList.name === "✨Done") {
+        throw new Error("Cards in ✨Done are read-only and cannot be updated or moved.");
+      }
       // Build a patch from changed fields only: omitted inputs must preserve existing data.
       const body: Record<string, string | number | string[]> = {};
       const changes: string[] = [];
@@ -80,7 +86,7 @@ export function registerTrello(
         body.desc = args.description;
         changes.push("updated the description");
       }
-      const destination = args.list === undefined ? undefined : resolve(await lists(), args.list, "list");
+      const destination = args.list === undefined ? undefined : resolve(boardLists, args.list, "list");
       if (destination && destination.id !== existing.idList) {
         body.idList = destination.id;
         changes.push(`moved this card to ${destination.name}`);
