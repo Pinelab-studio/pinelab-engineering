@@ -3,6 +3,12 @@
 These rules govern changes under `docs/`; they are not project-wide agent setup.
 Keep this file at 100 physical lines or fewer, including blank lines.
 
+## Writing style
+
+- Start every article by clearly stating what we will build or set up and which approach we will use. Explain alternatives only after that.
+- Use simple language and short sentences. Prefer everyday words; use technical terms only when needed to explain or implement something accurately.
+- Keep the tone friendly and helpful. Write like you are guiding a colleague, not trying to sound impressive or overly technical.
+
 ## Choose the right guide
 
 - `best-practices/`: durable engineering rules for agents, kept in context across Pinelab projects.
@@ -20,6 +26,7 @@ Keep this file at 100 physical lines or fewer, including blank lines.
 
 ## Recipes
 
+- Keep recipes between 200 and 800 words; exceed 800 only when necessary for a complete, reproducible guide or explicitly requested.
 - Give the intended outcome, scope, prerequisites, and necessary decisions before implementation.
 - Use ordered, executable steps with explicit inputs, commands, working directories, and expected outcomes where relevant.
 - Include verification of the successful path and consequential failure cases, plus known limitations.
@@ -44,16 +51,10 @@ Keep this file at 100 physical lines or fewer, including blank lines.
 - Make the title understandable outside this repository. Start the body with paragraph text, never a heading or a repeated title; use headings only after the introductory paragraph.
 - Preserve existing category metadata and stable paths unless a change is intentional; update references when renaming.
 - Workflow names are skill identifiers; their descriptions must retain the explicit Pinelab trigger.
-- Do not invent a new metadata schema or publish internal credentials, customer data, or environment-specific secrets.
 
 ## Sources, generated files, and checks
 
 - Verify commands against relevant scripts/configuration; distinguish tested steps from unverified recommendations.
 - Edit source Markdown, not generated catalogues. See [the index generator](generate-index.js) and [MCP bundler](../mcp/src/scripts/generate-skills.mjs).
-- After recipe or best-practice content/catalogue changes, run `node docs/generate-index.js` from the repository root and include any resulting `index.md` changes.
-- The index generator recursively includes Markdown in `best-practices/` and `recipes/`; each included file needs a description.
-- MCP bundles only top-level Markdown in `workflow/` and `best-practices/`, not recipes or this file. Its generated catalogue is not committed.
-- For MCP catalogue/discovery changes, run `npm test` and `npm run check` from `mcp/`; both regenerate the catalogue. Redeployment is needed to expose changed articles.
-- For documentation-only instruction changes, check clarity, relative links, metadata, scope conflicts, and preservation of requirements; do not require unrelated application tests.
+- For MCP catalogue/discovery changes, run `npm test` and `npm run check` from `mcp/`; both regenerate the catalogue.
 - A push to `main` triggers the website build via the GitHub Actions secret `WEBSITE_BUILD_HOOK`; never call the live hook merely to validate documentation.
-- Report checks actually performed and any limitations. Keep unrelated user changes intact; do not commit, push, or deploy without permission.

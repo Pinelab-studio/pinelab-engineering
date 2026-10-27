@@ -1,96 +1,135 @@
 ---
-name: "Lightweight marketing consent without a consent library"
+name: "GTM Advanced Consent mode with Astro and Vendure"
 category: frontend
-description: "Implement a non-modal marketing consent banner with optional-script gating and direct Google Consent Mode integration."
+description: "Set up GTM advanced Consent Mode with a custom cookie banner in Astro, and track purchases and shopping events from Vendure."
 ---
 
-Build a portable non-modal consent banner that blocks all optional marketing scripts until acceptance and controls Google Consent Mode directly. This recipe does not cover general consent-management platforms or certify legal compliance.
+We’ll set up **GTM advanced Consent Mode** with a custom cookie banner in Astro and purchase tracking from Vendure. GTM loads immediately with consent **denied**, then we show the banner. Google can send measurements without cookies. Clicking **Accept all** changes consent to **granted**, allowing cookie-based tracking.
 
-## Prerequisites
+## 1. Configure GTM
 
-- Reference stack: Astro 7, Tailwind CSS 4, daisyUI 5, and plain TypeScript.
-- Full-page navigation; SPA navigation requires explicit lifecycle handling.
-- Access to the layout, footer, analytics bootstrap, and tag-manager configuration.
-- No runtime dependency or React hydration is required.
+You’ll need access to GTM, GA4, and your Astro layout. Choose your banner text, privacy link, and how long to remember choices. The example uses 180 days; adjust this to your policy.
 
-## Ask before implementing
+Set the Google tag to fire on **Initialization – All Pages**. It already checks consent, so don’t make it wait for acceptance. Other tracking tools need their own consent checks and stop controls.
 
-Resolve these rules first:
+## 2. Load GTM with consent denied
 
-- One accept/reject choice or categories? The reference uses one choice.
-- Banner placement, dismissal behavior, languages, and privacy URL.
-- Storage lifetime, migration, and behavior when storage is blocked.
-- Whether reopening settings only shows the banner or immediately withdraws consent.
-- Whether pre-consent in-memory events are delivered after acceptance or discarded; checkout events may contain personal data.
-- Providers, verified cookie names, and GTM events that must remain compatible. Never copy tracking IDs between projects.
+Add this to your Astro layout’s `<head>`, before other tracking scripts. Replace `GTM-XXXXXX`. It restores saved choices before loading GTM.
 
-Reference decisions were Dutch/English, equally prominent buttons, six calendar months, a new versioned storage key, page-only state on storage failure, no withdrawal on reopening, and preserved in-memory queues.
+```html
+<script is:inline>
+  window.dataLayer = window.dataLayer || [];
+  function gtag() { window.dataLayer.push(arguments); }
+  function consentState(accepted) {
+    const state = accepted ? 'granted' : 'denied';
+    return {
+      analytics_storage: state, ad_storage: state,
+      ad_user_data: state, ad_personalization: state,
+    };
+  }
+  gtag('consent', 'default', consentState(false));
+  window.consentChoice = null;
+  try {
+    const saved = JSON.parse(localStorage.getItem('consent-v1'));
+    if (typeof saved?.accepted === 'boolean' &&
+        typeof saved.expires === 'number' && saved.expires > Date.now()) {
+      window.consentChoice = saved.accepted;
+      gtag('consent', 'update', consentState(saved.accepted));
+    }
+  } catch {}
+  window.dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' });
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-XXXXXX';
+  document.head.appendChild(script);
+</script>
+```
 
-## Implementation
+This follows [Google’s example](https://developers.google.com/tag-platform/security/guides/consent#implementation_example). You can instead use a GTM consent template with `setDefaultConsentState`/`updateConsentState`. Don’t combine both approaches.
 
-1. Separate responsibilities:
-   - `src/shared/components/ConsentBanner.astro`: portable markup and localized copy with `locale` and `privacyUrl` props.
-   - `src/shared/consent-controller.ts`: framework-independent DOM, persistence, cookie cleanup, and focus behavior.
-   - `src/shared/consent.ts`: project-specific Google Consent Mode and provider adapter.
+## 3. Connect the custom banner
 
-   Keep provider URLs, advertiser IDs, and cookie allowlists in the adapter.
+Make accepting and rejecting equally easy. Keep Cookie settings available for changing choices. Place this script after the buttons:
 
-2. Render the banner once in the shared layout only where analytics is enabled. Use a labelled section with `id="consent-banner"`, fixed bottom positioning, safe-area padding, and constrained mobile scrolling. Use equally prominent buttons with `data-consent-accept` and `data-consent-reject`; omit backdrop, scroll lock, focus trap, and close button. Keep it visible in server HTML, then hide it during initialization for a valid saved choice.
+```html
+<section id="consent-banner" aria-label="Cookie preferences">
+  <p>Allow analytics and advertising? <a href="/privacy">Privacy policy</a></p>
+  <button type="button" id="accept">Accept all</button>
+  <button type="button" id="reject">Reject all</button>
+</section>
+<button type="button" id="settings">Cookie settings</button>
+<script is:inline>
+  const banner = document.getElementById('consent-banner');
+  banner.hidden = window.consentChoice !== null;
+  function choose(accepted) {
+    gtag('consent', 'update', consentState(accepted));
+    window.consentChoice = accepted;
+    try {
+      localStorage.setItem('consent-v1', JSON.stringify({
+        accepted, expires: Date.now() + 180 * 86400000,
+      }));
+    } catch {} // Choice still applies on this page.
+    banner.hidden = true;
+  }
+  document.getElementById('accept').onclick = () => choose(true);
+  document.getElementById('reject').onclick = () => choose(false);
+  document.getElementById('settings').onclick = () => {
+    banner.hidden = false;
+    document.getElementById('accept').focus();
+  };
+</script>
+```
 
-3. Implement this controller shape:
+Other flows to handle:
 
-   ```ts
-   createConsentController({
-     banner,
-     storageKey,
-     marketingCookies,
-     onChange,
-   }); // returns { open(): void }
-   ```
+- **Reject/no choice:** keep GTM loaded with consent denied.
+- **Return visit:** reuse saved choices without extending how long they last. Ask again if choices expired or can’t be read. If saving is blocked, choices last for this page.
+- **Settings:** opening changes nothing. Accept/reject updates consent before leaving the page.
+- **Withdrawal:** also stop other tools and delete known marketing cookies; Google doesn’t delete them for you.
+- **Separate choices:** give analytics and advertising separate consent values.
 
-   Persist `{ accepted: boolean, expires: number }` in localStorage. Validate type and expiry. Calculate six calendar months from each explicit choice, clamping month-end dates; do not renew on visits. A missing, invalid, or expired value shows the banner and leaves tracking denied. Catch storage failures and apply the choice only to the page. `open()` reveals the same banner without changing consent, focuses a button, and restores focus after choosing.
+For Astro client-side navigation, reconnect buttons as needed without loading GTM twice.
 
-4. Set Google defaults before loading providers and preserve the existing queue:
+## 4. Send ecommerce events
 
-   ```ts
-   window.dataLayer = window.dataLayer || [];
-   function gtag(..._args: unknown[]) {
-     window.dataLayer!.push(arguments as unknown as Record<string, unknown>);
-   }
-   gtag('consent', 'default', {
-     analytics_storage: 'denied',
-     ad_storage: 'denied',
-     ad_user_data: 'denied',
-     ad_personalization: 'denied',
-   });
-   gtag('set', 'ads_data_redaction', true);
-   ```
+Fetch these Vendure fields. Send a purchase after Vendure confirms the order, not just on reaching the thank-you page. This example converts cents to a two-decimal currency:
 
-   Add the Window type declaration once. Denied Consent Mode does not prevent downloads: do not insert GTM or optional scripts before acceptance.
+```js
+window.dataLayer.push({ ecommerce: null });
+window.dataLayer.push({
+  event: 'purchase',
+  ecommerce: {
+    transaction_id: String(order.id),
+    currency: order.currencyCode,
+    value: order.lines.reduce((sum, l) => sum + l.proratedLinePrice, 0) / 100,
+    tax: (order.totalWithTax - order.total) / 100,
+    shipping: order.shipping / 100,
+    items: order.lines.map(l => ({
+      item_id: String(l.productVariant.id),
+      item_name: l.productVariant.name,
+      price: l.proratedUnitPrice / 100,
+      quantity: l.quantity,
+    })),
+  },
+});
+```
 
-5. In `onChange`, separately track acceptance, scheduled loading, and started loading. Acceptance grants all four Google fields, queues required GTM consent events, and schedules providers after `window.load`, using `requestIdleCallback` when available and a timer otherwise. Handle an already-complete document. Recheck consent in delayed callbacks and provider load handlers. Load providers once; push `{ 'gtm.start': Date.now(), event: 'gtm.js' }` before GTM. Preserve conversion queues and ordering. Retain old Klaro event names only when the GTM container requires them.
+Value excludes tax/shipping and includes discounts. Match product IDs to your feeds. Send purchases once; keep transaction IDs unchanged on reload to avoid duplicates. Never send personal data.
 
-6. On rejection or withdrawal, persist denial, hide the banner, update Google consent, and clear only verified accessible marketing cookies across relevant paths and host/parent-domain scopes. Cookie failures must not prevent denial. Pending callbacks must observe denied state. If providers already started, reload after saving denial. Do not clear all cookies or localStorage, and do not add cross-page event persistence implicitly.
+Also track:
 
-7. Initialize the adapter after banner markup is parsed; guard duplicate initialization and missing markup. The footer settings button delegates to the controller's `open()`. Ensure disabled storefronts render neither markup nor scripts and no alternate bootstrap bypasses the gate.
-8. Remove obsolete consent-library downloads, configuration, styles, tests, and globals. Document storage version, cookie allowlist, provider configuration, and integration points.
+- `page_view`: page visits; use automatic or manual tracking, not both.
+- `view_item_list`, `select_item`, `view_item`: seeing lists, choosing products, viewing products.
+- `add_to_cart`, `remove_from_cart`, `view_cart`: cart changes/views; send only changed quantities for changes.
+- `begin_checkout`, `add_shipping_info`, `add_payment_info`: checkout starts, shipping/payment chosen. Include `shipping_tier`/`payment_type` where relevant.
+- `refund`: refunds, using the original transaction ID.
 
-## Verify
+Clear old ecommerce data before each event. In GTM, match Custom Event triggers to GA4 event tags using `{{Event}}`. Enable ecommerce from Data Layer.
 
-- Production build and Astro type check pass; inspect the current generated page.
-- Fresh browser: banner is immediately visible; no GTM or optional marketing request occurs before acceptance.
-- Accept: choice persists, banner hides, providers load once, and agreed queued events run afterward.
-- Reject: providers are not inserted and unrelated storage survives.
-- Reload/navigation: valid choices persist without renewing expiry; invalid or expired records ask again.
-- Settings reopen the same banner without changing state; keyboard focus restores after selection.
-- Accept then reject before delayed work: no provider or conversion runs after denial. Already-started providers trigger reload.
-- Blocked storage works for the page and asks again next page.
-- Check responsive layout, languages, privacy link, overlays, and disabled storefronts. Avoid sending real analytics while testing.
+For Ads, connect `ecommerce.value`, `ecommerce.currency`, and `ecommerce.transaction_id` to the conversion tag. A `conversion` event needs a matching tag. Avoid counting purchases through both Ads tags and GA4 imports. Send events when they happen, even while denied; don’t resend after acceptance.
 
-## Limitations and status
+## 5. Check everything works
 
-- JavaScript cannot clear HttpOnly, third-party, or unknown-path cookies.
-- Delayed scripts still incur network and CPU cost after acceptance.
-- Returning visitors may briefly see the server-rendered banner before localStorage is read.
-- This does not validate GTM configuration or establish legal compliance.
-- The reference build and type check previously passed, but browser/Lighthouse follow-up remained pending due to a stale preview. No fresh verification was performed during documentation conversion.
+Try [Tag Assistant](https://developers.google.com/tag-platform/security/guides/consent-debugging) with a test container. A fresh visit should show four denied values, Google requests without cookies, and no analytics/ads cookies.
+
+Test accept, reject, reload, expiry, blocked storage, and changing your mind. Check other tools respect consent, [event values](https://developers.google.com/analytics/devguides/collection/ga4/ecommerce) are correct, nothing is counted twice, and no personal data is sent. These browser checks still need doing; reading code isn’t enough.
