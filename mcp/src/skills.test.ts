@@ -29,11 +29,11 @@ test("review and planning include global rules once while Vendure remains standa
   scenario(async (client) => {
     for (const name of ["get_workflow_review", "get_workflow_plan_and_implement"]) {
       const response = text(await client.callTool({ name, arguments: {} }));
-      assert.equal(response.split("## Global coding rules").length - 1, 1);
+      assert.equal(response.split("Document: docs/best-practices/pinelab-global-best-practices.md").length - 1, 1);
     }
     const vendure = text(await client.callTool({ name: "get_best_practices_vendure_best_practices", arguments: {} }));
     assert.equal(vendure.split("Document: ").length - 1, 1);
-    assert.doesNotMatch(vendure, /## Global coding rules/);
+    assert.ok(!vendure.includes("Document: docs/best-practices/pinelab-global-best-practices.md"));
   }));
 
 test("recipes are discoverable and readable only through the recipe tools", async () =>
