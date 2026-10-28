@@ -24,7 +24,7 @@ export default {
     if (request.method !== "POST")
       return new Response(null, { status: 405, headers: { Allow: "POST" } });
 
-    const server = createMcpServer(
+    const server = await createMcpServer(
       config,
       request.headers.get("Authorization") ?? undefined,
       async () => articles,

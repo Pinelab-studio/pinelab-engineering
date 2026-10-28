@@ -66,7 +66,7 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
         const response = await fetch(valid.endpoint, {
           method: "POST",
           headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
-          body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "get_skill", arguments: { id: "workflow/refine" } } }),
+          body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "get_workflow_refine", arguments: {} } }),
         });
         assert.equal(response.status, 200);
       }
@@ -74,7 +74,7 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
     await t.test("skill read succeeds with bearer token", async () => {
       const client = await connect(valid.endpoint);
       try {
-        const result = await client.callTool({ name: "get_skill", arguments: { id: "workflow/refine" } });
+        const result = await client.callTool({ name: "get_workflow_refine", arguments: {} });
         assert.notEqual(result.isError, true);
         assert.match(JSON.stringify(result), /Refine a task/);
         assert.equal(requests.length, 0);
@@ -152,25 +152,21 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
     await t.test("workflow skill descriptions include pinelab", async () => {
       const client = await connect(valid.endpoint);
       try {
-        const result = await client.callTool({ name: "list_skills", arguments: {} });
-        assert.notEqual(result.isError, true);
-        const skills = JSON.parse((result.content as { text: string }[])[0].text) as { id: string; description: string }[];
-        assert.ok(skills.some((skill) => skill.id.startsWith("workflow/")));
-        assert.ok(skills.some((skill) => skill.id.startsWith("best-practices/")));
-        const missing = [
-          ...skills.filter((skill) => skill.id.startsWith("workflow/") && !/\bpinelab\b/i.test(skill.description)).map((skill) => `skill: ${skill.id}`),
-        ];
+        const { tools } = await client.listTools();
+        assert.ok(tools.some((tool) => tool.name.startsWith("get_workflow_")));
+        assert.ok(tools.some((tool) => tool.name.startsWith("get_best_practices_")));
+        const missing = tools.filter((tool) => tool.name.startsWith("get_workflow_") && !/\bpinelab\b/i.test(tool.description!)).map((tool) => tool.name);
         assert.deepEqual(missing, [], `Descriptions missing pinelab:\n${missing.join("\n")}`);
       } finally { await client.close(); }
     });
     await t.test("discovery, skill catalogue and HTTP security regressions", async () => {
       const client = await connect(valid.endpoint);
       try {
-        const skills = await client.callTool({ name: "list_skills", arguments: {} });
-        assert.notEqual(skills.isError, true);
-        assert.match(JSON.stringify(skills), /vendure-best-practices/);
-        assert.doesNotMatch(JSON.stringify(skills), /storefront-seo/);
-        const unknown = await client.callTool({ name: "get_skill", arguments: { id: "../README" } });
+        const recipes = await client.callTool({ name: "list_recipes", arguments: {} });
+        assert.notEqual(recipes.isError, true);
+        assert.match(JSON.stringify(recipes), /storefront-seo/);
+        assert.doesNotMatch(JSON.stringify(recipes), /best-practices\//);
+        const unknown = await client.callTool({ name: "get_recipe", arguments: { id: "../README" } });
         assert.equal(unknown.isError, true);
         assert.ok((await client.listTools()).tools.some((tool) => tool.name === "create_card"));
       } finally { await client.close(); }
@@ -193,7 +189,7 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
     for (const [name, args] of [
       ["create_card", { title: "Never create", description: "Denied" }],
       ["get_card", { card: "card" }],
-      ["get_skill", { id: "workflow/refine" }],
+      ["get_workflow_refine", {}],
     ] as const) {
       await t.test(`${name} fails with HTTP 403 without bearer token`, async () => {
         requests.length = 0;
@@ -222,7 +218,7 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
           assert.match(JSON.stringify(result), /Trello configuration is incomplete/);
           assert.equal(requests.length, 0);
           // The server remains usable after rejecting a Trello call.
-          const skill = await client.callTool({ name: "get_skill", arguments: { id: "workflow/refine" } });
+          const skill = await client.callTool({ name: "get_workflow_refine", arguments: {} });
           assert.notEqual(skill.isError, true);
           assert.equal(requests.length, 0);
         } finally { await client.close(); }

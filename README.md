@@ -29,9 +29,9 @@ Add the Pinelab MCP server to your harness:
 }
 ```
 
-Workflow skills are designed to only trigger when you mention  **Pinelab** as to not affect your personal way of working.
+Workflow skills are designed to only trigger when you mention  **Pinelab** as to not affect your personal way of working. We are aware of context bloat and deliberately keep the tool descriptions very short!
 
-These instructions are based on our kanban workflow:
+These instructions in this MCP are based on our kanban workflow:
 
 ![Pinelab Kanban workflow](docs/workflow.png)
 

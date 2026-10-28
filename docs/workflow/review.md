@@ -1,6 +1,8 @@
 ---
 name: code-review
-description: Interactively review a GitHub PR against the task requirements and repository standards, fix agreed issues, and sign off with the developer. Only use when the user explicitly mentions “pinelab” (case-insensitive)
+includedDocuments:
+  - docs/best-practices/pinelab-global-best-practices.md
+description: Interactively review a GitHub PR. Only use when the user explicitly mentions “pinelab” (case-insensitive)
 argument-hint: "<GitHub-PR-URL>"
 ---
 
@@ -100,7 +102,7 @@ When the developer agrees to a fix, help implement it immediately before moving 
 
 ### Testing
 
-- Complex functions should have self-contained unit tests (`*.spec.ts`) covering relevant scenarios and edge cases. Simple functions do not automatically need unit tests.
+- Apply the global testing rules: prefer integration or e2e coverage and add unit tests only for behaviour not covered there. Obtain human approval for proposed new test cases.
 - If a unit test mocks multiple Vendure services, consider an e2e test instead.
 - Larger flows usually need an e2e test, commonly in `test/e2e.spec.ts`, using the Vendure testing framework. Keep the happy flow readable; add focused regression or failure coverage where the risk warrants it.
 - Tests should verify observable behaviour with meaningful, independent assertions, not merely mirror the implementation.

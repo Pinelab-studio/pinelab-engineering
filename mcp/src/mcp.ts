@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { includedDocuments } from "./included-documents.js";
 import { registerTrello } from "./trello/trello-tools.js";
 import type { User } from "./config.js";
 
@@ -34,7 +35,7 @@ const result = (value: unknown) => ({
  * @param authorization Incoming Authorization header, not a username supplied by a tool.
  * @param articles Article provider: build-time bundle on Workers.
  */
-export function createMcpServer(
+export async function createMcpServer(
   config: Config,
   authorization: string | undefined,
   articles: () => Promise<Article[]>,
@@ -43,16 +44,27 @@ export function createMcpServer(
     name: "pinelab-engineering",
     version: "0.1.0",
   });
+  const catalogue = await articles();
+  const render = (article: Article) => result(
+    `MCP usage: use authenticated Trello tools, not shell/curl. Load related guidance through its direct tool; use list_recipes/get_recipe for feature-specific resources.\n\n${includedDocuments(article, catalogue).map((document) => `Document: docs/${document.id}.md\n\n${document.text}`).join("\n\n---\n\n")}`,
+  );
+  for (const article of catalogue.filter(({ id }) => /^(best-practices|workflow)\//.test(id))) {
+    const name = `get_${article.id.replace(/\//g, "_").replace(/-/g, "_")}`;
+    server.registerTool(name, {
+      description: article.text.match(/^description: (.+)$/m)?.[1]?.replace(/^"|"$/g, "") ?? article.id,
+      inputSchema: {},
+    }, async () => render(article));
+  }
   server.registerTool(
-    "list_skills",
+    "list_recipes",
     {
       description:
-        "List workflow and knowledge skills; load relevant best practices before working. Best practices do not require a Pinelab mention. Only load or follow workflow/* skills when the user explicitly mentions “pinelab” (case-insensitive).",
+        "List feature-specific Vendure or storefront resources: implementation recipes, troubleshooting and setup guides. Load relevant recipes on demand with get_recipe; these are not global best practices or workflows.",
       inputSchema: {},
     },
     async () =>
       result(
-        (await articles()).map(({ id, text }) => ({
+        catalogue.filter(({ id }) => id.startsWith("recipes/")).map(({ id, text }) => ({
           id,
           name: text.match(/^name: (.+)$/m)?.[1] ?? id.split("/").at(-1),
           description:
@@ -62,20 +74,18 @@ export function createMcpServer(
       ),
   );
   server.registerTool(
-    "get_skill",
+    "get_recipe",
     {
       description:
-        "Read a skill. Best practices do not require a Pinelab mention. Only load or follow workflow/* skills when the user explicitly mentions “pinelab” (case-insensitive). Resolve references to other articles with list_skills/get_skill, not shell commands.",
+        "Read a feature-specific Vendure or storefront resource by its recipe ID from list_recipes. Load only when relevant to the current feature or task.",
       inputSchema: { id: z.string() },
     },
     async ({ id }) => {
       // Match against the approved catalogue; never turn client input into a filesystem path.
-      const article = (await articles()).find((a) => a.id === id);
+      const article = catalogue.find((a) => a.id === id && a.id.startsWith("recipes/"));
       return article
-        ? result(
-            `MCP usage: use the authenticated Trello tools instead of the shell/curl examples below. Credentials are managed by the server. Load related articles with list_skills/get_skill.\n\n${article.text}`,
-          )
-        : { ...result("Unknown skill"), isError: true };
+        ? render(article)
+        : { ...result("Unknown recipe"), isError: true };
     },
   );
   registerTrello(server, config, authorization);

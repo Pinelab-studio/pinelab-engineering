@@ -22,7 +22,7 @@ async function fixture(t: TestContext, mode: "http" | "json" | "network") {
   upstream.listen(0, "127.0.0.1");
   await new Promise<void>((resolve) => upstream.once("listening", resolve));
   t.after(() => { upstream.close(); });
-  const server = createMcpServer({
+  const server = await createMcpServer({
     apiBase: `http://127.0.0.1:${(upstream.address() as { port: number }).port}`,
     board: "board", key: redactionKey, token,
     users: [{ username: "test", token: bearer, permissions: ["read"] }],

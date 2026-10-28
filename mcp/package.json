@@ -7,7 +7,7 @@
   },
   "scripts": {
     "start": "npm run generate:skills && wrangler dev",
-    "generate:skills": "node src/scripts/generate-skills.mjs",
+    "generate:skills": "tsx src/scripts/generate-skills.mjs",
     "pretest": "npm run generate:skills",
     "test": "tsx --test src/*.test.ts test/*.test.ts",
     "precheck": "npm run generate:skills",

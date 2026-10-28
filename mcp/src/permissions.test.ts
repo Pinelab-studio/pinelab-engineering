@@ -78,7 +78,7 @@ async function scenario(
   failWrites = false;
   ambiguousSelections = false;
   const trello = await listen(fake);
-  const server = createMcpServer({
+  const server = await createMcpServer({
       apiBase: trello.url,
       board: "board",
       key: "key",
@@ -115,7 +115,7 @@ test("board context includes lists, labels and assignable usernames in one tool 
 test("tool discovery documents update semantics and exposes only the minimal Trello tools", async () =>
   scenario("reader-secret", async (client) => {
     const { tools } = await client.listTools();
-    assert.deepEqual(tools.map((tool) => tool.name).filter((name) => !["list_skills", "get_skill"].includes(name)).sort(),
+    assert.deepEqual(tools.map((tool) => tool.name).filter((name) => !["list_recipes", "get_recipe"].includes(name)).sort(),
       ["create_card", "get_board", "get_card", "list_cards", "update_card"]);
     const update = tools.find((tool) => tool.name === "update_card")!;
     assert.match(update.description!, /Omitted fields remain unchanged/);
