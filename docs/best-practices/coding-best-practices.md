@@ -1,8 +1,7 @@
 ---
-name: Pinelab Global Best Practices
-description: Always load before implementing or reviewing any code or tests.
+name: Coding Best Practices
+description: Coding and testing best practices; always load before implementing or reviewing any code or tests.
 ---
-Apply these rules to all code, using shallow, local, explicit structure and human-readable tests.
 
 ## Coding rules
 

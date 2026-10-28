@@ -36,13 +36,13 @@ To explore tools visually, run `npx @modelcontextprotocol/inspector` and connect
 
 ## Loading best practices
 
-Add this instruction to your agent/project setup: **Before implementing or reviewing any code, call `get_best_practices_pinelab_global_best_practices`. For Vendure work, also call `get_best_practices_vendure_best_practices`.** No Pinelab mention is required for best practices. The MCP server cannot force an agent to call a tool.
+Add this instruction to your agent/project setup: **Before implementing or reviewing any code, call `get_best_practices_coding_best_practices`. For Vendure work, also call `get_best_practices_vendure_best_practices`.** No Pinelab mention is required for best practices. The MCP server cannot force an agent to call a tool.
 
 Articles can declare multiple full repository-relative Markdown paths in a frontmatter block list (plain, unquoted paths):
 
 ```yaml
 includedDocuments:
-  - docs/best-practices/pinelab-global-best-practices.md
+  - docs/best-practices/coding-best-practices.md
   - docs/best-practices/vendure-best-practices.md
 ```
 

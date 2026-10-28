@@ -1,7 +1,8 @@
 ---
 name: code-review
 includedDocuments:
-  - docs/best-practices/pinelab-global-best-practices.md
+  - docs/best-practices/coding-best-practices.md
+  - docs/best-practices/pull-request-guidelines.md
 description: Interactively review a GitHub PR. Only use when the user explicitly mentions “pinelab” (case-insensitive)
 argument-hint: "<GitHub-PR-URL>"
 ---
@@ -120,14 +121,7 @@ Ask about justified exceptions, for example: “This flow would usually need an 
 
 ### Handover
 
-Check that the PR description explains:
-
-- **What changed:** clear explanation, with screenshots or a recording where useful.
-- **How to test:** concrete manual steps and expected results.
-- **Before merging:** required environment variables, migrations, or other prerequisites.
-- **After merging:** deployment steps, environment variables, dashboard configuration, or follow-up actions.
-
-Use explicit “None” where appropriate rather than leaving operational requirements ambiguous.
+Check that the PR description adheres to the PR guidelines below.
 
 With the developer's agreement, update the description from a temporary Markdown file, preserving useful existing content, or post a discussion comment. REST avoids the deprecated Projects (classic) GraphQL fields used by some older `gh pr edit` versions. `-F 'body=@<file>'` reads the file contents and preserves real newlines:
 
