@@ -40,7 +40,7 @@ export function createTrelloHelpers(
     server.registerTool(
       toolName,
       {
-        description: `Only use when the user explicitly mentions “pinelab” (case-insensitive). ${description}`,
+        description,
         inputSchema,
         annotations: {
           readOnlyHint: permission === "read",

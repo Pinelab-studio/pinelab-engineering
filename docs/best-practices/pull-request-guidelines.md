@@ -2,7 +2,8 @@
 name: Pull Request Guidelines
 description: Load when creating pull requests for Pinelab.
 ---
-Write pull request descriptions using the sections below so reviewers can quickly understand the change, validate it, and identify operational requirements. Keep the entire description at 200 words or fewer.
+Write pull request descriptions using the sections below so reviewers can quickly understand the change, validate it, and identify operational requirements. 
+Keep the entire description at 200 words or fewer.
 
 ## What changed and why
 

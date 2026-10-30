@@ -38,7 +38,7 @@ async function fixture(t: TestContext, mode: "http" | "json" | "network") {
 
 test("invalid Trello JSON logs status and path without leaking response contents", async (t) => {
   const { client, logs } = await fixture(t, "json");
-  const result = await client.callTool({ name: "get_board", arguments: {} });
+  const result = await client.callTool({ name: "get_trello_board", arguments: {} });
   assert.equal(result.isError, true);
   assert.match(JSON.stringify(result), /Invalid Trello response/);
   assert.equal(logs.mock.callCount(), 1);
@@ -51,7 +51,7 @@ test("invalid Trello JSON logs status and path without leaking response contents
 
 test("Trello network failures log safe diagnostics without raw fetch errors", async (t) => {
   const { client, logs } = await fixture(t, "network");
-  const result = await client.callTool({ name: "get_board", arguments: {} });
+  const result = await client.callTool({ name: "get_trello_board", arguments: {} });
   assert.equal(result.isError, true);
   assert.equal(logs.mock.callCount(), 1);
   const logged = JSON.stringify(logs.mock.calls[0].arguments);
@@ -64,7 +64,7 @@ test("Trello network failures log safe diagnostics without raw fetch errors", as
 
 test("Trello HTTP failures log bounded, redacted diagnostics but keep tool errors sanitized", async (t) => {
   const { client, logs } = await fixture(t, "http");
-  const result = await client.callTool({ name: "get_board", arguments: {} });
+  const result = await client.callTool({ name: "get_trello_board", arguments: {} });
   assert.equal(result.isError, true);
   assert.match(JSON.stringify(result), /Trello returned HTTP 400/);
   assert.doesNotMatch(JSON.stringify(result), /invalid board/);

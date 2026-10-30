@@ -8,6 +8,8 @@
   "scripts": {
     "start": "npm run generate:skills && wrangler dev",
     "generate:skills": "tsx src/scripts/generate-skills.mjs",
+    "generate:tools": "tsx src/scripts/generate-tools.ts",
+    "build": "npm run generate:skills && npm run generate:tools",
     "pretest": "npm run generate:skills",
     "test": "tsx --test src/*.test.ts test/*.test.ts",
     "precheck": "npm run generate:skills",

@@ -36,7 +36,7 @@ To explore tools visually, run `npx @modelcontextprotocol/inspector` and connect
 
 ## Loading best practices
 
-Add this instruction to your agent/project setup: **Before implementing or reviewing any code, call `get_best_practices_coding_best_practices`. For Vendure work, also call `get_best_practices_vendure_best_practices`.** No Pinelab mention is required for best practices. The MCP server cannot force an agent to call a tool.
+Add this instruction to your agent/project setup: **Before implementing or reviewing any code, call `get_coding_best_practices`. For Vendure work, also call `get_vendure_best_practices`.** No Pinelab mention is required for best practices. The MCP server cannot force an agent to call a tool.
 
 Articles can declare multiple full repository-relative Markdown paths in a frontmatter block list (plain, unquoted paths):
 
@@ -46,7 +46,7 @@ includedDocuments:
   - docs/best-practices/vendure-best-practices.md
 ```
 
-Each document under `docs/best-practices/` and `docs/workflow/` gets a direct, no-argument tool. Tool names are `get_` plus the document ID with slashes and hyphens replaced by underscores, for example `get_workflow_review`. Descriptions come from article frontmatter; workflows retain their explicit Pinelab trigger. These replace `list_skills` and `get_skill`.
+Each document under `docs/best-practices/` and `docs/workflow/` gets a direct, no-argument tool. Tool names are `get_` plus the document filename without its extension, with hyphens replaced by underscores, for example `get_review` or `get_coding_best_practices`. Category directories are not included. Descriptions come from article frontmatter; workflows retain their explicit Pinelab trigger. These replace `list_skills` and `get_skill`.
 
 Recipes have no individual tools. `list_recipes` lists feature-specific Vendure or storefront resources, including their IDs and descriptions; `get_recipe({ id: "recipes/storefront-seo" })` reads one on demand.
 

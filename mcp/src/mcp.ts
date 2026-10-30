@@ -49,7 +49,7 @@ export async function createMcpServer(
     `MCP usage: use authenticated Trello tools, not shell/curl. Load related guidance through its direct tool; use list_recipes/get_recipe for feature-specific resources.\n\n${includedDocuments(article, catalogue).map((document) => `Document: docs/${document.id}.md\n\n${document.text}`).join("\n\n---\n\n")}`,
   );
   for (const article of catalogue.filter(({ id }) => /^(best-practices|workflow)\//.test(id))) {
-    const name = `get_${article.id.replace(/\//g, "_").replace(/-/g, "_")}`;
+    const name = `get_${article.id.split("/").at(-1)!.replace(/-/g, "_")}`;
     server.registerTool(name, {
       description: article.text.match(/^description: (.+)$/m)?.[1]?.replace(/^"|"$/g, "") ?? article.id,
       inputSchema: {},
@@ -59,7 +59,7 @@ export async function createMcpServer(
     "list_recipes",
     {
       description:
-        "List feature-specific Vendure or storefront resources: implementation recipes, troubleshooting and setup guides. Load relevant recipes on demand with get_recipe; these are not global best practices or workflows.",
+        "Lists Pinelab Vendure and storefront recipes. Use get_recipe to read a recipe.",
       inputSchema: {},
     },
     async () =>

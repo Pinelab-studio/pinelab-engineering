@@ -11,7 +11,7 @@ test("every best practice and workflow has a direct readable tool, but recipes d
     assert.ok(!tools.some(({ name }) => ["list_skills", "get_skill"].includes(name)));
     // Verify every published document against the public tool interface.
     for (const article of articles) {
-      const name = `get_${article.id.replace(/[/-]/g, "_")}`;
+      const name = `get_${article.id.split("/").at(-1)!.replace(/-/g, "_")}`;
       if (article.id.startsWith("recipes/")) {
         assert.ok(!tools.some((tool) => tool.name === name));
         continue;
@@ -27,11 +27,11 @@ test("every best practice and workflow has a direct readable tool, but recipes d
 
 test("review and planning include global rules once while Vendure remains standalone", async () =>
   scenario(async (client) => {
-    for (const name of ["get_workflow_review", "get_workflow_plan_and_implement"]) {
+    for (const name of ["get_review", "get_plan_and_implement"]) {
       const response = text(await client.callTool({ name, arguments: {} }));
       assert.equal(response.split("Document: docs/best-practices/coding-best-practices.md").length - 1, 1);
     }
-    const vendure = text(await client.callTool({ name: "get_best_practices_vendure_best_practices", arguments: {} }));
+    const vendure = text(await client.callTool({ name: "get_vendure_best_practices", arguments: {} }));
     assert.equal(vendure.split("Document: ").length - 1, 1);
     assert.ok(!vendure.includes("Document: docs/best-practices/coding-best-practices.md"));
   }));
@@ -39,7 +39,7 @@ test("review and planning include global rules once while Vendure remains standa
 test("recipes are discoverable and readable only through the recipe tools", async () =>
   scenario(async (client) => {
     const { tools } = await client.listTools();
-    assert.match(tools.find(({ name }) => name === "list_recipes")!.description!, /feature-specific Vendure or storefront resources/);
+    assert.match(tools.find(({ name }) => name === "list_recipes")!.description!, /Lists Pinelab Vendure and storefront recipes\. Use get_recipe to read a recipe\./);
     const response = await client.callTool({ name: "list_recipes", arguments: {} });
     const recipes = JSON.parse(text(response)) as { id: string; description: string }[];
     assert.ok(recipes.some(({ id }) => id === "recipes/storefront-seo"));

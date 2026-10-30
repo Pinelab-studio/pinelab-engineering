@@ -12,7 +12,8 @@ Please see https://plugins.pinelab.studio/ai-integration/ on how to use our best
 
 # For Pinelab Developers
 
-The Pinelab MCP exposes tools and coding standards and guidelines on how we work. The only real tool is for managing Trello cards, the rest are all skills that explain your local Codex/Pi/Opencode on how to handle tasks. 
+The Pinelab MCP exposes tools and coding standards and guidelines on how we work. The only real tool is for managing Trello cards, the rest are all skills that explain your local Codex/Pi/Opencode on how to handle tasks.
+We care about your context, so we keep the toolset and descriptions short. See [`TOOLS.md`](./mcp/TOOlS.md) the amount of tokens the MCP adds to your context.
 
 Add the Pinelab MCP server to your harness:
 
@@ -29,7 +30,7 @@ Add the Pinelab MCP server to your harness:
 }
 ```
 
-Workflow skills are designed to only trigger when you mention  **Pinelab** as to not affect your personal way of working. We are aware of context bloat and deliberately keep the tool descriptions very short!
+Workflow skills are designed to only trigger when you mention  **Pinelab** as to not affect your personal way of working.
 
 These instructions in this MCP are based on our kanban workflow:
 
@@ -89,3 +90,5 @@ Handover Pinelab task <link to PR>
 3. Create a Pull Request
 4. Always `/review <gh PR link>` your own implementation before creating a Pull Request
 5. Another developer will `/review` your Pull Request
+
+See [`TOOLS.md`](./mcp/TOOlS.md) for a list of the exposed MCP tools.

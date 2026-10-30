@@ -119,7 +119,7 @@ When the developer agrees to a fix, help implement it immediately before moving 
 
 Ask about justified exceptions, for example: “This flow would usually need an e2e test. I don't see one; should we add it, or is there a reason to omit it?”
 
-### Handover
+### Description
 
 Check that the PR description adheres to the PR guidelines below.
 
