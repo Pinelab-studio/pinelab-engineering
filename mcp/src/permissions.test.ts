@@ -116,7 +116,7 @@ test("tool discovery documents update semantics and exposes only the minimal Tre
   scenario("reader-secret", async (client) => {
     const { tools } = await client.listTools();
     assert.deepEqual(tools.map((tool) => tool.name).filter((name) => !["list_recipes", "get_recipe"].includes(name)).sort(),
-      ["create_trello_card", "get_trello_board", "get_trello_card", "list_trello_cards", "update_trello_card"]);
+      ["add_trello_card_comment", "create_trello_card", "get_trello_board", "get_trello_card", "list_trello_cards", "update_trello_card"]);
     const update = tools.find((tool) => tool.name === "update_trello_card")!;
     assert.match(update.description!, /Updates a card on the Pinelab Trello Board/);
     assert.match(update.description!, /Use get_pinelab_trello_kanban for more information/);
@@ -133,6 +133,47 @@ test("invalid tokens never reach Trello", async () => {
   });
   assert.equal(records.length, 0);
 });
+
+test("writer adds exactly one comment without editing the card or checking its list", async () =>
+  scenario("writer-secret", async (client) => {
+    const result = await client.callTool({ name: "add_trello_card_comment", arguments: {
+      card: "card", text: "Ready for review.",
+    } });
+    assert.notEqual(result.isError, true);
+    assert.deepEqual(records.filter((r) => r.method !== "GET"), [{
+      method: "POST", path: "/cards/card/actions/comments", body: { text: "Ready for review." },
+    }]);
+    assert.equal(records.some((r) => r.path.endsWith("/lists")), false);
+  }));
+
+test("reader cannot add comments", async () =>
+  scenario("reader-secret", async (client) => {
+    const result = await client.callTool({ name: "add_trello_card_comment", arguments: {
+      card: "card", text: "Not allowed",
+    } });
+    assert.equal(result.isError, true);
+    assert.match(JSON.stringify(result), /Forbidden/);
+    assert.equal(records.length, 0);
+  }));
+
+test("comments reject foreign cards and empty text without writing", async () =>
+  scenario("writer-secret", async (client) => {
+    for (const args of [{ card: "foreign", text: "Hello" }, { card: "card", text: "   " }]) {
+      const result = await client.callTool({ name: "add_trello_card_comment", arguments: args });
+      assert.equal(result.isError, true);
+    }
+    assert.equal(records.some((r) => r.method !== "GET"), false);
+  }));
+
+test("comment failures are reported without retrying", async () =>
+  scenario("writer-secret", async (client) => {
+    failComments = true;
+    const result = await client.callTool({ name: "add_trello_card_comment", arguments: {
+      card: "card", text: "Hello",
+    } });
+    assert.equal(result.isError, true);
+    assert.equal(records.filter((r) => r.path.endsWith("/comments")).length, 1);
+  }));
 
 test("writer creates a card with defaults and an attributed comment", async () =>
   scenario("writer-secret", async (client) => {

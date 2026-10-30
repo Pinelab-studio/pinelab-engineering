@@ -52,6 +52,21 @@ export function registerTrello(
     },
   );
   tool(
+    "add_trello_card_comment",
+    "write",
+    "Adds a comment to a card on the Pinelab Trello Board. Use get_pinelab_trello_kanban for more information.",
+    {
+      ...cardInput,
+      text: z.string().trim().min(1).max(16000).describe("Comment text to add."),
+    },
+    async (args) => {
+      const existing = await card(args.card);
+      return api(`/cards/${existing.id}/actions/comments`, "POST", {
+        text: args.text,
+      });
+    },
+  );
+  tool(
     "update_trello_card",
     "write",
     "Updates a card on the Pinelab Trello Board. Use get_pinelab_trello_kanban for more information.",

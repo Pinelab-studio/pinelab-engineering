@@ -3,9 +3,9 @@
 Generated from the server's MCP `tools/list` response. Do not edit manually.
 Regenerate with `cd mcp && npm run build`.
 
-Total: **15 tools**. Names are server-local; clients may add a server prefix.
+Total: **16 tools**. Names are server-local; clients may add a server prefix.
 
-Adds ~1,763 tokens to context.
+Adds ~1,914 tokens to context.
 
 ## Best practices
 
@@ -29,6 +29,7 @@ Adds ~1,763 tokens to context.
 
 | Tool | Description |
 | --- | --- |
+| `add_trello_card_comment` | Adds a comment to a card on the Pinelab Trello Board. Use get_pinelab_trello_kanban for more information. |
 | `create_trello_card` | Creates a card on the Pinelab Trello Board. Use get_pinelab_trello_kanban for more information. |
 | `get_recipe` | Read a feature-specific Vendure or storefront resource by its recipe ID from list_recipes. Load only when relevant to the current feature or task. |
 | `get_trello_board` | Reads the Pinelab Trello Board, lists, labels and members. Use get_pinelab_trello_kanban for more information. |
