@@ -10,6 +10,7 @@ Apply these guidelines when implementing or reviewing Vendure code, plugins, or 
 - Place resolvers only in `resolvers: []`, not in `providers: []`.
 - Make behaviour configurable through a strategy when consumers may reasonably need to change it; avoid speculative abstractions. For example, expose `sendToAnalytics: (order) => ...` so consumers control how orders are formatted and sent.
 - Do not update order custom fields in `OrderPlacedEvent` handlers. Concurrent updates by Vendure and the handler can cause race conditions, leaving orders unsettled or active.
+- Always prefer built-in or ready-made config, strategies, services, React components, etc. supplied by Vendure over creating new custom code, even if that means sacrificing some functionality.
 
 # Vendure code structure
 

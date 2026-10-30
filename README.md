@@ -1,9 +1,10 @@
 # Pinelab Engineering
-Human and AI engineering principles used at Pinelab.studio
 
-* [`docs/best-practices`](docs/best-practices) - General engineering guidelines at Pinelab that apply to all our projects.
-* [`docs/recipes`](docs/recipes) - Feature specific guides that can be invoked on demand.
-* [`docs/workflow`](docs/workflow) - Way of working at Pinelab, used by developers at Pinelab
+Human and AI engineering principles used at Pinelab.studio. Our engineering principles consist of these 2 components:
+
+* [`docs/best-practices`](docs/best-practices) - General engineering guidelines at Pinelab that we use in almost all day-to-day tasks.
+* [`docs/recipes`](docs/recipes) - Feature specific guides that can be invoked on demand. We only include this when researching new features, before actual implementation. 
+* [`docs/workflow`](docs/workflow) - Way of working at Pinelab: Our kanban flow, expected PR handover etc. Mostly internal Pinelab stuff, but use it to your advantage.
   
 # For Everyone
 

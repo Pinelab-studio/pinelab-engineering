@@ -3,9 +3,9 @@
 Generated from the server's MCP `tools/list` response. Do not edit manually.
 Regenerate with `cd mcp && npm run build`.
 
-Total: **16 tools**. Names are server-local; clients may add a server prefix.
+Total: **17 tools**. Names are server-local; clients may add a server prefix.
 
-Adds ~1,914 tokens to context.
+Adds ~2,005 tokens to context.
 
 ## Best practices
 
@@ -20,6 +20,7 @@ Adds ~1,914 tokens to context.
 | Tool | Description |
 | --- | --- |
 | `get_kanban_priorities` | Recommend top 5 priorities todo's for today from the Pinelab Trello Kanban task board.  |
+| `get_monthly_client_summary` | Create a monthly summary for a Pinelab client with completed tasks, metrics, and next steps. Only use when the user explicitly mentions Pinelab and requests this summary. |
 | `get_pinelab_trello_kanban` | Manage Pinelab’s kanban tasks in Trello: create, refine, move, and label cards from Inbox to Done. Only use when the user explicitly mentions “pinelab” (case-insensitive) |
 | `get_plan_and_implement` | Make a plan to implement a given task. Only use when the user explicitly mentions “pinelab” (case-insensitive). |
 | `get_refine` | Functionally refine a given task or feature. Only use when the user explicitly mentions “pinelab” (case-insensitive) |
