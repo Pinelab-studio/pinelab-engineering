@@ -6,16 +6,19 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createMcpServer } from "./mcp.js";
 
 // Observe outgoing HTTP requests at the external API boundary, not internal call sequences.
-const records: { method: string; path: string; body: any }[] = [];
+const records: { method: string; path: string; body: any; query?: Record<string, string> }[] = [];
 let failComments = false;
 let failWrites = false;
 let ambiguousSelections = false;
+let boardLists = [{ id: "todo", name: "Todo" }, { id: "doing", name: "Doing" }];
+let boardCards: Record<string, unknown>[] = [];
 const fake = createServer(async (request, response) => {
   let text = "";
   for await (const chunk of request) text += chunk;
+  const url = new URL(request.url!, "http://localhost");
   const req = {
     method: request.method!,
-    path: new URL(request.url!, "http://localhost").pathname,
+    path: url.pathname,
     body: text ? JSON.parse(text) : undefined,
   };
   const res = {
@@ -28,17 +31,18 @@ const fake = createServer(async (request, response) => {
       response.end(JSON.stringify(result));
     },
   };
-  records.push({ method: req.method, path: req.path, body: req.body });
+  records.push({
+    ...req,
+    ...(req.method === "GET" ? {
+      query: Object.fromEntries([...url.searchParams].filter(([name]) => !["key", "token"].includes(name))),
+    } : {}),
+  });
   if (failWrites && req.method !== "GET" && !req.path.endsWith("/comments"))
     return res.status(503).json({ error: "sensitive upstream response" });
   if (req.path.endsWith("/comments"))
     return res.status(failComments ? 500 : 200).json({ id: "comment" });
   if (req.path === "/boards/board") return res.json({ id: "board" });
-  if (req.path.endsWith("/lists"))
-    return res.json([
-      { id: "todo", name: "Todo" },
-      { id: "doing", name: "Doing" },
-    ]);
+  if (req.path.endsWith("/lists")) return res.json(boardLists);
   if (req.path.endsWith("/members"))
     return res.json([{ id: "member", username: "developer", fullName: "Developer" }]);
   if (req.path.endsWith("/labels"))
@@ -46,8 +50,10 @@ const fake = createServer(async (request, response) => {
       { id: "bug", name: "Bug", color: "blue_dark" },
       { id: "client", name: "Client", color: "green" },
     ]);
-  if (req.path.endsWith("/actions") || req.path === "/boards/board/cards")
-    return res.json([]);
+  if (req.path === "/boards/board/cards") return res.json(boardCards);
+  if (req.path.startsWith("/lists/") && req.path.endsWith("/cards"))
+    return res.json(boardCards.filter((card) => card.idList === req.path.split("/")[2]));
+  if (req.path.endsWith("/actions")) return res.json([]);
   return res.json({
     id: "card",
     idBoard: req.path.includes("foreign") ? "other" : "board",
@@ -77,6 +83,8 @@ async function scenario(
   failComments = false;
   failWrites = false;
   ambiguousSelections = false;
+  boardLists = [{ id: "todo", name: "Todo" }, { id: "doing", name: "Doing" }];
+  boardCards = [];
   const trello = await listen(fake);
   const server = await createMcpServer({
       apiBase: trello.url,
@@ -303,6 +311,91 @@ test("reader reads cards, activity and board cards without creating comments", a
     assert.ok(records.every((r) => r.method === "GET"));
   }));
 
+test("reader lists Todo cards and available lists without fetching all board cards", async () =>
+  scenario("reader-secret", async (client) => {
+    setupCardListing();
+    const result = await client.callTool({ name: "list_trello_cards", arguments: { list: "Todo" } });
+    assert.notEqual(result.isError, true);
+    assert.deepEqual(JSON.parse((result.content as { text: string }[])[0].text), {
+      lists: [{ id: "todo", name: "Todo" }, { id: "doing", name: "Doing" }, { id: "empty", name: "Empty" }],
+      cards: [{ id: "todo-card", name: "Todo task", desc: "Todo context", idBoard: "board", idList: "todo", idLabels: ["bug"], idMembers: ["member"], due: null, url: "https://trello.com/c/todo-card", members: [{ id: "member", username: "developer", fullName: "Developer" }] }],
+    });
+    assert.deepEqual(records, [
+      { method: "GET", path: "/boards/board/lists", body: undefined, query: { filter: "open", fields: "name" } },
+      { method: "GET", path: "/lists/todo/cards", body: undefined, query: {
+        filter: "open", fields: "name,desc,idBoard,idList,idLabels,idMembers,due,url", members: "true", member_fields: "fullName,username",
+      } },
+    ]);
+  }));
+
+test("reader lists all open board cards and available lists when list is omitted", async () =>
+  scenario("reader-secret", async (client) => {
+    setupCardListing();
+    const result = await client.callTool({ name: "list_trello_cards", arguments: {} });
+    assert.notEqual(result.isError, true);
+    assert.deepEqual(JSON.parse((result.content as { text: string }[])[0].text), {
+      lists: [{ id: "todo", name: "Todo" }, { id: "doing", name: "Doing" }, { id: "empty", name: "Empty" }],
+      cards: [
+        { id: "todo-card", name: "Todo task", desc: "Todo context", idBoard: "board", idList: "todo", idLabels: ["bug"], idMembers: ["member"], due: null, url: "https://trello.com/c/todo-card", members: [{ id: "member", username: "developer", fullName: "Developer" }] },
+        { id: "doing-card", name: "Doing task", desc: "Doing context", idBoard: "board", idList: "doing", idLabels: [], idMembers: [], due: null, url: "https://trello.com/c/doing-card", members: [] },
+      ],
+    });
+    assert.deepEqual(records, [
+      { method: "GET", path: "/boards/board/lists", body: undefined, query: { filter: "open", fields: "name" } },
+      { method: "GET", path: "/boards/board/cards", body: undefined, query: {
+        filter: "open", fields: "name,desc,idBoard,idList,idLabels,idMembers,due,url", members: "true", member_fields: "fullName,username",
+      } },
+    ]);
+  }));
+
+test("reader lists an empty list without losing available list names", async () =>
+  scenario("reader-secret", async (client) => {
+    setupCardListing();
+    const result = await client.callTool({ name: "list_trello_cards", arguments: { list: "Empty" } });
+    assert.notEqual(result.isError, true);
+    assert.deepEqual(JSON.parse((result.content as { text: string }[])[0].text), {
+      lists: [{ id: "todo", name: "Todo" }, { id: "doing", name: "Doing" }, { id: "empty", name: "Empty" }],
+      cards: [],
+    });
+    assert.deepEqual(records.map((record) => record.path), ["/boards/board/lists", "/lists/empty/cards"]);
+  }));
+
+test("unknown list returns available names without requesting any cards", async () =>
+  scenario("reader-secret", async (client) => {
+    setupCardListing();
+    const result = await client.callTool({ name: "list_trello_cards", arguments: { list: "Unknown" } });
+    assert.equal(result.isError, true);
+    assert.equal(JSON.parse((result.content as { text: string }[])[0].text),
+      'Missing or ambiguous list: Unknown. Choose an existing, unambiguous name. Available lists: "Todo", "Doing", "Empty".');
+    assert.deepEqual(records.map((record) => record.path), ["/boards/board/lists"]);
+  }));
+
+test("ambiguous list returns available names without guessing or requesting cards", async () =>
+  scenario("reader-secret", async (client) => {
+    setupCardListing();
+    boardLists.push({ id: "duplicate", name: "Todo" });
+    const result = await client.callTool({ name: "list_trello_cards", arguments: { list: "Todo" } });
+    assert.equal(result.isError, true);
+    assert.equal(JSON.parse((result.content as { text: string }[])[0].text),
+      'Missing or ambiguous list: Todo. Choose an existing, unambiguous name. Available lists: "Todo", "Doing", "Empty", "Todo".');
+    assert.deepEqual(records.map((record) => record.path), ["/boards/board/lists"]);
+  }));
+
+test("card listing discovery documents Kanban lists and the response without Trello requests", async () =>
+  scenario("reader-secret", async (client) => {
+    const { tools } = await client.listTools();
+    const listing = tools.find((tool) => tool.name === "list_trello_cards")!;
+    assert.match(listing.description!, /Lists: Inbox, Waiting For Client Approval, Todo, Doing, Ready For Review, ✨Done\./);
+    assert.match(listing.description!, /Returns \{ lists, cards \}, including all current open lists/);
+    assert.match(listing.description!, /No board discovery needed/);
+    const fields = listing.inputSchema.properties as Record<string, { type: string; description: string; enum?: string[] }>;
+    assert.equal(fields.list.type, "string");
+    assert.equal(fields.list.enum, undefined);
+    assert.match(fields.list.description, /Exact existing list name/);
+    assert.match(fields.list.description, /omitted returns all open board cards/);
+    assert.equal(records.length, 0);
+  }));
+
 test("all tools enforce their permission before calling Trello", async () => {
   const writes = [
     ["create_trello_card", { title: "New", description: "Context" }],
@@ -452,3 +545,12 @@ test("reader can read board but cannot create cards", async () =>
     assert.match(JSON.stringify(denied), /Forbidden/);
     assert.equal(records.length, 0);
   }));
+
+/** Populate the existing HTTP fixture with distinct lists and cards for public listing tests. */
+function setupCardListing() {
+  boardLists.push({ id: "empty", name: "Empty" });
+  boardCards.push(
+    { id: "todo-card", name: "Todo task", desc: "Todo context", idBoard: "board", idList: "todo", idLabels: ["bug"], idMembers: ["member"], due: null, url: "https://trello.com/c/todo-card", members: [{ id: "member", username: "developer", fullName: "Developer" }] },
+    { id: "doing-card", name: "Doing task", desc: "Doing context", idBoard: "board", idList: "doing", idLabels: [], idMembers: [], due: null, url: "https://trello.com/c/doing-card", members: [] },
+  );
+}

@@ -5,7 +5,7 @@ Regenerate with `cd mcp && npm run build`.
 
 Total: **17 tools**. Names are server-local; clients may add a server prefix.
 
-Adds ~2,005 tokens to context.
+Adds ~2,062 tokens to context.
 
 ## Best practices
 
@@ -36,6 +36,6 @@ Adds ~2,005 tokens to context.
 | `get_trello_board` | Reads the Pinelab Trello Board, lists, labels and members. Use get_pinelab_trello_kanban for more information. |
 | `get_trello_card` | Reads a card and recent activity from the Pinelab Trello Board. Use get_pinelab_trello_kanban for more information. |
 | `list_recipes` | Lists Pinelab Vendure and storefront recipes. Use get_recipe to read a recipe. |
-| `list_trello_cards` | Lists open cards on the Pinelab Trello Board, optionally by list. Use get_pinelab_trello_kanban for more information. |
+| `list_trello_cards` | Lists open cards on the Pinelab Trello Board. Lists: Inbox, Waiting For Client Approval, Todo, Doing, Ready For Review, ✨Done. Returns { lists, cards }, including all current open lists. No board discovery needed. Use get_pinelab_trello_kanban for more information. |
 | `update_trello_card` | Updates a card on the Pinelab Trello Board. Use get_pinelab_trello_kanban for more information. |
 

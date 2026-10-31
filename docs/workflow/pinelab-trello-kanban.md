@@ -7,7 +7,8 @@ Use this workflow to apply Pinelab’s way of working on its Trello board. It de
 
 ## Working with the board
 
-- Use `get_trello_board` once to discover the configured board’s lists, labels, and assignable members. Use `list_trello_cards` to find tasks and `get_trello_card` to read an existing card before changing it.
+- Use `list_trello_cards` directly to find tasks; its tool description includes the Kanban list names. Pass an exact list name to get only that list’s open cards, or omit it to get all open board cards. The response contains `{ lists, cards }`, including current open lists even when they have no cards. No separate board-discovery call is needed.
+- Use `get_trello_board` when you need full board context, labels, or assignable members. Reuse list names from listing results or selection errors. Use `get_trello_card` to read an existing card before changing it.
 - Use `create_trello_card` and `update_trello_card` to save changes. Follow their tool schemas; use exact existing list names, label names, and assignee usernames. Never invent selections or silently choose ambiguous ones.
 - Use only the configured board. If a destination is missing or ambiguous, ask the user rather than choosing another list.
 - If the MCP tools are unavailable or access fails, report the blocker. Do not fall back to local credentials or direct API calls.
