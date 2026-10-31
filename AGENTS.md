@@ -52,6 +52,7 @@ Keep this file at 100 physical lines or fewer, including blank lines.
 - Every recipe and knowledge article (best practice) must have a clear, specific title in frontmatter `name` and a non-empty, single-line frontmatter `description` explaining its purpose and when to use it.
 - Make the title understandable outside this repository. Start the body with paragraph text, never a heading or a repeated title; use headings only after the introductory paragraph.
 - Preserve existing category metadata and stable paths unless a change is intentional; update references when renaming.
+- Keep workflow and best-practice descriptions short to minimize MCP context-window usage; retain essential applicability and trigger requirements.
 - Workflow names are skill identifiers; their descriptions must retain the explicit Pinelab trigger.
 
 ## Sources, generated files, and checks
