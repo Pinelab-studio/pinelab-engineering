@@ -3,9 +3,9 @@
 Generated from the server's MCP `tools/list` response. Do not edit manually.
 Regenerate with `cd mcp && npm run build`.
 
-Total: **17 tools**. Names are server-local; clients may add a server prefix.
+Total: **18 tools**. Names are server-local; clients may add a server prefix.
 
-Adds ~2,062 tokens to context.
+Adds ~2,132 tokens to context.
 
 ## Best practices
 
@@ -25,6 +25,7 @@ Adds ~2,062 tokens to context.
 | `get_plan_and_implement` | Make a plan to implement a given task. Only use when the user explicitly mentions “pinelab” (case-insensitive). |
 | `get_refine` | Functionally refine a given task or feature. Only use when the user explicitly mentions “pinelab” (case-insensitive) |
 | `get_review` | Interactively review a GitHub PR. Only use when the user explicitly mentions “pinelab” (case-insensitive) |
+| `get_security_scan` | Scan, fix, and open a PR. Only use when the user explicitly mentions pinelab (case-insensitive). |
 
 ## Other tools
 

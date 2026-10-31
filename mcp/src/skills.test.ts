@@ -25,6 +25,27 @@ test("every best practice and workflow has a direct readable tool, but recipes d
     }
   }));
 
+test("security scan is discoverable with a short explicit Pinelab trigger and readable instructions", async () =>
+  scenario(async (client) => {
+    const { tools } = await client.listTools();
+    const tool = tools.find(({ name }) => name === "get_security_scan");
+    assert.ok(tool, "Missing security scan tool");
+    assert.equal(tool.description, "Scan, fix, and open a PR. Only use when the user explicitly mentions pinelab (case-insensitive).");
+    const response = await client.callTool({ name: "get_security_scan", arguments: {} });
+    assert.notEqual(response.isError, true);
+    assert.ok(text(response).includes("Document: docs/workflow/security-scan.md"));
+    assert.ok(text(response).includes("Review changes from the last 7 days by default"));
+  }));
+
+test("security scan bundles coding and PR guidance exactly once", async () =>
+  scenario(async (client) => {
+    const response = text(await client.callTool({ name: "get_security_scan", arguments: {} }));
+    assert.equal(response.split("Document: docs/best-practices/coding-best-practices.md").length - 1, 1);
+    assert.equal(response.split("Document: docs/best-practices/pull-request-guidelines.md").length - 1, 1);
+    assert.ok(response.includes("## Think Before Coding"));
+    assert.ok(response.includes("Keep the entire description at 200 words or fewer."));
+  }));
+
 test("review and planning include global rules once while Vendure remains standalone", async () =>
   scenario(async (client) => {
     for (const name of ["get_review", "get_plan_and_implement"]) {
