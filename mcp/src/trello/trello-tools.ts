@@ -39,16 +39,18 @@ export function registerTrello(
     "Lists open cards on the Pinelab Trello Board, optionally by list. Use get_pinelab_trello_kanban for more information.",
     { list: name.optional() },
     async (args) => {
+      const boardLists = await lists();
       const destination =
         args.list === undefined
           ? undefined
-          : resolve(await lists(), args.list, "list");
+          : resolve(boardLists, args.list, "list");
+      const path = destination
+        ? `/lists/${encodeURIComponent(destination.id)}/cards`
+        : `/boards/${encodeURIComponent(config.board)}/cards`;
       const cards = await api(
-        `/boards/${encodeURIComponent(config.board)}/cards?filter=open&fields=name,desc,idBoard,idList,idLabels,idMembers,due,url&members=true&member_fields=fullName,username`,
+        `${path}?filter=open&fields=name,desc,idBoard,idList,idLabels,idMembers,due,url&members=true&member_fields=fullName,username`,
       );
-      return destination
-        ? cards.filter((value: any) => value.idList === destination.id)
-        : cards;
+      return { lists: boardLists, cards };
     },
   );
   tool(

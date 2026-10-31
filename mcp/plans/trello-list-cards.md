@@ -2,7 +2,7 @@
 
 Improve the existing `list_trello_cards` tool rather than adding another tool. Keep exact list-name selection consistent with card creation and updates, and expose enough context to avoid a separate board-discovery call for ordinary reads.
 
-Status: awaiting final implementation confirmation. The user approved the richer response and discovery examples (1a, 2a), then approved the existing integration-test approach (1a) with no new infrastructure. They subsequently requested keeping names and listing the documented Kanban list names directly in the tool description, replacing examples-only discovery. The user also explicitly requested list-scoped Trello card fetching rather than fetching all board cards for a named list. Existing test seams/scenarios are retained, with discovery and external HTTP expectations updated for these requests. No implementation or test changes are authorized until final confirmation.
+Status: implementation authorized by the user's final `A` confirmation and partially implemented. The richer response, exact-name input, documented names in discovery, list-scoped fetching, and existing test setup are approved. Todo and omitted-list slices completed RED → GREEN. The empty-list case passed on its first run, so implementation is paused under the agreed workflow to confirm keeping naturally passing cases as regression coverage. Remaining work: errors with available names, discovery description/schema, workflow guidance, and final verification.
 
 ## Findings
 
@@ -36,7 +36,7 @@ Known-list reads require one MCP call and two Trello HTTP requests: one for open
 
 ## Approval and scope boundary
 
-Only final implementation confirmation remains. Reuse the existing runner, fixtures, MCP integration setup, and Workers regression suite. Do not add dependencies, testing infrastructure, or a new listing-specific Workers test.
+Final implementation confirmation was received. Reuse the existing runner, fixtures, MCP integration setup, and Workers regression suite. Do not add dependencies, testing infrastructure, or a new listing-specific Workers test.
 
 ## Confirmed test seams
 
@@ -70,4 +70,11 @@ Location: `mcp/src/permissions.test.ts`, following existing MCP/HTTP fixture con
 
 Known-list reads return correctly scoped cards and the current open lists in one MCP call, using only the selected list's card endpoint rather than fetching all board cards. Discovery includes all six documented list names and explains the contract without Trello access. Missing/ambiguous selections expose available names without guessing. Workflow guidance no longer mandates board discovery for ordinary listing. Approved integration cases and existing regressions pass, and generated documentation is current. No new infrastructure or deployment.
 
-Confirm and implement? (y/n)
+## Execution log
+
+- Golden path: observed RED because the tool returned a bare card array. Implemented `{ lists, cards }` for selected lists and changed the external request to `/lists/{id}/cards`. The new test and all 24 existing permission tests passed (25 total). The test verifies exactly two Trello requests, open filtering, existing card fields/member expansion, and no board-wide card request.
+- Omitted list: observed RED because that path still returned a bare array without lists. Implemented the same envelope with current open lists; all 26 permission tests passed.
+- Empty list: added the agreed test at the existing seam. It passed on the first run with no further implementation, confirming that the preceding slices already cover this behavior. Paused before the next slice; never changed working code to force RED.
+- Pending decision: retain immediately passing cases as regression tests, report them honestly as existing coverage, and continue remaining slices without repeated pauses for that same circumstance. New missing behavior still requires observed RED → minimal GREEN.
+- Validation at this pause: `npm test` passed all 55 tests (including existing Workers regressions); `npm run check`, `npm run build`, and `git diff --check` passed. Expected failure-path diagnostics were emitted by existing tests.
+- This is not a completed feature; discovery text, enriched selection errors, workflow guidance, and their tests remain outstanding.
