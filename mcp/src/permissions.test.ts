@@ -360,6 +360,42 @@ test("reader lists an empty list without losing available list names", async () 
     assert.deepEqual(records.map((record) => record.path), ["/boards/board/lists", "/lists/empty/cards"]);
   }));
 
+test("unknown list returns available names without requesting any cards", async () =>
+  scenario("reader-secret", async (client) => {
+    setupCardListing();
+    const result = await client.callTool({ name: "list_trello_cards", arguments: { list: "Unknown" } });
+    assert.equal(result.isError, true);
+    assert.equal(JSON.parse((result.content as { text: string }[])[0].text),
+      'Missing or ambiguous list: Unknown. Choose an existing, unambiguous name. Available lists: "Todo", "Doing", "Empty".');
+    assert.deepEqual(records.map((record) => record.path), ["/boards/board/lists"]);
+  }));
+
+test("ambiguous list returns available names without guessing or requesting cards", async () =>
+  scenario("reader-secret", async (client) => {
+    setupCardListing();
+    boardLists.push({ id: "duplicate", name: "Todo" });
+    const result = await client.callTool({ name: "list_trello_cards", arguments: { list: "Todo" } });
+    assert.equal(result.isError, true);
+    assert.equal(JSON.parse((result.content as { text: string }[])[0].text),
+      'Missing or ambiguous list: Todo. Choose an existing, unambiguous name. Available lists: "Todo", "Doing", "Empty", "Todo".');
+    assert.deepEqual(records.map((record) => record.path), ["/boards/board/lists"]);
+  }));
+
+test("card listing discovery documents Kanban lists and the response without Trello requests", async () =>
+  scenario("reader-secret", async (client) => {
+    const { tools } = await client.listTools();
+    const listing = tools.find((tool) => tool.name === "list_trello_cards")!;
+    assert.match(listing.description!, /Lists: Inbox, Waiting For Client Approval, Todo, Doing, Ready For Review, ✨Done\./);
+    assert.match(listing.description!, /Returns \{ lists, cards \}, including all current open lists/);
+    assert.match(listing.description!, /No board discovery needed/);
+    const fields = listing.inputSchema.properties as Record<string, { type: string; description: string; enum?: string[] }>;
+    assert.equal(fields.list.type, "string");
+    assert.equal(fields.list.enum, undefined);
+    assert.match(fields.list.description, /Exact existing list name/);
+    assert.match(fields.list.description, /omitted returns all open board cards/);
+    assert.equal(records.length, 0);
+  }));
+
 test("all tools enforce their permission before calling Trello", async () => {
   const writes = [
     ["create_trello_card", { title: "New", description: "Context" }],

@@ -2,9 +2,9 @@
 
 Improve the existing `list_trello_cards` tool rather than adding another tool. Keep exact list-name selection consistent with card creation and updates, and expose enough context to avoid a separate board-discovery call for ordinary reads.
 
-Status: implementation authorized by the user's final `A` confirmation and partially implemented. The richer response, exact-name input, documented names in discovery, list-scoped fetching, and existing test setup are approved. Todo and omitted-list slices completed RED → GREEN. The empty-list case passed on its first run, so implementation is paused under the agreed workflow to confirm keeping naturally passing cases as regression coverage. Remaining work: errors with available names, discovery description/schema, workflow guidance, and final verification.
+Status: implemented and verified locally. The user authorized implementation with `A`, then explicitly approved retaining naturally passing cases as regression coverage for this implementation only (`1a this time`). All approved scenarios and documentation changes are complete. No new infrastructure or deployment.
 
-## Findings
+## Findings before implementation
 
 - `mcp/src/trello/trello-tools.ts` already registers `list_trello_cards({ list?: string })`. It returns open cards, optionally filtered by an exact existing open-list name.
 - `mcp/src/trello/trello-helpers.ts` resolves list names and refuses missing or duplicate names. Creation and updates use the same resolver.
@@ -55,7 +55,7 @@ All new cases are integration tests at the MCP SDK seam above. Use controlled HT
 6. Call `Client.listTools`; expect the tool description to contain all six exact documented names (Inbox, Waiting For Client Approval, Todo, Doing, Ready For Review, ✨Done). Expect the listing schema/description to explain exact-name input, omitted-list behavior, and live lists in the response. Expect discovery to make no Trello requests.
 7. Retain existing authorization regressions: denied calls fail before any Trello request. These already pass; do not manufacture RED for unchanged behavior.
 
-Location: `mcp/src/permissions.test.ts`, following existing MCP/HTTP fixture conventions. Keep internal collaborators real and double only the external Trello boundary. Use literal expected results. Implement one approved test at a time: observed RED, minimal GREEN, then regression checks. If a proposed test already passes, report that and agree how to proceed rather than manufacture a failure.
+Location: `mcp/src/permissions.test.ts`, following existing MCP/HTTP fixture conventions. Keep internal collaborators real and double only the external Trello boundary. Use literal expected results. Implement one approved test at a time: observed RED, minimal GREEN, then regression checks. For this implementation only, the user approved keeping immediately passing cases as regression coverage and continuing without further pauses for that circumstance; never manufacture a failure.
 
 ## Verification and scope
 
@@ -75,6 +75,11 @@ Known-list reads return correctly scoped cards and the current open lists in one
 - Golden path: observed RED because the tool returned a bare card array. Implemented `{ lists, cards }` for selected lists and changed the external request to `/lists/{id}/cards`. The new test and all 24 existing permission tests passed (25 total). The test verifies exactly two Trello requests, open filtering, existing card fields/member expansion, and no board-wide card request.
 - Omitted list: observed RED because that path still returned a bare array without lists. Implemented the same envelope with current open lists; all 26 permission tests passed.
 - Empty list: added the agreed test at the existing seam. It passed on the first run with no further implementation, confirming that the preceding slices already cover this behavior. Paused before the next slice; never changed working code to force RED.
-- Pending decision: retain immediately passing cases as regression tests, report them honestly as existing coverage, and continue remaining slices without repeated pauses for that same circumstance. New missing behavior still requires observed RED → minimal GREEN.
+- The user approved retaining immediately passing cases as regression tests and continuing the remaining slices without repeated pauses, explicitly for this implementation only. New missing behavior still requires observed RED → minimal GREEN.
 - Validation at this pause: `npm test` passed all 55 tests (including existing Workers regressions); `npm run check`, `npm run build`, and `git diff --check` passed. Expected failure-path diagnostics were emitted by existing tests.
-- This is not a completed feature; discovery text, enriched selection errors, workflow guidance, and their tests remain outstanding.
+- Unknown list: observed RED because the error omitted available names. Added listing-local enrichment around the shared exact-name resolver; verified GREEN with all earlier cases. Write-tool errors are unchanged.
+- Ambiguous list: passed immediately because the preceding error enrichment also covers duplicate names. Retained as regression coverage under the user's one-time approval; verified no card request occurs.
+- Discovery: observed RED because list names and response semantics were absent. Added all six documented names to the tool description and exact-name/default behavior to the input description; all 30 permission/integration tests passed. Discovery still makes no Trello requests and accepts names as a string, not a fixed enum.
+- Updated Kanban guidance to call listing directly; retained board context for labels/members and current-card reads before writes. Regenerated tool documentation without editing generated files manually. Reviewed the generated description and traced Todo through the tool: one MCP call, board-list lookup, then only `/lists/todo/cards`; no board-wide card fetch or discovery prerequisite.
+- Final checks: `npm test` passed all 58 tests, including the unchanged Workers regression suite. `npm run check`, `npm run build`, and `git diff --check` passed. Existing failure-path tests emitted expected diagnostics. No dependencies or testing infrastructure were added.
+- Handover: consumers must read `cards` from the returned object instead of treating the result as a bare array. `lists` includes every current open list, including empty lists. After deployment, refresh MCP tool discovery to see the list names and updated contract. Live Trello/deployment were not exercised; HTTP fixtures are the approved external boundary.

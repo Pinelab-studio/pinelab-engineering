@@ -36,14 +36,19 @@ export function registerTrello(
   tool(
     "list_trello_cards",
     "read",
-    "Lists open cards on the Pinelab Trello Board, optionally by list. Use get_pinelab_trello_kanban for more information.",
-    { list: name.optional() },
+    "Lists open cards on the Pinelab Trello Board. Lists: Inbox, Waiting For Client Approval, Todo, Doing, Ready For Review, ✨Done. Returns { lists, cards }, including all current open lists. No board discovery needed. Use get_pinelab_trello_kanban for more information.",
+    { list: name.optional().describe("Exact existing list name; omitted returns all open board cards.") },
     async (args) => {
       const boardLists = await lists();
-      const destination =
-        args.list === undefined
-          ? undefined
-          : resolve(boardLists, args.list, "list");
+      let destination: { id: string } | undefined;
+      if (args.list !== undefined) {
+        try {
+          destination = resolve(boardLists, args.list, "list");
+        } catch (error) {
+          const available = boardLists.map((list: { name: string }) => JSON.stringify(list.name)).join(", ") || "none";
+          throw new Error(`${(error as Error).message} Available lists: ${available}.`);
+        }
+      }
       const path = destination
         ? `/lists/${encodeURIComponent(destination.id)}/cards`
         : `/boards/${encodeURIComponent(config.board)}/cards`;
