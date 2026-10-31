@@ -1,8 +1,8 @@
-# Plan draft: discoverable Trello card listing
+# Implementation plan: discoverable Trello card listing
 
 Improve the existing `list_trello_cards` tool rather than adding another tool. Keep exact list-name selection consistent with card creation and updates, and expose enough context to avoid a separate board-discovery call for ordinary reads.
 
-Status: planning only. The user approved the richer response and discovery examples (1a, 2a). Test seams/scenarios and final implementation approval are still pending. No implementation or test changes are authorized yet.
+Status: awaiting final implementation confirmation. The user approved the richer response and discovery examples (1a, 2a), then approved the existing integration-test approach (1a) with no new infrastructure. Test seams and scenarios below are approved. No implementation or test changes are authorized until final confirmation.
 
 ## Findings
 
@@ -31,16 +31,16 @@ Known-list reads then require one MCP call. The server can still make multiple T
 1. Return `{ lists, cards }`, intentionally replacing the bare card array.
 2. Include compact, non-exhaustive examples such as `Todo` and `Doing` in discovery; runtime results/errors provide authoritative names.
 
-## Pending approval
+## Approval and scope boundary
 
-Approve the test seams and scenarios below, then confirm the final plan. Recommended: MCP integration coverage plus the existing Workers regression suite. Alternative: also add a listing-specific Workers transport test. No tests will be written before seam/scenario approval and final implementation confirmation.
+Only final implementation confirmation remains. Reuse the existing runner, fixtures, MCP integration setup, and Workers regression suite. Do not add dependencies, testing infrastructure, or a new listing-specific Workers test.
 
-## Proposed test seams (not yet approved)
+## Confirmed test seams
 
 - MCP SDK `Client.callTool` and `Client.listTools` against the real server over `InMemoryTransport`, using an external fake Trello HTTP server. Catches public tool contracts, selection/filtering, discoverability, and authorization. Misses deployed HTTP/Workers transport and actual Trello behavior.
-- Reuse the existing workerd end-to-end suite as regression coverage. A new listing-specific Workers case is optional, not assumed approved.
+- Reuse the existing workerd end-to-end suite as regression coverage, without adding new cases or infrastructure.
 
-## Proposed test order (not yet approved)
+## Confirmed test order
 
 All new cases are integration tests at the MCP SDK seam above. Use controlled HTTP fixtures with two cards (`todo-card` in Todo, `doing-card` in Doing) and three open lists (Todo, Doing, Empty), with literal expected results.
 
@@ -51,8 +51,6 @@ All new cases are integration tests at the MCP SDK seam above. Use controlled HT
 5. Supply two fixture lists named Todo and call with `list: "Todo"`; expect an ambiguity error with available names, never a guessed selection.
 6. Call `Client.listTools`; expect the listing schema/description to explain exact list names, Todo/Doing examples, omitted-list behavior, and live lists in the response. Expect discovery to make no Trello requests.
 7. Retain existing authorization regressions: denied calls fail before any Trello request. These already pass; do not manufacture RED for unchanged behavior.
-
-Optional additional seam: SDK calls over Streamable HTTP to workerd, still with a fake Trello HTTP boundary. Catches Workers/transport wiring that in-memory tests miss; still misses the deployed service and actual Trello behavior. If selected, add one golden-path listing case in `mcp/test/e2e.test.ts`.
 
 Location: `mcp/src/permissions.test.ts`, following existing MCP/HTTP fixture conventions. Keep internal collaborators real and double only the external Trello boundary. Use literal expected results. Implement one approved test at a time: observed RED, minimal GREEN, then regression checks. If a proposed test already passes, report that and agree how to proceed rather than manufacture a failure.
 
@@ -65,4 +63,8 @@ Location: `mcp/src/permissions.test.ts`, following existing MCP/HTTP fixture con
 - Baseline run before implementation: all 52 tests passed; TypeScript check passed. Expected failure-path diagnostics appeared during tests.
 - Branch created from freshly pulled `main`: `feat/trello-list-cards-plan`.
 
-After decisions and test approval, present the settled plan for final confirmation before implementing.
+## Definition of done
+
+Known-list reads return correctly scoped cards and the current open lists in one MCP call. Discovery explains the contract without Trello access. Missing/ambiguous selections expose available names without guessing. Workflow guidance no longer mandates board discovery for ordinary listing. Approved integration cases and existing regressions pass, and generated documentation is current. No new infrastructure or deployment.
+
+Confirm and implement? (y/n)
