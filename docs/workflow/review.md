@@ -3,7 +3,7 @@ name: code-review
 includedDocuments:
   - docs/best-practices/coding-best-practices.md
   - docs/best-practices/pull-request-guidelines.md
-description: Interactively review a GitHub PR. Only use when the user explicitly mentions “pinelab” (case-insensitive)
+description: Interactively review a GitHub PR the Pinelab way.
 argument-hint: "[GitHub-PR-URL]"
 ---
 

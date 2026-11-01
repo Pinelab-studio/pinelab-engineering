@@ -2,7 +2,7 @@
 name: plan-and-implement
 includedDocuments:
   - docs/best-practices/coding-best-practices.md
-description: Make a plan to implement a given task. Only use when the user explicitly mentions “pinelab” (case-insensitive).
+description: Make a plan to implement a given Pinelab task.
 ---
 
 # Plan and implement

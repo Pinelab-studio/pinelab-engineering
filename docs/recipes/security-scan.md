@@ -1,12 +1,9 @@
 ---
-name: security-scan
-includedDocuments:
-  - docs/best-practices/coding-best-practices.md
-  - docs/best-practices/pull-request-guidelines.md
-description: Scan, fix, and open a PR. Only use when the user explicitly mentions pinelab (case-insensitive).
+name: Node.js Security Scan and Dependency Updates
+description: Run a Node.js security scan, investigate dependency updates, fix confirmed issues, and open a pull request documenting risks and breaking changes.
 ---
 
-Run a lightweight Node.js security scan, fix confirmed issues and compatible production patch updates, then open a pull request. Use repository-wide checks plus a focused review of recent changes. Only load or follow this workflow when the user explicitly mentions **Pinelab** (case-insensitive). This is an agent instruction, not a server-side keyword check.
+Run a lightweight Node.js security scan, fix confirmed issues and compatible production patch updates, then open a pull request. Use repository-wide checks plus a focused review of recent changes.
 
 ## 1. Set scope and prepare
 
@@ -42,13 +39,13 @@ Keep full output outside AI context where possible; read summaries and relevant 
 
 ## 3. Investigate updates and fix
 
-Prioritize exploitable production vulnerabilities and broken functionality. Fix confirmed issues with focused changes and regression tests under the included coding rules. Do not fix suspicions as if verified.
+Prioritize exploitable production vulnerabilities and broken functionality. Fix confirmed issues with focused changes and regression tests under the project's coding rules. Do not fix suspicions as if verified.
 
 Also consider production patch updates within the installed major/minor version; use installed versions and the dependency tree, not only declared ranges. Report routine minor/major updates without applying them. Compatible updates for confirmed vulnerabilities may go beyond patches, but require the same investigation below.
 
-Before **every** dependency update, inspect official changelogs/release notes for the entire installed-to-target range, linked migration guides, engine requirements, and relevant advisories. Patch labels do not guarantee safety. Record source links and findings. If release information is unavailable or inconclusive, defer the update. Database migrations, breaking changes, credential rotation, and operational/product decisions require explicit approval before proceeding; report and defer those items while continuing safe work. Never run migrations against live systems.
+Before **every** package update, read that package's official changelog for the entire installed-to-target range, along with release notes, linked migration guides, engine requirements, and relevant advisories. Patch labels do not guarantee safety. Record source links and findings. If release information is unavailable or inconclusive, defer the update. Database migrations, breaking changes, credential rotation, and operational/product decisions require explicit approval before proceeding; report and defer those items while continuing safe work. Never run migrations against live systems.
 
-Update the manifest and lockfile together using the project's package manager. Avoid unrelated lockfile churn. Follow the included coding guidance for test approval and test-first fixes; obtain any missing scenario approval without reopening already agreed cases. Run relevant regression checks after each fix/update and the available final checks. Report pre-existing failures separately. Do not describe an unverified fix as validated.
+Update the manifest and lockfile together using the project's package manager. Avoid unrelated lockfile churn. Follow the project's coding guidance for test approval and test-first fixes; obtain any missing scenario approval without reopening already agreed cases. Run relevant regression checks after each fix/update and the available final checks. Report pre-existing failures separately. Do not describe an unverified fix as validated.
 
 ## 4. Report and open a PR
 
@@ -56,6 +53,6 @@ Return a concise report in the conversation with scan commit, lookback/baseline,
 
 P0 means critical security; P1 high security or broken functionality; P2 moderate risk/maintenance; P3 minor improvements. Include relevant bugs, missing tests, duplication, and performance findings at lower priority without expanding into unrelated cleanup.
 
-Review the diff for secrets and unrelated/generated artifacts. Remove temporary plan files created for this task, not pre-existing user files. Commit and push only intended fixes on the feature branch, then create a PR following the included PR guidelines. Do not merge or deploy. With no fixes, return the report without an empty commit or PR. If checks or PR creation fail, report the blocker and actual completion state.
+Review the diff for secrets and unrelated/generated artifacts. Remove temporary plan files created for this task, not pre-existing user files. Commit and push only intended fixes on the feature branch, then create a PR following the project's PR guidelines. Do not merge or deploy. With no fixes, return the report without an empty commit or PR. If checks or PR creation fail, report the blocker and actual completion state.
 
-The PR must document **each dependency's old → new version, changelog/release-note links, relevant changes, migration and breaking-change findings, operational steps, and test results**. Explicitly say when no migrations or breaking changes were identified and note uncertainty. Keep the description within the PR guidelines' limit; place a larger dependency table/report in a linked PR comment. Include deferred updates and approval requirements. Return the PR link and reproduction commands. Scheduling remains outside this workflow.
+The PR must document **each dependency's old → new version, changelog/release-note links, relevant changes, migration and breaking-change findings, operational steps, and test results**. For each upgraded dependency, explicitly state `Breaking changes: <details>` or `breaking: none` when none were identified. Explicitly say when no migrations were identified and note uncertainty. Keep the description within the PR guidelines' limit; place a larger dependency table/report in a linked PR comment. Include deferred updates and approval requirements. Return the PR link and reproduction commands. Scheduling remains outside this recipe.

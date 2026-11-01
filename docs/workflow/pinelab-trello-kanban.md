@@ -1,6 +1,6 @@
 ---
 name: pinelab-kanban
-description: "Manage Pinelab’s kanban tasks in Trello: create, refine, move, and label cards from Inbox to Done. Only use when the user explicitly mentions “pinelab” (case-insensitive)"
+description: "Manage Pinelab’s kanban tasks in Trello: create, refine, move, label cards and move from Inbox to Done"
 ---
 
 Use this workflow to apply Pinelab’s way of working on its Trello board. It defines task lifecycle, approval gates, and card content. Use the authenticated Pinelab MCP tools for all Trello card management; do not use local environment variables, credential files, shell commands, or direct Trello API requests.

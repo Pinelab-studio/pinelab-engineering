@@ -25,25 +25,21 @@ test("every best practice and workflow has a direct readable tool, but recipes d
     }
   }));
 
-test("security scan is discoverable with a short explicit Pinelab trigger and readable instructions", async () =>
+test("security scan is discoverable as a recipe without bundled guidance", async () =>
   scenario(async (client) => {
     const { tools } = await client.listTools();
-    const tool = tools.find(({ name }) => name === "get_security_scan");
-    assert.ok(tool, "Missing security scan tool");
-    assert.equal(tool.description, "Scan, fix, and open a PR. Only use when the user explicitly mentions pinelab (case-insensitive).");
-    const response = await client.callTool({ name: "get_security_scan", arguments: {} });
+    assert.ok(!tools.some(({ name }) => name === "get_security_scan"));
+    const recipes = JSON.parse(text(await client.callTool({ name: "list_recipes", arguments: {} }))) as { id: string }[];
+    assert.ok(recipes.some(({ id }) => id === "recipes/security-scan"));
+    const response = await client.callTool({ name: "get_recipe", arguments: { id: "recipes/security-scan" } });
     assert.notEqual(response.isError, true);
-    assert.ok(text(response).includes("Document: docs/workflow/security-scan.md"));
-    assert.ok(text(response).includes("Review changes from the last 7 days by default"));
-  }));
-
-test("security scan bundles coding and PR guidance exactly once", async () =>
-  scenario(async (client) => {
-    const response = text(await client.callTool({ name: "get_security_scan", arguments: {} }));
-    assert.equal(response.split("Document: docs/best-practices/coding-best-practices.md").length - 1, 1);
-    assert.equal(response.split("Document: docs/best-practices/pull-request-guidelines.md").length - 1, 1);
-    assert.ok(response.includes("## Think Before Coding"));
-    assert.ok(response.includes("Keep the entire description at 200 words or fewer."));
+    const content = text(response);
+    assert.ok(content.includes("Review changes from the last 7 days by default"));
+    assert.ok(!content.includes("includedDocuments:"));
+    assert.ok(!content.includes("## Think Before Coding"));
+    assert.ok(!content.includes("Keep the entire description at 200 words or fewer."));
+    assert.ok(content.includes("read that package's official changelog for the entire installed-to-target range"));
+    assert.ok(content.includes("For each upgraded dependency, explicitly state `Breaking changes: <details>` or `breaking: none`"));
   }));
 
 test("review and planning include global rules once while Vendure remains standalone", async () =>

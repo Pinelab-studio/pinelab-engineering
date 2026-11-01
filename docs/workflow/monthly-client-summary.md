@@ -1,6 +1,6 @@
 ---
 name: monthly-client-summary
-description: "Create a monthly summary for a Pinelab client with completed tasks, metrics, and next steps. Only use when the user explicitly mentions Pinelab and requests this summary."
+description: "Create a monthly summary for a Pinelab client with completed tasks, metrics, and next steps based on Trello and Vendure DB."
 ---
 
 We will create a monthly summary for a specific Pinelab client using tasks from Trello and metrics from the database. The result is a Dutch HTML email whose rendered content the user can copy into an email client. The user must read, verify, and adjust the email as needed before sending it.
