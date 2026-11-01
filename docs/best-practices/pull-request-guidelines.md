@@ -2,8 +2,14 @@
 name: Pull Request Guidelines
 description: Load when creating pull requests for Pinelab.
 ---
-Write pull request descriptions using the sections below so reviewers can quickly understand the change, validate it, and identify operational requirements. 
+
+Write pull request descriptions using the sections below so reviewers can quickly understand the change, validate it, and identify operational requirements.
 Keep the entire description at 200 words or fewer.
+
+## Before creating a PR
+
+- If `CHANGELOG.md` exists, propose a semantic version bump and changelog update including the package.json version; get approval before editing. Use `# X.Y.Z (YYYY-MM-DD)` and concise bullets, newest first. Commit/push approved changes. 
+- Create with `gh pr create --title '<title>' --body-file - --base <default>` using a heredoc for the body. Return the raw PR URL.
 
 ## What changed and why
 
