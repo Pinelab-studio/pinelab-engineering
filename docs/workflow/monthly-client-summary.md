@@ -1,11 +1,11 @@
 ---
 name: monthly-client-summary
-description: "Create a monthly summary for a Pinelab client with completed tasks, metrics, and next steps based on Trello and Vendure DB."
+description: "Only explicitly trigger when asked to create a monthly summary for a Pinelab client."
 ---
 
 We will create a monthly summary for a specific Pinelab client using tasks from Trello and metrics from the database. The result is a Dutch HTML email whose rendered content the user can copy into an email client. The user must read, verify, and adjust the email as needed before sending it.
 
-Required input: the client and the month to summarize.
+Required input: the client and the month to summarize. If only a month is given, always use the current calendar year, even if that month is still in the future. Do not ask for the year; use a different year only when explicitly supplied.
 
 ## Procedure
 
@@ -16,7 +16,7 @@ Required input: the client and the month to summarize.
 5. Fetch the metrics for this client from the Vendure database with the query below.
 6. Use these metrics to fill in the metric variables in the email template
 7. Write a one or two sentence conclusion for the metrics, and insert in {{metric_conclusions}}
-8. Return the filled in HTML email in chat, so that the user can copy/past it. Do mention what the user needs to replace still.
+8. Return the filled-in HTML template in chat inside a fenced code block starting with ```html and ending with ```, so the user can easily copy it. Outside the code block, mention anything the user still needs to replace.
 
 ## SQL query for metrics
 
@@ -155,7 +155,9 @@ This query returns the following per currency:
 
 ### Instructions for filling out the template
 
+- Only fill in the template variables. Do not change the layout, HTML structure, styles, or fixed text.
 - Keep the email content in Dutch.
+- Each bullet point summarizing Trello tasks must be one sentence of at most 25 words, for both this client and other clients.
 - Use the corresponding currency symbol in front of amounts: €, £ or $ depending on the currency code.
 - Replace all `{{...}}` placeholders before sending the email.
 - HTML-escape inserted text. Populate `{{finished_tasks_html}}` with a `<ul>` containing `<li>` elements; escape the task text, not the HTML tags.
@@ -241,25 +243,14 @@ Do not invent missing values or leave placeholders unresolved.
     </table>
 
     <p>
-      Je kan hier altijd live bekijken wat er in de planning staat en welke taken we al hebben afgerond:
-      <a
-        href="{{planning_url}}"
-        style="color:#365914; text-decoration:underline;"
-        >Bekijk de planning</a
-      >.
-    </p>
-    <p>
-      <strong
-        >TODO voor de gebruiker: vul de link naar de planning in en verwijder
-        deze tekst voordat je de e-mail verstuurt.</strong
-      >
+      Je kan hier altijd live bekijken wat er in de planning staat en welke taken we al hebben afgerond: TODO
     </p>
 
     <h2 style="font-size:20px; line-height:28px; margin:24px 0 12px;">
       Dit hebben we bij andere projecten gedaan
     </h2>
     <p>
-      Collectivisatie en hergebruik is onderdeel van Pinelab, dus wie weet zit
+      Collectivisatie is goed voor allen, dus wie weet zit
       er iets voor je tussen?
     </p>
     {{other_tasks_html}}
