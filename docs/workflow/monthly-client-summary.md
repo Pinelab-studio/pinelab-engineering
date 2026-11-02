@@ -9,7 +9,7 @@ Required input: the client and the month to summarize. If only a month is given,
 
 ## Procedure
 
-1. Retrieve all Trello tasks moved to the Done list during the selected month, including tasks for other clients.
+1. Retrieve all Trello tasks moved to the Done list (or created in the Done list) during the selected month, including tasks for other clients.
 2. Summarize what we completed for this client. Use simple, non-technical bullet points. Combine tasks where this improves readability.
 3. Summarize what we completed for other clients as inspiration for possible improvements and available solutions. Do not mention other clients' names. ONLY fetch non-archived cards.
 4. Use these Trello cards to fill in the variables in the email template below.
