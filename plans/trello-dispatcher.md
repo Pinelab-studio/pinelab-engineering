@@ -1,6 +1,6 @@
-# On-demand Pinelab Trello MCP — draft plan
+# On-demand Pinelab Trello MCP — implementation plan
 
-Status: planning; implementation and test changes are not authorized.
+Status: interface, compatibility choice, and test seams/scenarios confirmed. Awaiting final implementation approval; implementation and test changes are not yet authorized.
 
 ## Goal and boundaries
 
@@ -15,22 +15,22 @@ Replace six advertised Trello operation tools and the separate Kanban guidance l
 - Existing tests assert separate tool names and one direct tool per workflow; these contracts need deliberate updates.
 - Trello guidance currently names the old tools. Update its operation references without relaxing lifecycle or approval requirements.
 
-## Proposed design (pending approval)
+## Confirmed design
 
 1. Advertise optional `action` plus an object `input`, without embedding all operation schemas. Omitted action returns the Kanban workflow and detailed action schemas, with no Trello requests.
 2. Actions: `list_cards`, `get_card`, `get_board`, `create_card`, `update_card`, `add_comment`.
 3. Reuse operation schemas for runtime strict validation and discovery output. Reject unknown actions, unknown fields, malformed inputs, and nonempty inputs without an action; return actionable errors without side effects.
 4. Preserve operation defaults, response shapes, authenticated attribution, per-action read/write permission checks, board scoping, current Done restrictions, selection validation, sanitized failures, and no automatic write retries.
-5. Remove legacy tools rather than retaining aliases. Document the breaking interface change and client tool-list refresh requirement.
+5. Remove legacy tools immediately rather than retaining aliases. Document the breaking interface change and client tool-list refresh requirement only in the PR description, not in a changelog or migration document. Update normal usage guidance to describe the current interface.
 6. Keep documentation discovery independent of Trello credentials, matching existing guidance loading; preserve transport authentication. Operation calls still require their existing credentials and permissions.
 7. Use conservative mutation-capable annotations for the combined tool. A single tool cannot advertise separate read-only hints per action; client approval UX may become less granular.
 
-## Proposed test seams (pending confirmation)
+## Confirmed test seams
 
 - Public MCP `listTools`/`callTool` via real SDK transport, with a fake external Trello HTTP service: catches discovery, validation, dispatch, permissions, and observable API effects; misses live Trello behavior and client UI/agent compliance.
 - Existing worker HTTP tests via workerd: catches transport authentication, article bundling, and runtime integration; misses live hosting and live Trello behavior.
 
-## Proposed ordered scenarios (pending confirmation)
+## Confirmed ordered scenarios
 
 1. Golden path: discover the single tool, call without action, then list Todo cards using the returned contract. Expect workflow and action schemas without upstream requests during discovery, then the expected lists/cards response.
 2. Invalid action, missing required operation inputs, unknown fields, or inputs without an action: clear error and no Trello requests.
@@ -47,13 +47,15 @@ Affected: `mcp/src/mcp.ts`, `mcp/src/trello/`, `mcp/src/permissions.test.ts`, `m
 
 From `mcp/`: install locked dependencies with `npm ci` if needed; run `npm test`, `npm run check`, and `npm run build`. Supplement with a client discovery/help/list smoke check if an updated client is available; never perform live writes merely to verify this change.
 
-## Decisions awaiting user input
+## Confirmed decisions and implementation gate
 
-1. Approve the compact action/input interface with combined help, or choose full up-front typed action schemas.
-2. Approve immediate removal of old tool names, or require a compatibility transition with temporary context overhead.
-3. Approve the proposed integration and worker seams/scenarios, or request changes. Test details dependent on the chosen interface will be finalized afterward.
+The user selected the compact action/input interface, immediate removal of old tools, and the proposed integration/worker test seams and scenarios. Breaking-change communication belongs only in the PR.
 
-After decisions are settled, present the final plan for explicit implementation approval. No implementation in this planning turn.
+Tests call `pinelab_trello` with `{}` for discovery and `{ action: "list_cards", input: { list: "Todo" } }` for the golden-path operation. Expected lists/cards come from fixed fixture literals, not implementation-derived values. Invalid inputs must produce a tool error and zero upstream requests. Existing operation tests retain their observable expectations while switching to action/input calls. Worker tests use the same public contract over HTTP.
+
+Completion means one compact advertised entry point, on-demand workflow and schemas, strict validated dispatch for all six operations, preserved safety behavior, updated usage guidance/catalogue, passing automated checks, and a PR-only breaking-change note at handover. No live write verification or deployment is in scope.
+
+Present the final plan for explicit implementation approval before changing code or tests.
 
 ## Checks this turn
 
