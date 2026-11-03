@@ -1,6 +1,6 @@
 # On-demand Pinelab Trello MCP — implementation plan
 
-Status: interface, compatibility choice, and test seams/scenarios confirmed. Awaiting final implementation approval; implementation and test changes are not yet authorized.
+Status: implementation authorized by the user and implemented. See verification and handover below.
 
 ## Goal and boundaries
 
@@ -55,8 +55,17 @@ Tests call `pinelab_trello` with `{}` for discovery and `{ action: "list_cards",
 
 Completion means one compact advertised entry point, on-demand workflow and schemas, strict validated dispatch for all six operations, preserved safety behavior, updated usage guidance/catalogue, passing automated checks, and a PR-only breaking-change note at handover. No live write verification or deployment is in scope.
 
-Present the final plan for explicit implementation approval before changing code or tests.
+The user authorized implementation after the final plan was presented.
 
-## Checks this turn
+## Planning baseline
 
 Working tree was clean. Updated local main from origin and created `feat/trello-dispatcher`. Installed locked dependencies in `mcp/`. Baseline: all 59 tests passed, `npm run check` passed, and `npm run build` passed. npm reported four dependency vulnerabilities (two moderate, two high); dependency remediation is outside this task. An initial npm invocation from the repository root failed because the package lives in `mcp/`; rerunning there succeeded.
+
+## Implementation verification and handover
+
+- Implemented one entry point with on-demand guidance/action schemas and all six existing operations. Updated usage guidance and migrated existing SDK/worker/logging tests.
+- Observed RED then GREEN for the golden path (entry point absent), operation validation (unknown fields accepted), catalogue removal (extra Kanban loader), and strict top-level validation (unknown field accepted).
+- Existing operation regressions were migrated rather than manufacturing failures for behavior already implemented. Per-action permissions and original API effects remain covered.
+- Advertised Trello tool definitions measured through SDK `listTools`: 7 tools / 5,166 serialized characters before; 1 tool / 566 characters after (about 89% smaller). This measures JSON character count, not tokenizer usage. UTF-8 byte counts: 5,170 before / 566 after.
+- Final checks passed from `mcp/`: all 61 tests, `npm run check`, and `npm run build`. `git diff --check` also passed. No live Trello calls, client UI verification, or deployment performed. Worker tests cover HTTP transport with a fake external Trello service.
+- At PR creation, include the agreed PR-only interface-change note and client refresh instruction; no separate migration document is needed.

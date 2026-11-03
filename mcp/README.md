@@ -34,6 +34,20 @@ All requests require the MCP token. Trello credentials are only needed for Trell
 
 To explore tools visually, run `npx @modelcontextprotocol/inspector` and connect using its default proxy mode.
 
+## Pinelab Trello operations
+
+Only use `pinelab_trello` for explicitly requested Pinelab Trello work. Call it with `{}` first: the response contains `guidance` and `actions`, with each action's description, permission, and JSON input schema. Discovery makes no Trello requests and needs no Trello credentials; HTTP authentication is still required.
+
+Then call the same tool with an action and input, for example:
+
+```json
+{ "action": "list_cards", "input": { "list": "Todo" } }
+```
+
+Supported actions are `list_cards`, `get_card`, `get_board`, `create_card`, `update_card`, and `add_comment`. Inputs are strictly validated. Operation permissions are checked per action. The combined tool is conservatively annotated as potentially modifying data, so clients may request approval even for read actions.
+
+The small entry-point definition remains visible in tool discovery. Detailed guidance and operation schemas load on demand; this does not enforce conditional visibility or agent compliance.
+
 ## Loading best practices
 
 Add this instruction to your agent/project setup: **Before implementing or reviewing any code, call `get_coding_best_practices`. For Vendure work, also call `get_vendure_best_practices`.** No Pinelab mention is required for best practices. The MCP server cannot force an agent to call a tool.
@@ -46,7 +60,7 @@ includedDocuments:
   - docs/best-practices/vendure-best-practices.md
 ```
 
-Each document under `docs/best-practices/` and `docs/workflow/` gets a direct, no-argument tool. Tool names are `get_` plus the document filename without its extension, with hyphens replaced by underscores, for example `get_review` or `get_coding_best_practices`. Category directories are not included. Descriptions come from article frontmatter; workflows retain their explicit Pinelab trigger. These replace `list_skills` and `get_skill`.
+Each document under `docs/best-practices/` and `docs/workflow/` gets a direct, no-argument tool, except the Kanban workflow, which is loaded through `pinelab_trello`. Tool names are `get_` plus the document filename without its extension, with hyphens replaced by underscores, for example `get_review` or `get_coding_best_practices`. Category directories are not included. Descriptions come from article frontmatter; workflows retain their explicit Pinelab trigger. These replace `list_skills` and `get_skill`.
 
 Recipes have no individual tools. `list_recipes` lists feature-specific Vendure or storefront resources, including their IDs and descriptions; `get_recipe({ id: "recipes/storefront-seo" })` reads one on demand.
 

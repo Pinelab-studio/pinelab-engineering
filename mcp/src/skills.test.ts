@@ -5,13 +5,20 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createMcpServer, type Article } from "./mcp.js";
 
-test("every best practice and workflow has a direct readable tool, but recipes do not", async () =>
+test("guidance is readable through direct tools except on-demand Trello guidance and recipes", async () =>
   scenario(async (client, articles) => {
     const { tools } = await client.listTools();
     assert.ok(!tools.some(({ name }) => ["list_skills", "get_skill"].includes(name)));
     // Verify every published document against the public tool interface.
     for (const article of articles) {
       const name = `get_${article.id.split("/").at(-1)!.replace(/-/g, "_")}`;
+      if (article.id === "workflow/pinelab-trello-kanban") {
+        assert.ok(!tools.some((tool) => tool.name === name));
+        const response = await client.callTool({ name: "pinelab_trello", arguments: {} });
+        assert.notEqual(response.isError, true);
+        assert.ok(JSON.parse(text(response)).guidance.includes(article.text));
+        continue;
+      }
       if (article.id.startsWith("recipes/")) {
         assert.ok(!tools.some((tool) => tool.name === name));
         continue;
