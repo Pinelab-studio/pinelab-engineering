@@ -83,7 +83,7 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
     await t.test("board context includes lists, labels and members", async () => {
       const client = await connect(valid.endpoint);
       try {
-        const result = await client.callTool({ name: "get_trello_board", arguments: {} });
+        const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "get_board", input: {} } });
         assert.notEqual(result.isError, true);
         assert.deepEqual(JSON.parse((result.content as { text: string }[])[0].text), {
           board: { id: "board" }, lists: [{ id: "todo", name: "Todo" }, { id: "done", name: "✨Done" }],
@@ -96,9 +96,9 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
       requests.length = 0;
       const client = await connect(valid.endpoint);
       try {
-        const result = await client.callTool({ name: "create_trello_card", arguments: {
+        const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "create_card", input: {
           title: "Test title", description: "Test description", labels: ["Bug"], assignees: ["developer"],
-        } });
+        } } });
         assert.notEqual(result.isError, true, JSON.stringify(result));
         assert.deepEqual(JSON.parse((result.content as { text: string }[])[0].text).card, card);
         const create = requests.find((request) => request.method === "POST" && request.path === "/1/cards");
@@ -111,9 +111,9 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
       requests.length = 0;
       const client = await connect(valid.endpoint);
       try {
-        const result = await client.callTool({ name: "update_trello_card", arguments: {
+        const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "update_card", input: {
           card: "card", labels: [], assignees: [], position: "bottom",
-        } });
+        } } });
         assert.notEqual(result.isError, true, JSON.stringify(result));
         assert.deepEqual(requests.find((request) => request.method === "PUT")?.body, {
           idLabels: "", idMembers: "", pos: "bottom",
@@ -130,19 +130,19 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
           { labels: [] }, { assignees: [] }, { position: "top" }, {},
         ]) {
           requests.length = 0;
-          const result = await client.callTool({ name: "update_trello_card", arguments: { card: "card", ...patch } });
+          const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "update_card", input: { card: "card", ...patch } } });
           assert.equal(result.isError, true);
           assert.match(JSON.stringify(result), /read-only/);
           assert.ok(requests.every((request) => request.method === "GET"));
         }
-        const result = await client.callTool({ name: "get_trello_card", arguments: { card: "card" } });
+        const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "get_card", input: { card: "card" } } });
         assert.notEqual(result.isError, true);
       } finally { cardList = "todo"; await client.close(); }
     });
     await t.test("read card succeeds with bearer token", async () => {
       const client = await connect(valid.endpoint);
       try {
-        const result = await client.callTool({ name: "get_trello_card", arguments: { card: "card" } });
+        const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "get_card", input: { card: "card" } } });
         assert.notEqual(result.isError, true);
         assert.deepEqual(JSON.parse((result.content as { text: string }[])[0].text), {
           card, activity: [], nextBefore: null,
@@ -153,7 +153,7 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
       const client = await connect(valid.endpoint);
       try {
         const { tools } = await client.listTools();
-        const workflows = ["get_review", "get_refine", "get_plan_and_implement", "get_pinelab_trello_kanban", "get_kanban_priorities"];
+        const workflows = ["get_review", "get_refine", "get_plan_and_implement", "pinelab_trello", "get_kanban_priorities"];
         for (const name of [...workflows, "get_coding_best_practices"]) {
           assert.ok(tools.some((tool) => tool.name === name), `Missing tool: ${name}`);
         }
@@ -170,7 +170,14 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
         assert.doesNotMatch(JSON.stringify(recipes), /best-practices\//);
         const unknown = await client.callTool({ name: "get_recipe", arguments: { id: "../README" } });
         assert.equal(unknown.isError, true);
-        assert.ok((await client.listTools()).tools.some((tool) => tool.name === "create_trello_card"));
+        assert.ok((await client.listTools()).tools.some((tool) => tool.name === "pinelab_trello"));
+        const before = requests.length;
+        const help = await client.callTool({ name: "pinelab_trello", arguments: {} });
+        assert.notEqual(help.isError, true);
+        const guidance = JSON.parse((help.content as { text: string }[])[0].text);
+        assert.match(guidance.guidance, /Completed tasks are read-only/);
+        assert.ok(guidance.actions.create_card.inputSchema.properties.title);
+        assert.equal(requests.length, before);
       } finally { await client.close(); }
       assert.equal((await fetch(valid.endpoint, { method: "POST", headers: { Authorization: "Bearer invalid" } })).status, 403);
       assert.equal((await fetch(valid.endpoint, { method: "POST", headers: { Authorization: `Bearer ${bearer}`, Origin: "https://untrusted.example" } })).status, 403);
@@ -182,15 +189,15 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
       requests.length = 0;
       const client = await connect(valid.endpoint);
       try {
-        const result = await client.callTool({ name: "get_trello_card", arguments: { card: "redirect" } });
+        const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "get_card", input: { card: "redirect" } } });
         assert.equal(result.isError, true);
         assert.match(JSON.stringify(result), /Trello returned HTTP 302/);
         assert.deepEqual(requests.map((request) => request.path), ["/1/boards/board", "/1/cards/redirect"]);
       } finally { await client.close(); }
     });
     for (const [name, args] of [
-      ["create_trello_card", { title: "Never create", description: "Denied" }],
-      ["get_trello_card", { card: "card" }],
+      ["pinelab_trello", { action: "create_card", input: { title: "Never create", description: "Denied" } }],
+      ["pinelab_trello", { action: "get_card", input: { card: "card" } }],
       ["get_refine", {}],
     ] as const) {
       await t.test(`${name} fails with HTTP 403 without bearer token`, async () => {
@@ -208,14 +215,14 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
   const missing = await start(true);
   try {
     for (const [name, args] of [
-      ["create_trello_card", { title: "Never create", description: "No credentials" }],
-      ["get_trello_card", { card: "card" }],
+      ["create_card", { title: "Never create", description: "No credentials" }],
+      ["get_card", { card: "card" }],
     ] as const) {
       await t.test(`${name} returns a tool error without Trello credentials`, async () => {
         requests.length = 0;
         const client = await connect(missing.endpoint);
         try {
-          const result = await client.callTool({ name, arguments: args });
+          const result = await client.callTool({ name: "pinelab_trello", arguments: { action: name, input: args } });
           assert.equal(result.isError, true);
           assert.match(JSON.stringify(result), /Trello configuration is incomplete/);
           assert.equal(requests.length, 0);

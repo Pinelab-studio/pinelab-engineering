@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
+import { readFile } from "node:fs/promises";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createMcpServer } from "./mcp.js";
@@ -96,7 +97,7 @@ async function scenario(
         { username: "Writer", token: "writer-secret".repeat(4), permissions: ["write"] },
       ],
       env: {},
-    }, token ? `Bearer ${token.repeat(4)}` : undefined, async () => []);
+    }, token ? `Bearer ${token.repeat(4)}` : undefined, async () => JSON.parse(await readFile(new URL("./generated/skills.json", import.meta.url), "utf8")));
   const client = new Client({ name: "test", version: "1" });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   try {
@@ -110,9 +111,44 @@ async function scenario(
   }
 }
 
+test("discover guidance then list Todo cards through the compact Trello entry point", async () =>
+  scenario("reader-secret", async (client) => {
+    setupCardListing();
+    const { tools } = await client.listTools();
+    const tool = tools.find(({ name }) => name === "pinelab_trello");
+    assert.ok(tool);
+    assert.deepEqual(Object.keys(tool.inputSchema.properties!).sort(), ["action", "input"]);
+    const help = await client.callTool({ name: "pinelab_trello", arguments: {} });
+    assert.notEqual(help.isError, true);
+    const discovery = JSON.parse((help.content as { text: string }[])[0].text);
+    assert.match(discovery.guidance, /Completed tasks are read-only/);
+    assert.equal(discovery.actions.list_cards.inputSchema.properties.list.type, "string");
+    assert.equal(records.length, 0);
+    const response = await client.callTool({ name: "pinelab_trello", arguments: { action: "list_cards", input: { list: "Todo" } } });
+    assert.notEqual(response.isError, true);
+    const result = JSON.parse((response.content as { text: string }[])[0].text);
+    assert.deepEqual(result.lists, [{ id: "todo", name: "Todo" }, { id: "doing", name: "Doing" }, { id: "empty", name: "Empty" }]);
+    assert.deepEqual(result.cards.map((card: { name: string }) => card.name), ["Todo task"]);
+  }));
+
+test("invalid dispatcher inputs are rejected without reaching Trello", async () =>
+  scenario("reader-secret", async (client) => {
+    for (const args of [
+      { action: "unknown" },
+      { action: "get_card", input: {} },
+      { action: "list_cards", input: { typo: "Todo" } },
+      { input: { list: "Todo" } },
+      { action: "get_board", input: {}, typo: true },
+    ]) {
+      const response = await client.callTool({ name: "pinelab_trello", arguments: args });
+      assert.equal(response.isError, true, JSON.stringify(args));
+      assert.equal(records.length, 0);
+    }
+  }));
+
 test("board context includes lists, labels and assignable usernames in one tool call", async () =>
   scenario("reader-secret", async (client) => {
-    const result = await client.callTool({ name: "get_trello_board", arguments: {} });
+    const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "get_board", input: {} } });
     assert.notEqual(result.isError, true);
     const context = JSON.parse((result.content as { text: string }[])[0].text);
     assert.deepEqual(context.lists, [{ id: "todo", name: "Todo" }, { id: "doing", name: "Doing" }]);
@@ -120,22 +156,25 @@ test("board context includes lists, labels and assignable usernames in one tool 
     assert.deepEqual(context.members, [{ id: "member", username: "developer", fullName: "Developer" }]);
   }));
 
-test("tool discovery documents update semantics and exposes only the minimal Trello tools", async () =>
+test("tool discovery exposes only one Trello entry point and loads update semantics on demand", async () =>
   scenario("reader-secret", async (client) => {
     const { tools } = await client.listTools();
-    assert.deepEqual(tools.map((tool) => tool.name).filter((name) => !["list_recipes", "get_recipe"].includes(name)).sort(),
-      ["add_trello_card_comment", "create_trello_card", "get_trello_board", "get_trello_card", "list_trello_cards", "update_trello_card"]);
-    const update = tools.find((tool) => tool.name === "update_trello_card")!;
-    assert.match(update.description!, /Updates a card on the Pinelab Trello Board/);
-    assert.match(update.description!, /Use get_pinelab_trello_kanban for more information/);
-    const fields = update.inputSchema.properties as Record<string, { description: string }>;
+    assert.deepEqual(tools.filter(({ name }) => /trello/.test(name)).map(({ name }) => name), ["pinelab_trello"]);
+    const tool = tools.find(({ name }) => name === "pinelab_trello")!;
+    assert.equal(tool.annotations?.readOnlyHint, false);
+    assert.equal(tool.annotations?.destructiveHint, true);
+    const response = await client.callTool({ name: "pinelab_trello", arguments: {} });
+    const { actions } = JSON.parse((response.content as { text: string }[])[0].text);
+    assert.deepEqual(Object.keys(actions).sort(), ["add_comment", "create_card", "get_board", "get_card", "list_cards", "update_card"]);
+    const fields = actions.update_card.inputSchema.properties;
     assert.match(fields.labels.description, /Replaces all labels/);
     assert.match(fields.assignees.description, /omitted preserves/);
+    assert.equal(records.length, 0);
   }));
 
 test("invalid tokens never reach Trello", async () => {
   await scenario("invalid", async (client) => {
-    const result = await client.callTool({ name: "get_trello_board", arguments: {} });
+    const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "get_board", input: {} } });
     assert.equal(result.isError, true);
     assert.match(JSON.stringify(result), /Unauthorized/);
   });
@@ -144,9 +183,9 @@ test("invalid tokens never reach Trello", async () => {
 
 test("writer adds exactly one comment without editing the card or checking its list", async () =>
   scenario("writer-secret", async (client) => {
-    const result = await client.callTool({ name: "add_trello_card_comment", arguments: {
+    const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "add_comment", input: {
       card: "card", text: "Ready for review.",
-    } });
+    } } });
     assert.notEqual(result.isError, true);
     assert.deepEqual(records.filter((r) => r.method !== "GET"), [{
       method: "POST", path: "/cards/card/actions/comments", body: { text: "Ready for review." },
@@ -156,9 +195,9 @@ test("writer adds exactly one comment without editing the card or checking its l
 
 test("reader cannot add comments", async () =>
   scenario("reader-secret", async (client) => {
-    const result = await client.callTool({ name: "add_trello_card_comment", arguments: {
+    const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "add_comment", input: {
       card: "card", text: "Not allowed",
-    } });
+    } } });
     assert.equal(result.isError, true);
     assert.match(JSON.stringify(result), /Forbidden/);
     assert.equal(records.length, 0);
@@ -167,7 +206,7 @@ test("reader cannot add comments", async () =>
 test("comments reject foreign cards and empty text without writing", async () =>
   scenario("writer-secret", async (client) => {
     for (const args of [{ card: "foreign", text: "Hello" }, { card: "card", text: "   " }]) {
-      const result = await client.callTool({ name: "add_trello_card_comment", arguments: args });
+      const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "add_comment", input: args } });
       assert.equal(result.isError, true);
     }
     assert.equal(records.some((r) => r.method !== "GET"), false);
@@ -176,19 +215,16 @@ test("comments reject foreign cards and empty text without writing", async () =>
 test("comment failures are reported without retrying", async () =>
   scenario("writer-secret", async (client) => {
     failComments = true;
-    const result = await client.callTool({ name: "add_trello_card_comment", arguments: {
+    const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "add_comment", input: {
       card: "card", text: "Hello",
-    } });
+    } } });
     assert.equal(result.isError, true);
     assert.equal(records.filter((r) => r.path.endsWith("/comments")).length, 1);
   }));
 
 test("writer creates a card with defaults and an attributed comment", async () =>
   scenario("writer-secret", async (client) => {
-    const response = await client.callTool({
-      name: "create_trello_card",
-      arguments: { title: "New", description: "Context" },
-    });
+    const response = await client.callTool({ name: "pinelab_trello", arguments: { action: "create_card", input: { title: "New", description: "Context" } } });
     assert.notEqual(response.isError, true);
     assert.deepEqual(
       records.find((r) => r.method === "POST" && r.path === "/cards")?.body,
@@ -207,9 +243,9 @@ test("writer creates a card with defaults and an attributed comment", async () =
 
 test("writer creates a card with confirmed labels and assignees", async () =>
   scenario("writer-secret", async (client) => {
-    const result = await client.callTool({ name: "create_trello_card", arguments: {
+    const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "create_card", input: {
       title: "Assigned", description: "Context", labels: ["Bug", "Client"], assignees: ["developer", "developer"],
-    } });
+    } } });
     assert.notEqual(result.isError, true);
     assert.deepEqual(records.find((r) => r.method === "POST" && r.path === "/cards")?.body, {
       name: "Assigned", desc: "Context", idList: "todo", idLabels: ["bug", "client"], idMembers: ["member"], pos: "top",
@@ -218,9 +254,9 @@ test("writer creates a card with confirmed labels and assignees", async () =>
 
 test("writer updates labels, assignees, list and position in one attributed change", async () =>
   scenario("writer-secret", async (client) => {
-    const result = await client.callTool({ name: "update_trello_card", arguments: {
+    const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "update_card", input: {
       card: "card", labels: ["Bug", "Bug"], assignees: ["developer", "developer"], list: "Doing", position: "bottom",
-    } });
+    } } });
     assert.notEqual(result.isError, true);
     assert.deepEqual(records.find((r) => r.method === "PUT")?.body, {
       idLabels: ["bug"], idMembers: ["member"], idList: "doing", pos: "bottom",
@@ -233,14 +269,11 @@ test("writer updates labels, assignees, list and position in one attributed chan
 
 test("writer updates only requested fields and records one summary", async () =>
   scenario("writer-secret", async (client) => {
-    const response = await client.callTool({
-      name: "update_trello_card",
-      arguments: {
+    const response = await client.callTool({ name: "pinelab_trello", arguments: { action: "update_card", input: {
         card: "labelledassigned",
         title: "Changed",
         description: "Changed description",
-      },
-    });
+      } } });
     assert.notEqual(response.isError, true);
     assert.deepEqual(records.find((r) => r.method === "PUT")?.body, {
       name: "Changed",
@@ -253,10 +286,7 @@ test("writer updates only requested fields and records one summary", async () =>
 
 test("writer moves cards using resolved list names", async () =>
   scenario("writer-secret", async (client) => {
-    const response = await client.callTool({
-      name: "update_trello_card",
-      arguments: { card: "card", list: "Doing" },
-    });
+    const response = await client.callTool({ name: "pinelab_trello", arguments: { action: "update_card", input: { card: "card", list: "Doing" } } });
     assert.notEqual(response.isError, true);
     assert.deepEqual(records.find((r) => r.method === "PUT")?.body, {
       idList: "doing",
@@ -268,10 +298,7 @@ test("writer moves cards using resolved list names", async () =>
 
 test("writer replaces the existing labels with the supplied selection", async () =>
   scenario("writer-secret", async (client) => {
-    const response = await client.callTool({
-      name: "update_trello_card",
-      arguments: { card: "labelled", labels: ["Client"] },
-    });
+    const response = await client.callTool({ name: "pinelab_trello", arguments: { action: "update_card", input: { card: "labelled", labels: ["Client"] } } });
     assert.notEqual(response.isError, true);
     assert.deepEqual(
       records.find((r) => r.method === "PUT")?.body,
@@ -284,10 +311,7 @@ test("writer replaces the existing labels with the supplied selection", async ()
 
 test("writer clears labels and assignees using empty arrays", async () =>
   scenario("writer-secret", async (client) => {
-    const response = await client.callTool({
-      name: "update_trello_card",
-      arguments: { card: "labelledassigned", labels: [], assignees: [] },
-    });
+    const response = await client.callTool({ name: "pinelab_trello", arguments: { action: "update_card", input: { card: "labelledassigned", labels: [], assignees: [] } } });
     assert.notEqual(response.isError, true);
     assert.deepEqual(records.find((r) => r.method === "PUT")?.body, {
       idLabels: "", idMembers: "",
@@ -299,12 +323,9 @@ test("writer clears labels and assignees using empty arrays", async () =>
 
 test("reader reads cards, activity and board cards without creating comments", async () =>
   scenario("reader-secret", async (client) => {
-    const card = await client.callTool({
-      name: "get_trello_card",
-      arguments: { card: "card" },
-    });
+    const card = await client.callTool({ name: "pinelab_trello", arguments: { action: "get_card", input: { card: "card" } } });
     assert.notEqual(card.isError, true);
-    const list = await client.callTool({ name: "list_trello_cards", arguments: {} });
+    const list = await client.callTool({ name: "pinelab_trello", arguments: { action: "list_cards", input: {} } });
     assert.notEqual(list.isError, true);
     assert.ok(records.some((r) => r.path === "/cards/card/actions"));
     assert.ok(records.some((r) => r.path === "/boards/board/cards"));
@@ -314,7 +335,7 @@ test("reader reads cards, activity and board cards without creating comments", a
 test("reader lists Todo cards and available lists without fetching all board cards", async () =>
   scenario("reader-secret", async (client) => {
     setupCardListing();
-    const result = await client.callTool({ name: "list_trello_cards", arguments: { list: "Todo" } });
+    const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "list_cards", input: { list: "Todo" } } });
     assert.notEqual(result.isError, true);
     assert.deepEqual(JSON.parse((result.content as { text: string }[])[0].text), {
       lists: [{ id: "todo", name: "Todo" }, { id: "doing", name: "Doing" }, { id: "empty", name: "Empty" }],
@@ -331,7 +352,7 @@ test("reader lists Todo cards and available lists without fetching all board car
 test("reader lists all open board cards and available lists when list is omitted", async () =>
   scenario("reader-secret", async (client) => {
     setupCardListing();
-    const result = await client.callTool({ name: "list_trello_cards", arguments: {} });
+    const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "list_cards", input: {} } });
     assert.notEqual(result.isError, true);
     assert.deepEqual(JSON.parse((result.content as { text: string }[])[0].text), {
       lists: [{ id: "todo", name: "Todo" }, { id: "doing", name: "Doing" }, { id: "empty", name: "Empty" }],
@@ -351,7 +372,7 @@ test("reader lists all open board cards and available lists when list is omitted
 test("reader lists an empty list without losing available list names", async () =>
   scenario("reader-secret", async (client) => {
     setupCardListing();
-    const result = await client.callTool({ name: "list_trello_cards", arguments: { list: "Empty" } });
+    const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "list_cards", input: { list: "Empty" } } });
     assert.notEqual(result.isError, true);
     assert.deepEqual(JSON.parse((result.content as { text: string }[])[0].text), {
       lists: [{ id: "todo", name: "Todo" }, { id: "doing", name: "Doing" }, { id: "empty", name: "Empty" }],
@@ -363,7 +384,7 @@ test("reader lists an empty list without losing available list names", async () 
 test("unknown list returns available names without requesting any cards", async () =>
   scenario("reader-secret", async (client) => {
     setupCardListing();
-    const result = await client.callTool({ name: "list_trello_cards", arguments: { list: "Unknown" } });
+    const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "list_cards", input: { list: "Unknown" } } });
     assert.equal(result.isError, true);
     assert.equal(JSON.parse((result.content as { text: string }[])[0].text),
       'Missing or ambiguous list: Unknown. Choose an existing, unambiguous name. Available lists: "Todo", "Doing", "Empty".');
@@ -374,7 +395,7 @@ test("ambiguous list returns available names without guessing or requesting card
   scenario("reader-secret", async (client) => {
     setupCardListing();
     boardLists.push({ id: "duplicate", name: "Todo" });
-    const result = await client.callTool({ name: "list_trello_cards", arguments: { list: "Todo" } });
+    const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "list_cards", input: { list: "Todo" } } });
     assert.equal(result.isError, true);
     assert.equal(JSON.parse((result.content as { text: string }[])[0].text),
       'Missing or ambiguous list: Todo. Choose an existing, unambiguous name. Available lists: "Todo", "Doing", "Empty", "Todo".');
@@ -383,8 +404,8 @@ test("ambiguous list returns available names without guessing or requesting card
 
 test("card listing discovery documents Kanban lists and the response without Trello requests", async () =>
   scenario("reader-secret", async (client) => {
-    const { tools } = await client.listTools();
-    const listing = tools.find((tool) => tool.name === "list_trello_cards")!;
+    const response = await client.callTool({ name: "pinelab_trello", arguments: {} });
+    const listing = JSON.parse((response.content as { text: string }[])[0].text).actions.list_cards;
     assert.match(listing.description!, /Lists: Inbox, Waiting For Client Approval, Todo, Doing, Ready For Review, ✨Done\./);
     assert.match(listing.description!, /Returns \{ lists, cards \}, including all current open lists/);
     assert.match(listing.description!, /No board discovery needed/);
@@ -398,20 +419,20 @@ test("card listing discovery documents Kanban lists and the response without Tre
 
 test("all tools enforce their permission before calling Trello", async () => {
   const writes = [
-    ["create_trello_card", { title: "New", description: "Context" }],
-    ["update_trello_card", { card: "card", title: "Changed" }],
-    ["update_trello_card", { card: "card", list: "Doing", labels: ["Bug"], assignees: ["developer"] }],
+    ["create_card", { title: "New", description: "Context" }],
+    ["update_card", { card: "card", title: "Changed" }],
+    ["update_card", { card: "card", list: "Doing", labels: ["Bug"], assignees: ["developer"] }],
   ] as const;
   const reads = [
-    ["get_trello_board", {}],
-    ["list_trello_cards", {}],
-    ["get_trello_card", { card: "card" }],
+    ["get_board", {}],
+    ["list_cards", {}],
+    ["get_card", { card: "card" }],
   ] as const;
   for (const token of [undefined, "invalid", "reader-secret"]) {
     await scenario(token, async (client) => {
       for (const [name, args] of writes) {
         assert.equal(
-          (await client.callTool({ name, arguments: args })).isError,
+          (await client.callTool({ name: "pinelab_trello", arguments: { action: name, input: args } })).isError,
           true,
           name,
         );
@@ -419,7 +440,7 @@ test("all tools enforce their permission before calling Trello", async () => {
       if (token !== "reader-secret") {
         for (const [name, args] of reads)
           assert.equal(
-            (await client.callTool({ name, arguments: args })).isError,
+            (await client.callTool({ name: "pinelab_trello", arguments: { action: name, input: args } })).isError,
             true,
             name,
           );
@@ -429,7 +450,7 @@ test("all tools enforce their permission before calling Trello", async () => {
   }
   await scenario("writer-secret", async (client) => {
     for (const [name, args] of reads) {
-      const response = await client.callTool({ name, arguments: args });
+      const response = await client.callTool({ name: "pinelab_trello", arguments: { action: name, input: args } });
       assert.equal(response.isError, true);
       assert.match(JSON.stringify(response), /Forbidden/);
     }
@@ -440,10 +461,10 @@ test("all tools enforce their permission before calling Trello", async () => {
 test("cross-board mutations and reads are rejected without writes", async () =>
   scenario("writer-secret", async (client) => {
     for (const [name, args] of [
-      ["update_trello_card", { card: "foreign", title: "Changed" }],
-      ["update_trello_card", { card: "foreign", list: "Doing", labels: ["Bug"], assignees: ["developer"] }],
+      ["update_card", { card: "foreign", title: "Changed" }],
+      ["update_card", { card: "foreign", list: "Doing", labels: ["Bug"], assignees: ["developer"] }],
     ] as const) {
-      const response = await client.callTool({ name, arguments: args });
+      const response = await client.callTool({ name: "pinelab_trello", arguments: { action: name, input: args } });
       assert.equal(response.isError, true);
       assert.match(JSON.stringify(response), /outside the configured board/);
     }
@@ -453,10 +474,7 @@ test("cross-board mutations and reads are rejected without writes", async () =>
 test("comment failure does not fail or repeat a successful mutation", async () =>
   scenario("writer-secret", async (client) => {
     failComments = true;
-    const response = await client.callTool({
-      name: "update_trello_card",
-      arguments: { card: "card", title: "Changed" },
-    });
+    const response = await client.callTool({ name: "pinelab_trello", arguments: { action: "update_card", input: { card: "card", title: "Changed" } } });
     assert.notEqual(response.isError, true);
     assert.equal(records.filter((r) => r.method === "PUT").length, 1);
     assert.equal(records.filter((r) => r.path.endsWith("/comments")).length, 1);
@@ -465,10 +483,10 @@ test("comment failure does not fail or repeat a successful mutation", async () =
 test("unknown list, label or assignee rejects the entire create/update before any mutation", async () =>
   scenario("writer-secret", async (client) => {
     for (const selection of [{ list: "Unknown" }, { labels: ["Unknown"] }, { assignees: ["Unknown"] }]) {
-      for (const name of ["create_trello_card", "update_trello_card"]) {
-        const response = await client.callTool({ name, arguments: {
-          card: "card", title: "Changed", description: "Context", ...selection,
-        } });
+      for (const name of ["create_card", "update_card"]) {
+        const response = await client.callTool({ name: "pinelab_trello", arguments: { action: name, input: {
+          ...(name === "update_card" ? { card: "card" } : {}), title: "Changed", description: "Context", ...selection,
+        } } });
         assert.equal(response.isError, true, JSON.stringify({ name, selection, response }));
         assert.match(JSON.stringify(response), /Missing or ambiguous/);
       }
@@ -480,10 +498,10 @@ test("ambiguous selections reject create/update without guessing or partially wr
   scenario("writer-secret", async (client) => {
     ambiguousSelections = true;
     for (const selection of [{ list: "Todo" }, { list: "Doing", labels: ["Bug"] }, { list: "Doing", assignees: ["developer"] }]) {
-      for (const name of ["create_trello_card", "update_trello_card"]) {
-        const response = await client.callTool({ name, arguments: {
-          card: "card", title: "Changed", description: "Context", ...selection,
-        } });
+      for (const name of ["create_card", "update_card"]) {
+        const response = await client.callTool({ name: "pinelab_trello", arguments: { action: name, input: {
+          ...(name === "update_card" ? { card: "card" } : {}), title: "Changed", description: "Context", ...selection,
+        } } });
         assert.equal(response.isError, true);
         assert.match(JSON.stringify(response), /Missing or ambiguous/);
       }
@@ -494,10 +512,7 @@ test("ambiguous selections reject create/update without guessing or partially wr
 test("failed writes are reported without upstream details or success comments", async () =>
   scenario("writer-secret", async (client) => {
     failWrites = true;
-    const response = await client.callTool({
-      name: "update_trello_card",
-      arguments: { card: "card", title: "Changed" },
-    });
+    const response = await client.callTool({ name: "pinelab_trello", arguments: { action: "update_card", input: { card: "card", title: "Changed" } } });
     assert.equal(response.isError, true);
     assert.match(JSON.stringify(response), /HTTP 503/);
     assert.doesNotMatch(JSON.stringify(response), /sensitive upstream/);
@@ -507,20 +522,14 @@ test("failed writes are reported without upstream details or success comments", 
 
 test("no-op updates do not write or add comments", async () =>
   scenario("writer-secret", async (client) => {
-    const response = await client.callTool({
-      name: "update_trello_card",
-      arguments: { card: "labelledassigned", title: "Original", list: "Todo", labels: ["Bug", "Bug"], assignees: ["developer", "developer"] },
-    });
+    const response = await client.callTool({ name: "pinelab_trello", arguments: { action: "update_card", input: { card: "labelledassigned", title: "Original", list: "Todo", labels: ["Bug", "Bug"], assignees: ["developer", "developer"] } } });
     assert.notEqual(response.isError, true);
     assert.ok(records.every((r) => r.method === "GET"));
   }));
 
 test("cross-board reads do not fetch activity", async () =>
   scenario("reader-secret", async (client) => {
-    const response = await client.callTool({
-      name: "get_trello_card",
-      arguments: { card: "foreign" },
-    });
+    const response = await client.callTool({ name: "pinelab_trello", arguments: { action: "get_card", input: { card: "foreign" } } });
     assert.equal(response.isError, true);
     assert.match(JSON.stringify(response), /outside the configured board/);
     assert.ok(!records.some((r) => r.path.endsWith("/actions")));
@@ -529,7 +538,7 @@ test("cross-board reads do not fetch activity", async () =>
 test("reader can read board but cannot create cards", async () =>
   scenario("reader-secret", async (client) => {
     assert.notEqual(
-      (await client.callTool({ name: "get_trello_board", arguments: {} })).isError,
+      (await client.callTool({ name: "pinelab_trello", arguments: { action: "get_board", input: {} } })).isError,
       true,
     );
     assert.deepEqual(
@@ -537,10 +546,7 @@ test("reader can read board but cannot create cards", async () =>
       ["/boards/board", "/boards/board/lists", "/boards/board/labels", "/boards/board/members"],
     );
     records.length = 0;
-    const denied = await client.callTool({
-      name: "create_trello_card",
-      arguments: { title: "New", description: "Context" },
-    });
+    const denied = await client.callTool({ name: "pinelab_trello", arguments: { action: "create_card", input: { title: "New", description: "Context" } } });
     assert.equal(denied.isError, true);
     assert.match(JSON.stringify(denied), /Forbidden/);
     assert.equal(records.length, 0);

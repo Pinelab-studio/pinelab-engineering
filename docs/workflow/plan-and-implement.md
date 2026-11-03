@@ -7,7 +7,7 @@ description: Make a plan to implement a given Pinelab task.
 
 # Plan and implement
 
-Turn a refined task into a confirmed technical plan, then implement it with test-driven development. This is the default planning flow for developers without their own plan mode. A developer's own planning flow may replace the interview mechanics, but must load Pinelab best practices and preserve applicable approval, testing, review, and handover requirements. This workflow is independent of task storage and status changes; leave those to the calling workflow. Do not commit, push, or deploy unless explicitly requested.
+Turn a refined task into a confirmed technical plan, then implement it with test-driven development. This is the default planning flow for developers without their own plan mode. A developer's own planning flow may replace the interview mechanics, but must load Pinelab best practices and preserve applicable approval, testing, review, and handover requirements. This workflow is independent of task storage and status changes; leave those to the calling workflow. After successful implementation and verification, remove task-specific plan files and create a pull request as described below; this includes committing and pushing the feature branch. Never commit or push directly to the default or production branch. Do not deploy unless explicitly requested.
 
 ## 0. Start on a new branch
 
@@ -128,6 +128,15 @@ Report briefly:
 - Tests and checks actually run, their results, and any remaining failures or checks not run.
 - Relevant handover or reproduction instructions and any unmet DoD items.
 
-Do not claim completion while known required checks or DoD items remain unresolved. Return the implementation result to the calling workflow without making task-status changes yourself.
+Do not claim completion while known required checks or DoD items remain unresolved.
+
+### Remove the plan and create the PR
+
+After implementation and required verification succeed:
+
+1. Remove any temporary plan files created for this task so they are not included in the PR diff. Do not remove unrelated plans or permanent project documentation. Keep the implementation summary, test results, and handover in the PR description instead.
+2. Load [Pull Request Guidelines](../best-practices/pull-request-guidelines.md) before creating the PR, and follow its approval gates and description requirements.
+3. Commit the implementation and plan-file removal, push the feature branch, and create a PR against the remote's default branch. If a PR already exists for this branch, update it instead of creating a duplicate. Never commit or push directly to the default or production branch.
+4. Return the PR URL and a brief verification summary to the user or calling workflow. Do not merge, deploy, or change task status yourself.
 
 <!-- Planning inspired by Matt Pocock's grill-me skill; test-first implementation inspired by his TDD skill. -->

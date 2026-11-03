@@ -8,14 +8,15 @@ export function registerTrello(
   server: McpServer,
   config: Config,
   authorization: string | undefined,
+  guidance: string,
 ) {
-  const { tool, api, board, lists, labels, members, card, resolve, comment } =
-    createTrelloHelpers(server, config, authorization);
+  const { tool, register, api, board, lists, labels, members, card, resolve, comment } =
+    createTrelloHelpers(server, config, authorization, guidance);
 
   tool(
-    "get_trello_card",
+    "get_card",
     "read",
-    "Reads a card and recent activity from the Pinelab Trello Board. Use get_pinelab_trello_kanban for more information.",
+    "Reads a card and recent activity from the Pinelab Trello Board.",
     {
       ...cardInput,
       before: id.optional(),
@@ -34,9 +35,9 @@ export function registerTrello(
     },
   );
   tool(
-    "list_trello_cards",
+    "list_cards",
     "read",
-    "Lists open cards on the Pinelab Trello Board. Lists: Inbox, Waiting For Client Approval, Todo, Doing, Ready For Review, ✨Done. Returns { lists, cards }, including all current open lists. No board discovery needed. Use get_pinelab_trello_kanban for more information.",
+    "Lists open cards on the Pinelab Trello Board. Lists: Inbox, Waiting For Client Approval, Todo, Doing, Ready For Review, ✨Done. Returns { lists, cards }, including all current open lists. No board discovery needed.",
     { list: name.optional().describe("Exact existing list name; omitted returns all open board cards.") },
     async (args) => {
       const boardLists = await lists();
@@ -59,9 +60,9 @@ export function registerTrello(
     },
   );
   tool(
-    "add_trello_card_comment",
+    "add_comment",
     "write",
-    "Adds a comment to a card on the Pinelab Trello Board. Use get_pinelab_trello_kanban for more information.",
+    "Adds a comment to a card on the Pinelab Trello Board.",
     {
       ...cardInput,
       text: z.string().trim().min(1).max(16000).describe("Comment text to add."),
@@ -74,16 +75,16 @@ export function registerTrello(
     },
   );
   tool(
-    "update_trello_card",
+    "update_card",
     "write",
-    "Updates a card on the Pinelab Trello Board. Use get_pinelab_trello_kanban for more information.",
+    "Updates a card on the Pinelab Trello Board.",
     {
       ...cardInput,
       title: name.optional().describe("New title; omitted preserves the current title."),
       description: z.string().max(16000).optional().describe("New description; omitted preserves it, empty string clears it."),
-      list: name.optional().describe("Exact existing list name from get_trello_board; omitted preserves the current list."),
+      list: name.optional().describe("Exact existing list name from get_board; omitted preserves the current list."),
       labels: z.array(name).max(100).optional().describe("Exact existing label names. Replaces all labels; [] clears them; omitted preserves them."),
-      assignees: z.array(name).max(100).optional().describe("Exact board-member usernames from get_trello_board. Replaces all assignees; [] clears them; omitted preserves them."),
+      assignees: z.array(name).max(100).optional().describe("Exact board-member usernames from get_board. Replaces all assignees; [] clears them; omitted preserves them."),
       position: pos.optional().describe("New position; omitted preserves current positioning."),
     },
     async (args) => {
@@ -142,15 +143,15 @@ export function registerTrello(
     },
   );
   tool(
-    "create_trello_card",
+    "create_card",
     "write",
-    "Creates a card on the Pinelab Trello Board. Use get_pinelab_trello_kanban for more information.",
+    "Creates a card on the Pinelab Trello Board.",
     {
       title: name,
       description: z.string().max(16000),
       list: name.default("Todo"),
-      labels: z.array(name).max(100).default([]).describe("Exact existing label names from get_trello_board; omitted or [] means no labels."),
-      assignees: z.array(name).max(100).optional().describe("Exact board-member usernames from get_trello_board; omitted or [] means unassigned."),
+      labels: z.array(name).max(100).default([]).describe("Exact existing label names from get_board; omitted or [] means no labels."),
+      assignees: z.array(name).max(100).optional().describe("Exact board-member usernames from get_board; omitted or [] means unassigned."),
       position: pos.default("top"),
     },
     async (args) => {
@@ -192,9 +193,9 @@ export function registerTrello(
     },
   );
   tool(
-    "get_trello_board",
+    "get_board",
     "read",
-    "Reads the Pinelab Trello Board, lists, labels and members. Use get_pinelab_trello_kanban for more information.",
+    "Reads the Pinelab Trello Board, lists, labels and members.",
     {},
     async () => ({
       board: await board(),
@@ -203,4 +204,5 @@ export function registerTrello(
       members: await members(),
     }),
   );
+  register();
 }

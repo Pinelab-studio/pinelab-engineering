@@ -1,5 +1,6 @@
 import { authenticate } from "../auth.js";
 import { z } from "zod";
+import { toJsonSchemaCompat } from "@modelcontextprotocol/sdk/server/zod-json-schema-compat.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Config } from "../mcp.js";
 
@@ -26,10 +27,17 @@ export function createTrelloHelpers(
   server: McpServer,
   config: Config,
   authorization: string | undefined,
+  guidance: string,
 ) {
   const user = authenticate(config, authorization);
+  const operations = new Map<string, {
+    permission: "read" | "write";
+    description: string;
+    schema: z.AnyZodObject;
+    handler: (args: Record<string, any>) => Promise<unknown>;
+  }>();
 
-  /** Central permission gate. Internal safety lookups inherit the tool's authorization. */
+  /** Collect an operation with its permission and the schema shared by discovery and validation. */
   function tool(
     toolName: string,
     permission: "read" | "write",
@@ -37,48 +45,58 @@ export function createTrelloHelpers(
     inputSchema: z.ZodRawShape,
     handler: (args: Record<string, any>) => Promise<unknown>,
   ) {
-    server.registerTool(
-      toolName,
-      {
-        description,
-        inputSchema,
-        annotations: {
-          readOnlyHint: permission === "read",
-          destructiveHint: permission === "write",
-          idempotentHint: permission === "read",
-          openWorldHint: true,
-        },
-      },
-      async (args) => {
-        if (!user)
-          return {
-            ...output("Unauthorized: valid bearer token required"),
-            isError: true,
-          };
-        if (!user.permissions.includes(permission))
-          return {
-            ...output(`Forbidden: ${permission} permission required`),
-            isError: true,
-          };
-        if (![config.board, config.key, config.token].every((value) => value?.trim()))
-          return {
-            ...output("Trello configuration is incomplete: configure TRELLO_BOARD_ID, TRELLO_API_KEY, and TRELLO_API_TOKEN"),
-            isError: true,
-          };
-        try {
-          return output(await handler(args));
-        } catch (error) {
-          return {
-            ...output(
-              error instanceof Error
-                ? error.message
-                : "Trello operation failed",
-            ),
-            isError: true,
-          };
-        }
-      },
-    );
+    operations.set(toolName, { permission, description, schema: z.object(inputSchema).strict(), handler });
+  }
+
+  /** Advertise a compact entry point; detailed operation schemas load only on demand. */
+  function register() {
+    server.registerTool("pinelab_trello", {
+      description: "Use for Pinelab Trello operations. Call without action to load required workflow guidance and action parameters, then call with action and input.",
+      inputSchema: z.object({ action: z.string().optional(), input: z.record(z.unknown()).optional() }).strict(),
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
+    }, async ({ action, input }) => {
+      if (action === undefined && input && Object.keys(input).length) {
+        return { ...output("Input requires an action; call without arguments for guidance."), isError: true };
+      }
+      if (action === undefined) return output({
+        guidance,
+        actions: Object.fromEntries([...operations].map(([name, operation]) => [name, {
+          description: operation.description,
+          permission: operation.permission,
+          inputSchema: toJsonSchemaCompat(operation.schema),
+        }])),
+      });
+      // Validate dispatch and operation inputs before any upstream requests.
+      const operation = operations.get(action);
+      if (!operation) return { ...output("Unknown action; call without action for supported operations."), isError: true };
+      const { permission, handler, schema } = operation;
+      const parsed = schema.safeParse(input ?? {});
+      if (!parsed.success) return { ...output(parsed.error.message), isError: true };
+      // Apply permissions per action; internal safety lookups inherit this authorization.
+      if (!user)
+        return {
+          ...output("Unauthorized: valid bearer token required"),
+          isError: true,
+        };
+      if (!user.permissions.includes(permission))
+        return {
+          ...output(`Forbidden: ${permission} permission required`),
+          isError: true,
+        };
+      if (![config.board, config.key, config.token].every((value) => value?.trim()))
+        return {
+          ...output("Trello configuration is incomplete: configure TRELLO_BOARD_ID, TRELLO_API_KEY, and TRELLO_API_TOKEN"),
+          isError: true,
+        };
+      try {
+        return output(await handler(parsed.data));
+      } catch (error) {
+        return {
+          ...output(error instanceof Error ? error.message : "Trello operation failed"),
+          isError: true,
+        };
+      }
+    });
   }
   /** Redact all configured credentials before logging; never log URLs or request bodies. */
   function redact(text: string) {
@@ -225,5 +243,5 @@ export function createTrelloHelpers(
     }
   }
 
-  return { tool, api, board, lists, labels, members, card, resolve, comment };
+  return { tool, register, api, board, lists, labels, members, card, resolve, comment };
 }
