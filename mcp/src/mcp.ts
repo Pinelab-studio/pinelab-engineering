@@ -60,7 +60,7 @@ export async function createMcpServer(
     "list_recipes",
     {
       description:
-        "Lists Pinelab Vendure and storefront recipes. Use get_recipe to read a recipe.",
+        "Lists Pinelab Vendure and storefront recipes (guides). Use get_recipe to read a recipe.",
       inputSchema: {},
     },
     async () =>
