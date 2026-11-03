@@ -46,7 +46,7 @@ Task intake happens automatically, no need to worry about this.
 
 _If a task is in "Todo" it is already refined, skip this step!_
 
-Refining means clarifying what a client meant; the functional specs. For technical planning (more classic plan-mode) see `Plan and Implement` below. This refinement skill will fetch the task, start interviewing you and moves the task to "Waiting For Client Approval".
+Refining means agreeing on the goal, functional requirements, test behaviours, and technical guidance so another developer can pick up the task. Investigate feasibility and risks; leave detailed implementation choices to `Plan and Implement` below. When refining a Trello task, the workflow fetches it, asks about unresolved decisions, and moves the confirmed task to "Waiting For Client Approval".
 
 Start refining a task by prompting something like:
 
@@ -57,7 +57,7 @@ Start refining Pinelab task <Trello task link>
 
 ## 2. Plan and Implement 
 
-Use this when starting development on a task that is ready to pick up (in the Todo list). This is your typical plan-mode (or grill-me), and includes all Pinelabs best practices. 
+Use this when starting development on a task that is ready to pick up (in the Todo list when using Trello). Input can also be text, a document, or conversation context. Reuse any confirmed refinement, verify its technical guidance against current code, and resolve only remaining implementation and test-strategy decisions before confirming the plan. This flow includes Pinelab's best practices.
 
 Start working on a task by prompting:
 

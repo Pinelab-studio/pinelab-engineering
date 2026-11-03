@@ -5,7 +5,7 @@ Regenerate with `cd mcp && npm run build`.
 
 Total: **11 tools**. Names are server-local; clients may add a server prefix.
 
-Adds ~823 tokens to context.
+Adds ~840 tokens to context.
 
 ## Best practices
 
@@ -21,8 +21,8 @@ Adds ~823 tokens to context.
 | --- | --- |
 | `get_kanban_priorities` | Recommend top 5 priorities todo's for today from the Pinelab Trello Kanban task board.  |
 | `get_monthly_client_summary` | Only explicitly trigger when asked to create a monthly summary for a Pinelab client. |
-| `get_plan_and_implement` | Make a plan to implement a given Pinelab task. |
-| `get_refine` | Functionally refine a given Pinelab task or feature. |
+| `get_plan_and_implement` | Plan and implement a Pinelab task, reusing confirmed refinement when supplied. |
+| `get_refine` | Refine a Pinelab task's scope, test behaviours, and technical guidance for implementation. |
 | `get_review` | Interactively review a GitHub PR the Pinelab way. |
 
 ## Other tools
