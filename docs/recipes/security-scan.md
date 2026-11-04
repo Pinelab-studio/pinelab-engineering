@@ -1,15 +1,17 @@
 ---
 name: Node.js Security Scan and Dependency Updates
-description: Run a Node.js security scan, investigate dependency updates, fix confirmed issues, and open a pull request documenting risks and breaking changes.
+description: Scan every Node.js package.json project, investigate dependency updates, and open a separate pull request per project with fixes, risks, and breaking changes.
 ---
 
-Run a lightweight Node.js security scan, fix confirmed issues and compatible production patch updates, then open a pull request. Use repository-wide checks plus a focused review of recent changes.
+Run a lightweight Node.js security scan for every project with its own `package.json`, fix confirmed issues and compatible production patch updates, then open a separate pull request per project with fixes. Use repository-wide discovery plus project-scoped checks and a focused review of recent changes.
 
 ## 1. Set scope and prepare
 
 Review changes from the last 7 days by default; accept a user-specified positive whole number of days. Reject invalid values before running commands. No schedule or stored scan baseline is required.
 
-Inspect project instructions, package roots/workspaces, runtime versions, scripts, and working-tree status. Preserve existing work. If switching branches would overwrite changes, stop and ask. Identify the remote's default branch, check it out, pull with `--ff-only`, and create a fresh `fix/security-scan-<unique-suffix>` branch. Never edit or push directly on the default/production branch.
+Inspect project instructions, package roots/workspaces, runtime versions, scripts, and working-tree status. Discover every tracked `package.json`, including nested projects and workspace packages; exclude installed dependencies and generated/vendor directories. Record each project's path and workspace/lockfile ownership. Scan every discovered project, not just the repository root or the first package found. For example, `api/package.json` and `storefront/package.json` require two scans and, when both need fixes, two PRs.
+
+Preserve existing work. If switching branches would overwrite changes, stop and ask. Identify the remote's default branch, check it out, and pull with `--ff-only`. For each project needing changes, create a fresh `fix/security-scan-<project>-<unique-suffix>` branch from the updated default branch, never from another project's scan branch. Never edit or push directly on the default/production branch.
 
 From the repository root, record the scan's starting commit and compute the comparison before editing. Replace `7` with the validated lookback:
 
@@ -26,7 +28,7 @@ This compares net changes, not every historical patch. On a first run, shallow c
 
 ## 2. Run checks independently
 
-In each applicable npm package root (respecting workspace configuration), run:
+For every discovered project, run the following from its package root, or from its workspace root with the appropriate workspace selector where supported:
 
 - `npm audit --omit=dev`
 - `npm audit`
@@ -45,14 +47,14 @@ Also consider production patch updates within the installed major/minor version;
 
 Before **every** package update, read that package's official changelog for the entire installed-to-target range, along with release notes, linked migration guides, engine requirements, and relevant advisories. Patch labels do not guarantee safety. Record source links and findings. If release information is unavailable or inconclusive, defer the update. Database migrations, breaking changes, credential rotation, and operational/product decisions require explicit approval before proceeding; report and defer those items while continuing safe work. Never run migrations against live systems.
 
-Update the manifest and lockfile together using the project's package manager. Avoid unrelated lockfile churn. Follow the project's coding guidance for test approval and test-first fixes; obtain any missing scenario approval without reopening already agreed cases. Run relevant regression checks after each fix/update and the available final checks. Report pre-existing failures separately. Do not describe an unverified fix as validated.
+Update the manifest and lockfile together using the project's package manager. Keep each project's fixes on its own branch. For workspaces sharing a lockfile, use workspace-aware commands and include only lockfile changes required by that project's fixes; do not mix other projects' manifest updates into the PR. If a fix cannot be isolated safely, report the coupling and ask before combining projects. Avoid unrelated lockfile churn. Follow the project's coding guidance for test approval and test-first fixes; obtain any missing scenario approval without reopening already agreed cases. Run relevant regression checks after each fix/update and the available final checks. Report pre-existing failures separately. Do not describe an unverified fix as validated.
 
 ## 4. Report and open a PR
 
-Return a concise report in the conversation with scan commit, lookback/baseline, check statuses, skipped checks, and coverage limits. Separate confirmed findings from suspected risks. Use a P0–P3 table: issue, evidence (file/line or command excerpt), impact, recommended fix, estimated effort, and disposition (fixed/deferred).
+Return a concise report in the conversation covering every discovered project by path, with scan commit, lookback/baseline, check statuses, skipped checks, and coverage limits. Identify projects with no fixes or blocked checks explicitly so none are silently omitted. Separate confirmed findings from suspected risks. Use a P0–P3 table: issue, evidence (file/line or command excerpt), impact, recommended fix, estimated effort, and disposition (fixed/deferred).
 
 P0 means critical security; P1 high security or broken functionality; P2 moderate risk/maintenance; P3 minor improvements. Include relevant bugs, missing tests, duplication, and performance findings at lower priority without expanding into unrelated cleanup.
 
-Review the diff for secrets and unrelated/generated artifacts. Remove temporary plan files created for this task, not pre-existing user files. Commit and push only intended fixes on the feature branch, then create a PR following the project's PR guidelines. Do not merge or deploy. With no fixes, return the report without an empty commit or PR. If checks or PR creation fail, report the blocker and actual completion state.
+Review the diff for secrets and unrelated/generated artifacts. Remove temporary plan files created for this task, not pre-existing user files. For each project with fixes, commit and push only that project's intended changes on its separate feature branch, then create a separate PR following the project's PR guidelines. Identify the project path in each PR. Do not merge or deploy. For projects with no fixes, return their reports without empty commits or PRs. If one project's checks or PR creation fail, report its blocker and actual completion state, and continue scanning the remaining projects.
 
-The PR must document **each dependency's old → new version, changelog/release-note links, relevant changes, migration and breaking-change findings, operational steps, and test results**. For each upgraded dependency, explicitly state `Breaking changes: <details>` or `breaking: none` when none were identified. Explicitly say when no migrations were identified and note uncertainty. Keep the description within the PR guidelines' limit; place a larger dependency table/report in a linked PR comment. Include deferred updates and approval requirements. Return the PR link and reproduction commands. Scheduling remains outside this recipe.
+The PR must document **each dependency's old → new version, changelog/release-note links, relevant changes, migration and breaking-change findings, operational steps, and test results**. For each upgraded dependency, explicitly state `Breaking changes: <details>` or `breaking: none` when none were identified. Explicitly say when no migrations were identified and note uncertainty. Keep the description within the PR guidelines' limit; place a larger dependency table/report in a linked PR comment. Include deferred updates and approval requirements. Return all PR links mapped to their project paths, with reproduction commands for each project. Scheduling remains outside this recipe.
