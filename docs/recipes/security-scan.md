@@ -31,11 +31,11 @@ This compares net changes, not every historical patch. On a first run, shallow c
 For every discovered project, run the following from its package root, or from its workspace root with the appropriate workspace selector where supported:
 
 - `npm audit --omit=dev`
-- `npm audit`
+- `npm audit` — scan for vulnerabilities.
 - `npm outdated`
 - Available lint, typecheck, test, and build scripts, using their actual names from `package.json`.
 
-Inspect scripts before execution; avoid commands that deploy, mutate production, or need live credentials. Use isolated local services where needed. Record every command's exit status and concise evidence separately; do not chain checks with `&&` or stop reporting after a failure. Distinguish findings from network/tool failures. Mark missing or unsafe checks as unavailable/skipped, with reasons. Never run `npm audit fix --force`.
+Inspect scripts before execution; avoid commands that deploy, mutate production, or need live credentials. Use isolated local services where needed. Record every command's exit status and concise evidence separately; do not chain checks with `&&` or stop reporting after a failure. Distinguish findings from network/tool failures. Mark missing or unsafe checks as unavailable/skipped, with reasons.
 
 Keep full output outside AI context where possible; read summaries and relevant excerpts. Do not load the entire repository or lockfile. Review changed filenames first, then selected diffs and necessary callers. Inspect authentication/authorization, injection, validation, API/database boundaries, uploads, exposed secrets, and insecure configuration where relevant. Check Node.js support status and risky/unmaintained dependencies. Flag unreviewed high-risk areas; audit output does not prove application security. Never expose secret values in output or reports.
 
@@ -45,7 +45,17 @@ Prioritize exploitable production vulnerabilities and broken functionality. Fix 
 
 Also consider production patch updates within the installed major/minor version; use installed versions and the dependency tree, not only declared ranges. Report routine minor/major updates without applying them. Compatible updates for confirmed vulnerabilities may go beyond patches, but require the same investigation below.
 
-Before **every** package update, read that package's official changelog for the entire installed-to-target range, along with release notes, linked migration guides, engine requirements, and relevant advisories. Patch labels do not guarantee safety. Record source links and findings. If release information is unavailable or inconclusive, defer the update. Database migrations, breaking changes, credential rotation, and operational/product decisions require explicit approval before proceeding; report and defer those items while continuing safe work. Never run migrations against live systems.
+For each project with audit findings, use this remediation sequence on its own branch:
+
+```bash
+npm audit             # Scan for vulnerabilities
+npm audit fix         # Automatically apply compatible fixes
+npm audit fix --force # Allow breaking updates for remaining vulnerabilities
+```
+
+Run each command separately and inspect its result. Use `npm audit fix --dry-run --json` (and `--force` when needed) to preview proposed updates before applying them, so the release investigation below happens first. Run `--force` only when compatible fixes leave vulnerabilities requiring breaking updates; it is allowed without separate approval for dependency breaking changes. Document every breaking change and required application adjustment in the project's PR. Apply necessary code adjustments, rerun audits and project checks, and report unresolved vulnerabilities or failed checks rather than claiming success. Keep workspace fixes scoped to the selected project; do not force a repository-wide update that mixes projects.
+
+Before **every** package update, read that package's official changelog for the entire installed-to-target range, along with release notes, linked migration guides, engine requirements, and relevant advisories. Patch labels do not guarantee safety. Record source links and findings. If release information is unavailable or inconclusive, defer the update. Database migrations, credential rotation, and operational/product decisions still require explicit approval before proceeding; report and defer those items while continuing safe work. Never run migrations against live systems.
 
 Update the manifest and lockfile together using the project's package manager. Keep each project's fixes on its own branch. For workspaces sharing a lockfile, use workspace-aware commands and include only lockfile changes required by that project's fixes; do not mix other projects' manifest updates into the PR. If a fix cannot be isolated safely, report the coupling and ask before combining projects. Avoid unrelated lockfile churn. Follow the project's coding guidance for test approval and test-first fixes; obtain any missing scenario approval without reopening already agreed cases. Run relevant regression checks after each fix/update and the available final checks. Report pre-existing failures separately. Do not describe an unverified fix as validated.
 
