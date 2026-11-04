@@ -3,7 +3,7 @@ name: Node.js Security Scan and Dependency Updates
 description: Scan every Node.js package.json project, investigate dependency updates, and open a separate pull request per project with fixes, risks, and breaking changes.
 ---
 
-Run a lightweight Node.js security scan for every project with its own `package.json`, fix confirmed issues and compatible production patch updates, then open a separate pull request per project with fixes. Use repository-wide discovery plus project-scoped checks and a focused review of recent changes.
+Run a lightweight Node.js security scan for every project with its own `package.json`, fix confirmed issues and compatible production patch updates, then open a separate pull request per project with fixes. Use repository-wide discovery plus project-scoped checks and a focused review of recent changes. In a monorepo, “project” means a directory with its own `package.json` within the same Git repository, not a separate Git repository. Scan only the current repository; all project branches and PRs target that same repository.
 
 ## 1. Set scope and prepare
 
