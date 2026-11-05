@@ -51,7 +51,7 @@ export function createTrelloHelpers(
   /** Advertise a compact entry point; detailed operation schemas load only on demand. */
   function register() {
     server.registerTool("pinelab_trello", {
-      description: "Use for Pinelab Trello operations. Call without action to load required workflow guidance and action parameters, then call with action and input.",
+      description: "Manage Pinelab Trello tasks and recommend today's priorities. Call without action to load workflows and action parameters, then call with action and input for operations.",
       inputSchema: z.object({ action: z.string().optional(), input: z.record(z.unknown()).optional() }).strict(),
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
     }, async ({ action, input }) => {

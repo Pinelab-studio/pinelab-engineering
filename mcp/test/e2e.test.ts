@@ -153,7 +153,9 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
       const client = await connect(valid.endpoint);
       try {
         const { tools } = await client.listTools();
-        const workflows = ["get_review", "get_refine", "get_plan_and_implement", "pinelab_trello", "get_kanban_priorities"];
+        const workflows = ["get_review", "get_refine", "get_plan_and_implement", "pinelab_trello"];
+        assert.ok(!tools.some(({ name }) => name === "get_kanban_priorities"));
+        assert.match(tools.find(({ name }) => name === "pinelab_trello")!.description!, /today's priorities/);
         for (const name of [...workflows, "get_coding_best_practices"]) {
           assert.ok(tools.some((tool) => tool.name === name), `Missing tool: ${name}`);
         }

@@ -3,7 +3,7 @@ name: kanban-priorities
 description: Recommend top 5 priorities todo's for today from the Pinelab Trello Kanban task board. 
 ---
 
-Read the current task board using the existing Trello skill/workflow instructions. Inspect Inbox, Waiting for Client Approval, Doing, Ready For Review, and Todo. Include Todo to verify how much ready-to-start work remains. Read relevant card details and recent activity before making recommendations.
+Recommend today’s priorities by reading the current task board through `pinelab_trello`; call it without arguments to load this guide, the Kanban workflow, and action schemas. Inspect Inbox, Waiting for Client Approval, Doing, Ready For Review, and Todo. Include Todo to verify how much ready-to-start work remains. Read relevant card details and recent activity before making recommendations.
 
 Recommend the top 5 concrete actions I should take today, in this strict priority order:
 
@@ -24,4 +24,5 @@ Selection rules:
 
 Output concisely:
 - **Todo health:** qualifying cards / minimum 5, plus any shortfall.
-- A ranked numbered list of up to 5 actions. For each, include linked card titles, the concrete next step, and a short reason tied to the priorities above. For the refinement batch, use compact sub-bullets for its cards and state the target number of ready Todo cards.
+- Up to 5 bullet points in priority order, each at most one sentence with linked card titles, a concrete next step, and a short reason.
+- Sub-bullets are allowed for batch card links; keep each to at most one sentence. For refinement, state the target number of ready Todo cards.

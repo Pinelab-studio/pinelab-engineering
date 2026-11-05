@@ -9,10 +9,11 @@ test("guidance is readable through direct tools except on-demand Trello guidance
   scenario(async (client, articles) => {
     const { tools } = await client.listTools();
     assert.ok(!tools.some(({ name }) => ["list_skills", "get_skill"].includes(name)));
+    assert.match(tools.find(({ name }) => name === "pinelab_trello")!.description!, /today's priorities/);
     // Verify every published document against the public tool interface.
     for (const article of articles) {
       const name = `get_${article.id.split("/").at(-1)!.replace(/-/g, "_")}`;
-      if (article.id === "workflow/pinelab-trello-kanban") {
+      if (["workflow/pinelab-trello-kanban", "workflow/kanban-priorities"].includes(article.id)) {
         assert.ok(!tools.some((tool) => tool.name === name));
         const response = await client.callTool({ name: "pinelab_trello", arguments: {} });
         assert.notEqual(response.isError, true);

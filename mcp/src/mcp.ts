@@ -48,8 +48,9 @@ export async function createMcpServer(
   const render = (article: Article) => result(
     `MCP usage: use authenticated Trello tools, not shell/curl. Load related guidance through its direct tool; use list_recipes/get_recipe for feature-specific resources.\n\n${includedDocuments(article, catalogue).map((document) => `Document: docs/${document.id}.md\n\n${document.text}`).join("\n\n---\n\n")}`,
   );
-  // Kanban guidance is loaded through the Trello entry point, not a second tool.
-  for (const article of catalogue.filter(({ id }) => /^(best-practices|workflow)\//.test(id) && id !== "workflow/pinelab-trello-kanban")) {
+  // Trello workflows load through one entry point rather than separate tools.
+  const trelloWorkflows = catalogue.filter(({ id }) => ["workflow/pinelab-trello-kanban", "workflow/kanban-priorities"].includes(id));
+  for (const article of catalogue.filter(({ id }) => /^(best-practices|workflow)\//.test(id) && !trelloWorkflows.some((article) => article.id === id))) {
     const name = `get_${article.id.split("/").at(-1)!.replace(/-/g, "_")}`;
     server.registerTool(name, {
       description: article.text.match(/^description: (.+)$/m)?.[1]?.replace(/^"|"$/g, "") ?? article.id,
@@ -89,7 +90,6 @@ export async function createMcpServer(
         : { ...result("Unknown recipe"), isError: true };
     },
   );
-  const kanban = catalogue.find(({ id }) => id === "workflow/pinelab-trello-kanban");
-  registerTrello(server, config, authorization, kanban ? includedDocuments(kanban, catalogue).map(({ text }) => text).join("\n\n---\n\n") : "Kanban guidance is unavailable in this catalogue.");
+  registerTrello(server, config, authorization, trelloWorkflows.length ? trelloWorkflows.flatMap((article) => includedDocuments(article, catalogue)).map(({ text }) => text).join("\n\n---\n\n") : "Kanban guidance is unavailable in this catalogue.");
   return server;
 }
