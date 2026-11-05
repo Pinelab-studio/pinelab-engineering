@@ -56,7 +56,7 @@ When asked to refine a task, load `get_refine` and follow it for question rounds
 
 ### Required estimate
 
-Every refined task must have a user-confirmed numeric estimate in its title, in parentheses: `Task title (100)`. Here, `100` is an example, not a fixed value. Agree on the estimate once the scope and Definition of Done are clear. If the estimation unit or convention is unknown, ask rather than assume.
+Every refined task must have a user-confirmed numeric estimate in its title, in parentheses: `Task title (100)`. Here, `100` is an example, not a fixed value. Estimates do NOT have units, don't ask for those. Agree on the estimate once the scope and Definition of Done are clear. If the estimation unit or convention is unknown, ask rather than assume.
 
 Include the estimate in the title shown for final confirmation. Replace an existing estimate rather than appending a second one, preserving unrelated title content. Do not save a task as refined or move it to **Waiting For Client Approval** without an agreed estimate in its title.
 
