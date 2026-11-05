@@ -3,7 +3,7 @@ name: refine-task
 description: Refine a Pinelab task's scope, test behaviours, and technical guidance for implementation.
 ---
 
-Refine a task into a confirmed description with functional requirements, test behaviours, and enough technical guidance for another developer to pick it up. Investigate feasibility and risks, but leave detailed implementation planning to [Plan and implement](plan-and-implement.md) or the developer's own planning flow. Do not implement. The calling workflow owns task storage and lifecycle actions.
+Refine a task into a confirmed description with requirements, highover test behaviours, and enough technical guidance for another developer to pick it up. Investigate feasibility and risks.
 
 ## 1. Gather context and investigate
 
@@ -45,6 +45,6 @@ When the frontier is empty, present a concise title and the full description in 
 
 Preserve relevant existing context and record judgment calls. If drafting exposes an unresolved decision, return to question rounds. Ask the user to confirm the full draft; after changes, present it again for confirmation.
 
-Return the confirmed title and description to the calling workflow or directly to the user. Confirmation establishes shared understanding, not authorization to implement or external approval.
+Create the Trello card and return the confirmed title and description to the calling workflow or directly to the user. Confirmation establishes shared understanding, not authorization to implement or external approval.
 
 <!-- Question-round approach based on Matt Pocock's grill-me skill. -->
