@@ -22,7 +22,7 @@ Use this workflow to apply Pinelab’s way of working on its Trello board. It de
 2. Refined tasks move to **Waiting For Client Approval**.
 3. After client approval, tasks move to **Todo**. Never infer client approval from refinement confirmation.
 4. Tasks being worked on move to **Doing**.
-5. Completed implementations move to **Ready For Review**, never directly to Done.
+5. Completed implementations move to **Ready For Review**, never directly to Done. Before moving a card, ensure links to all PRs for the implementation are at the top of its description.
 6. Approved implementations move to **✨Done**; rejected implementations return to **Doing**.
 
 ### Completed tasks are read-only
@@ -52,41 +52,7 @@ This guidance applies only to creation. Do not enforce type/client labels on upd
 
 ## Task refinement
 
-When asked to refine a task, load `get_refine` and follow it for question rounds, agreed test scenarios, task content, and full draft confirmation. This Kanban workflow owns persistence and lifecycle decisions.
-
-### Required estimate
-
-Every refined task must have a user-confirmed numeric estimate in its title, in parentheses: `Task title (100)`. Here, `100` is an example, not a fixed value. Estimates do NOT have units, don't ask for those. Agree on the estimate once the scope and Definition of Done are clear. If the estimation unit or convention is unknown, ask rather than assume.
-
-Include the estimate in the title shown for final confirmation. Replace an existing estimate rather than appending a second one, preserving unrelated title content. Do not save a task as refined or move it to **Waiting For Client Approval** without an agreed estimate in its title.
-
-### Save the refined task
-
-1. For a **Trello card link**, read the card through the MCP and provide its content to the refinement workflow. Update that same card after confirmation; do not create a duplicate. For **free text**, use it as the starting point and create a new card after confirmation.
-2. Include the PR handover requirement from the description format below as an additional Definition of Done requirement. Preserve the refinement workflow’s short opening summary, requirements, and agreed tests.
-3. Ask the user to confirm the full draft, including the estimated title and destination **Waiting For Client Approval / top**. Wait for confirmation before saving or moving. This confirms refinement, not client approval; do not move directly to Todo.
-4. Save the agreed title and description through the MCP, placing the new or existing card in **Waiting For Client Approval / top**. If that list is missing or ambiguous, ask; never substitute Todo. Apply creation-only label guidance to new cards and preserve unrelated data on existing cards.
-5. After success, briefly state what changed and include the card URL. Report partial failures accurately.
-
-If the task was already refined and confirmed in this conversation, reuse that result instead of repeating the interview. Obtain any missing estimate and confirm the estimated title and destination before saving if they were not included in the earlier confirmation.
-
-## Card descriptions
-
-New cards and refined existing cards use this Markdown format. Pass the description directly to the MCP tool; no local files or shell preparation are needed.
-
-```markdown
-**Context/Goal:** <one or two sentences>
-
-**Functional requirements:**
-- <requirement>
-
-**Definition of done:**
-- <agreed completion criterion>
-- Tests cover: <agreed scenarios, expected outcomes, and automated or manual coverage>
-- The PR includes a handover explaining how the result works, using <textual explanation, reproduction/demo steps, screenshots, screen recording, or diagram as appropriate>.
-```
-
-For refined tasks, retain all confirmed content and completion requirements from the refinement workflow.
+When asked to refine a task, load the refinement workflow via `get_refine`. It owns the refinement interview, estimates, task content, full draft confirmation, and saving refined tasks. Follow this Kanban workflow for board operations and lifecycle rules.
 
 ## Communication and scope
 

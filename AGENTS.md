@@ -16,7 +16,8 @@ Keep this file at 100 physical lines or fewer, including blank lines.
 - `best-practices/`: durable engineering rules for agents, kept in context across Pinelab projects.
 - `recipes/`: task-specific guides loaded on demand, not permanent context.
 - `workflow/`: Pinelab's way of working, including approvals, testing, review, and handover.
-- Keep each rule in one authoritative document; link it from other guides with an explicit reading trigger.
+- Keep each rule in one authoritative document; reference it from other guides with an explicit reading trigger.
+- Documentation is exposed through MCP. Do not link to local files or tell consumers to read repository paths. Reference the MCP tool (and recipe ID where needed) that loads the guide instead.
 
 ## Best practices
 
@@ -33,7 +34,7 @@ Keep this file at 100 physical lines or fewer, including blank lines.
 - Use ordered, executable steps with explicit inputs, commands, working directories, and expected outcomes where relevant.
 - Include verification of the successful path and consequential failure cases, plus known limitations.
 - Distinguish reusable instructions from project-specific examples; never include secrets or private operational details.
-- Link applicable best practices rather than duplicating them. Recipes do not require a Pinelab mention.
+- Reference applicable best practices through their MCP tools rather than duplicating them. Recipes do not require a Pinelab mention.
 
 ## Workflows and developer freedom
 
