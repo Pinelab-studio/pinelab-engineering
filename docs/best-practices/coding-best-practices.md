@@ -50,6 +50,7 @@ The test: Every changed line should trace directly to the user's request.
 
 Apply these rules to all unit, integration, and end-to-end tests.
 
+- Tests are always self-contained, no external network requests. Use manual scripts (no `.spec.ts` or `.test.ts`) to test if connecting to external platforms work.
 - Avoid Over-Testing: Focus on behavior, not implementation details. Don’t test internal state or private functions.
 - Tests are for humans to understand and review. Before writing tests, propose their scenarios and expected outcomes and obtain human approval. Ask again only when behaviour or scope changes.
 - Prefer integration or end-to-end tests for user-facing behaviour. Add focused unit tests for complex logic or edge cases not meaningfully covered in e2e or integration; avoid duplicating assertions across levels.
