@@ -1,58 +1,72 @@
 ---
 name: Node.js Security Scan and Dependency Updates
-description: Run a Node.js security scan, investigate dependency updates, fix confirmed issues, and open a pull request documenting risks and breaking changes.
+description: Scan every Node.js package.json project, investigate dependency updates, and open a separate pull request per project with fixes, risks, and breaking changes.
 ---
 
-Run a lightweight Node.js security scan, fix confirmed issues and compatible production patch updates, then open a pull request. Use repository-wide checks plus a focused review of recent changes.
+Scan every Node.js `package.json` project in the current Git repository, fix confirmed issues and production patches, and open one PR per changed project. In monorepos, projects are directories, not separate Git repositories; all branches/PRs belong to this repository.
 
-## 1. Set scope and prepare
+## 1. Discover projects and establish a baseline
 
-Review changes from the last 7 days by default; accept a user-specified positive whole number of days. Reject invalid values before running commands. No schedule or stored scan baseline is required.
+Load [coding best practices](../best-practices/coding-best-practices.md) before fixes or tests. Inspect project instructions, runtime versions, scripts, and workspace/lockfile ownership. Discover every tracked `package.json`, including nested projects and workspace packages; exclude dependencies and generated/vendor directories. Example: `api/package.json` and `storefront/package.json` need two scans and, if both need fixes, two PRs.
 
-Inspect project instructions, package roots/workspaces, runtime versions, scripts, and working-tree status. Preserve existing work. If switching branches would overwrite changes, stop and ask. Identify the remote's default branch, check it out, pull with `--ff-only`, and create a fresh `fix/security-scan-<unique-suffix>` branch. Never edit or push directly on the default/production branch.
+Preserve existing work; stop and ask if switching branches would overwrite it. Identify the remote's default branch, check it out, and pull with `--ff-only`. Never edit or push directly on the default/production branch.
 
-From the repository root, record the scan's starting commit and compute the comparison before editing. Replace `7` with the validated lookback:
+Review the last 7 days unless given another positive whole number; reject invalid values before commands. From the repository root, record the baseline before editing:
 
 ```bash
-DAYS=7
+DAYS=7 # Replace with validated lookback
 SCAN_HEAD=$(git rev-parse HEAD)
 BASE=$(git rev-list -1 --before="$DAYS days ago" "$SCAN_HEAD")
-# Only run when BASE is non-empty and history covers the requested period:
+# Run only when BASE exists and history covers the requested period:
 git diff --name-only "$BASE" "$SCAN_HEAD"
 git diff "$BASE" "$SCAN_HEAD" -- <selected-paths>
 ```
 
-This compares net changes, not every historical patch. On a first run, shallow clone, or missing baseline, inspect available changes and high-risk entry points in small batches; state the missing history and unreviewed areas. Never silently treat missing history as no changes. With no changed files, still run dependency and project checks; explicitly state that incremental code review had no changes. A time window is not a full-repository security audit.
+This compares net changes, not historical patches. With missing/shallow history, inspect available changes and high-risk entry points; report coverage gaps. With no changed files, still run checks and report no incremental changes. Full audits, scheduling, and stored baselines are outside scope.
 
-## 2. Run checks independently
+## 2. Scan every project
 
-In each applicable npm package root (respecting workspace configuration), run:
+From each package root, or its workspace root using supported workspace selectors, run independently:
 
-- `npm audit --omit=dev`
-- `npm audit`
-- `npm outdated`
-- Available lint, typecheck, test, and build scripts, using their actual names from `package.json`.
+- `npm audit --omit=dev` — production vulnerabilities.
+- `npm audit` — all dependency vulnerabilities.
+- `npm outdated`.
+- Available lint, typecheck, test, and build scripts, using actual names.
 
-Inspect scripts before execution; avoid commands that deploy, mutate production, or need live credentials. Use isolated local services where needed. Record every command's exit status and concise evidence separately; do not chain checks with `&&` or stop reporting after a failure. Distinguish findings from network/tool failures. Mark missing or unsafe checks as unavailable/skipped, with reasons. Never run `npm audit fix --force`.
+Inspect scripts first. Skip deployment, production mutation, or live-credential requirements; use isolated services. Record each command's exit status and concise evidence, distinguishing findings from tool/network failures. Explain skipped checks. Do not chain checks with `&&` or stop after failures; continue remaining projects when one is blocked.
 
-Keep full output outside AI context where possible; read summaries and relevant excerpts. Do not load the entire repository or lockfile. Review changed filenames first, then selected diffs and necessary callers. Inspect authentication/authorization, injection, validation, API/database boundaries, uploads, exposed secrets, and insecure configuration where relevant. Check Node.js support status and risky/unmaintained dependencies. Flag unreviewed high-risk areas; audit output does not prove application security. Never expose secret values in output or reports.
+Read summaries and selected diffs/callers, not entire repositories, lockfiles, or command output. Review authentication/authorization, injection, validation, API/database boundaries, uploads, secrets, and configuration where relevant. Check Node.js support and risky/unmaintained dependencies. Never expose secret values. Flag unreviewed high-risk areas; clean audit output does not prove application security.
 
-## 3. Investigate updates and fix
+## 3. Investigate and fix per project
 
-Prioritize exploitable production vulnerabilities and broken functionality. Fix confirmed issues with focused changes and regression tests under the project's coding rules. Do not fix suspicions as if verified.
+Prioritize confirmed exploitable vulnerabilities and broken functionality, not suspicions. Also consider production patches within the installed major/minor version, using installed versions and the dependency tree. Report routine minor/major updates without applying them; vulnerability fixes may exceed patches.
 
-Also consider production patch updates within the installed major/minor version; use installed versions and the dependency tree, not only declared ranges. Report routine minor/major updates without applying them. Compatible updates for confirmed vulnerabilities may go beyond patches, but require the same investigation below.
+Before editing, create `fix/security-scan-<project>-<unique-suffix>` from the updated default, never another project's branch. Update manifests/lockfiles together using the project's package manager. For shared lockfiles, use workspace-aware commands scoped to this project's fixes. Avoid unrelated churn; ask before combining inseparable projects.
 
-Before **every** package update, read that package's official changelog for the entire installed-to-target range, along with release notes, linked migration guides, engine requirements, and relevant advisories. Patch labels do not guarantee safety. Record source links and findings. If release information is unavailable or inconclusive, defer the update. Database migrations, breaking changes, credential rotation, and operational/product decisions require explicit approval before proceeding; report and defer those items while continuing safe work. Never run migrations against live systems.
+For npm projects, preview compatible fixes with `npm audit fix --dry-run --json`. Before **every** update, inspect official changelogs across the installed-to-target range, release notes, linked migration guides, engine requirements, and advisories. Record sources; defer unavailable or inconclusive release information. Patch labels do not guarantee safety.
 
-Update the manifest and lockfile together using the project's package manager. Avoid unrelated lockfile churn. Follow the project's coding guidance for test approval and test-first fixes; obtain any missing scenario approval without reopening already agreed cases. Run relevant regression checks after each fix/update and the available final checks. Report pre-existing failures separately. Do not describe an unverified fix as validated.
+After investigation:
 
-## 4. Report and open a PR
+```bash
+npm audit fix         # Apply compatible vulnerability fixes
+```
 
-Return a concise report in the conversation with scan commit, lookback/baseline, check statuses, skipped checks, and coverage limits. Separate confirmed findings from suspected risks. Use a P0–P3 table: issue, evidence (file/line or command excerpt), impact, recommended fix, estimated effort, and disposition (fixed/deferred).
+If vulnerabilities remain and require breaking updates, preview with `npm audit fix --force --dry-run --json`, investigate as above, then run:
 
-P0 means critical security; P1 high security or broken functionality; P2 moderate risk/maintenance; P3 minor improvements. Include relevant bugs, missing tests, duplication, and performance findings at lower priority without expanding into unrelated cleanup.
+```bash
+npm audit fix --force # Allow breaking vulnerability fixes
+```
 
-Review the diff for secrets and unrelated/generated artifacts. Remove temporary plan files created for this task, not pre-existing user files. Commit and push only intended fixes on the feature branch, then create a PR following the project's PR guidelines. Do not merge or deploy. With no fixes, return the report without an empty commit or PR. If checks or PR creation fail, report the blocker and actual completion state.
+Dependency breaking changes need no separate approval; make necessary application adjustments and document them. Database migrations, credential rotation, and operational/product decisions still require approval: defer those items while continuing safe work. Never run live migrations.
 
-The PR must document **each dependency's old → new version, changelog/release-note links, relevant changes, migration and breaking-change findings, operational steps, and test results**. For each upgraded dependency, explicitly state `Breaking changes: <details>` or `breaking: none` when none were identified. Explicitly say when no migrations were identified and note uncertainty. Keep the description within the PR guidelines' limit; place a larger dependency table/report in a linked PR comment. Include deferred updates and approval requirements. Return the PR link and reproduction commands. Scheduling remains outside this recipe.
+Follow coding guidance for regression tests, scenario approval, and test-first fixes. After each fix/update, rerun relevant checks; finish with audits and available project checks. Separate pre-existing failures, unresolved vulnerabilities, and unverified fixes from validated results.
+
+## 4. Report and open project PRs
+
+Report every project by path, including scan commit, lookback/baseline, check statuses, skipped checks, coverage limits, and no-fix/blocked outcomes. Separate confirmed findings from suspected risks. Use a table: priority, issue, evidence (file/line or command excerpt), impact, recommended fix, effort, disposition (fixed/deferred).
+
+Priorities: P0 critical security; P1 high security/broken functionality; P2 moderate risk/maintenance; P3 minor improvements. Include relevant bugs, missing tests, duplication, and performance findings without unrelated cleanup.
+
+Review diffs for secrets and unrelated/generated artifacts; remove only temporary plan files created for this task. Commit/push intended fixes and create one PR per changed project following [PR guidelines](../best-practices/pull-request-guidelines.md). Identify the project path. No fixes means no empty commit/PR. Do not merge or deploy; report actual completion and blockers.
+
+For each upgraded dependency, document old → new version, release links, relevant changes, `Breaking changes: <details>` or `breaking: none`, migration findings (explicitly state none or uncertainty), operational steps, and test results. Include deferred updates/approvals. Respect the PR description limit; link larger reports in a PR comment. Return PR links by project and reproduction commands.
