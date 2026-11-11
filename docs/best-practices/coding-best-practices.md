@@ -17,8 +17,8 @@ These guidelines bias toward caution over speed. For trivial tasks, use judgment
 **Don't assume. Don't hide confusion. Surface tradeoffs.**
 
 Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
+- State assumptions explicitly. Resolve product questions during refinement; when using `get_implement`, reuse refinement and make conservative in-scope technical choices without another interview.
+- Do not silently override settled requirements. Record technical choices and report concrete conflicts that prevent safe implementation.
 - If a simpler approach exists, say so. Push back when warranted.
 
 ## Simplicity First
@@ -51,7 +51,7 @@ Apply these rules to all unit, integration, and end-to-end tests.
 
 - Tests are always self-contained, no external network requests. Use manual scripts (no `.spec.ts` or `.test.ts`) to test if connecting to external platforms work.
 - Avoid Over-Testing: Focus on behavior, not implementation details. Don’t test internal state or private functions.
-- Tests are for humans to understand and review. Before writing tests, propose their scenarios and expected outcomes and obtain human approval. Ask again only when behaviour or scope changes.
+- Tests are for humans to understand and review. Agree intended behaviours and outcomes during refinement. When using `get_implement`, reuse that scope and choose in-scope cases, public seams, and fixtures without further approval. Outside that workflow, obtain approval before writing new test scenarios.
 - Prefer integration or end-to-end tests for user-facing behaviour. Add focused unit tests for complex logic or edge cases not meaningfully covered in e2e or integration; avoid duplicating assertions across levels.
 - Use helpers for readability, but place them below the test cases: the cases are what readers need to understand first.
 - Use hardcoded expected values so tests detect contract changes: compare `result === 'expected-string'`, not `result === SOME_CONSTANT` imported from the implementation.

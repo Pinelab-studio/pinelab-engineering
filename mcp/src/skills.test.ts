@@ -42,17 +42,17 @@ test("security scan is discoverable as a recipe without bundled guidance", async
     const response = await client.callTool({ name: "get_recipe", arguments: { id: "recipes/security-scan" } });
     assert.notEqual(response.isError, true);
     const content = text(response);
-    assert.ok(content.includes("Review changes from the last 7 days by default"));
+    assert.ok(content.includes("Review the last 7 days unless given another positive whole number"));
     assert.ok(!content.includes("includedDocuments:"));
     assert.ok(!content.includes("## Think Before Coding"));
     assert.ok(!content.includes("Keep the entire description at 200 words or fewer."));
-    assert.ok(content.includes("read that package's official changelog for the entire installed-to-target range"));
-    assert.ok(content.includes("For each upgraded dependency, explicitly state `Breaking changes: <details>` or `breaking: none`"));
+    assert.ok(content.includes("Before **every** update, inspect official changelogs across the installed-to-target range"));
+    assert.match(content, /For each upgraded dependency,[^\n]*`Breaking changes: <details>` or `breaking: none`/);
   }));
 
 test("review and planning include global rules once while Vendure remains standalone", async () =>
   scenario(async (client) => {
-    for (const name of ["get_review", "get_plan_and_implement"]) {
+    for (const name of ["get_review", "get_implement"]) {
       const response = text(await client.callTool({ name, arguments: {} }));
       assert.equal(response.split("Document: docs/best-practices/coding-best-practices.md").length - 1, 1);
     }

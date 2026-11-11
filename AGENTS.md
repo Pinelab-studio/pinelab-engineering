@@ -38,10 +38,7 @@ Keep this file at 100 physical lines or fewer, including blank lines.
 
 ## Workflows and developer freedom
 
-- Only load or follow workflows when the user explicitly mentions “Pinelab” (case-insensitive); associated Trello operations use the same trigger.
 - Make required outcomes, approval gates, and safety boundaries distinct from recommended prompts or interview mechanics.
-- Developers may use their own planning tools and flow, but must load Pinelab best practices and preserve applicable approval, testing, review, and handover requirements.
-- When no custom plan mode is supplied, use [Plan and implement](workflow/plan-and-implement.md).
 - Before changing task refinement, read [Refine a task](workflow/refine.md).
 - Before changing task lifecycle or Trello operations, read [Pinelab Kanban](workflow/pinelab-trello-kanban.md).
 - Before changing review or prioritization, read [Review](workflow/review.md) or [Kanban priorities](workflow/sanitize-kanban.md), respectively.

@@ -3,7 +3,7 @@ name: refine-task
 description: Refine a Pinelab task's scope, test behaviours, and technical guidance for implementation.
 ---
 
-Refine a Pinelab task through investigation and question rounds into a confirmed description with requirements, highover test behaviours, and enough technical guidance for another developer to pick it up. Investigate feasibility and risks.
+Refine a task for Pinelab through investigation and question rounds into confirmed requirements, test behaviours, and technical guidance. Resolve upfront questions here so `get_implement` can start without another interview or confirmation round.
 
 ## 1. Gather context and investigate
 
@@ -17,14 +17,16 @@ Investigate enough to identify a feasible approach, dependencies, compatibility 
 
 Track settled decisions, open questions, and pending investigations as a **design tree**. The **frontier** contains every unresolved decision whose prerequisites are settled. Ask the whole frontier in one round, then wait. Dependent questions wait for the prerequisite answer or investigation; unrelated questions can proceed.
 
-Use concise numbered questions with a recommendation, simple choices where useful, and trade-offs only when needed:
+Use concise numbered questions. When meaningful alternatives exist, list lettered choices (a, b, c, etc.), mark the recommendation, and briefly explain relevant trade-offs. Do not invent alternatives just to make a multiple-choice question. Use yes/no or an open question when no meaningful alternatives exist.
 
 ```text
 ❓ **1** - <question>
-➡️ <recommended answer>
+a. <option> (recommended)
+b. <alternative>
+c. <alternative>
 ```
 
-Accept **y** for the recommendation, **n** to reject it, and **x** to use your judgment or ignore an optional choice. Record judgment calls in the draft. Recompute the frontier after each round; do not repeat settled questions, invent requirements, or silently decide for the user.
+Accept compact answers such as **1a, 2c** and map each choice to its numbered question. Also accept **y** for the recommendation, **n** to reject it, and **x** to use your judgment or ignore an optional choice. Record judgment calls in the draft. Recompute the frontier after each round; do not repeat settled questions, invent requirements, or silently decide for the user.
 
 Cover the goal, scope, expected behaviours, exclusions, and observable completion criteria. Discuss technical constraints and options that affect feasibility, scope, risk, or handoff. Separate mandatory constraints from recommended approaches; leave routine implementation details to the implementer. Stay within the task, not unrelated redesign.
 
@@ -32,7 +34,11 @@ Cover the goal, scope, expected behaviours, exclusions, and observable completio
 
 Explicitly ask which behaviours should be tested, proposing normal, edge, and failure scenarios relevant to the task. For each, agree on the expected outcome and automated or manual coverage after its behaviour is settled. Include these under **Tests cover** in the Definition of done; “add tests” is insufficient. If automation is inappropriate, agree on concrete manual verification rather than omitting checks.
 
-Detailed test seams, fixtures, runners, and commands belong to implementation planning unless they affect feasibility or scope. Record unresolved technical questions and whether they block readiness; do not present a task as ready while material feasibility or scope questions remain open.
+Investigate suitable public test seams, runners, fixtures, and required services. Explain what the proposed coverage catches and misses. Resolve human choices about coverage, manual versus automated checks, compatibility, public interfaces, data changes, and consequential trade-offs here. Agree mandatory testing constraints; delegate routine seam, fixture, command, and in-scope test-case choices to the implementer. Do not require approval of every implementation detail.
+
+Check environment prerequisites and record setup instructions and known limitations. Resolve material scope or feasibility questions before marking the task ready; do not pass them downstream as an implementation questionnaire. Refinement confirmation approves the intended outcomes and delegates routine implementation and testing decisions.
+
+Load `get_pull_request_guidelines` during refinement. If the project requires a manually maintained version/changelog update, agree the release policy or proposed semantic bump here, including package version and changelog scope. Otherwise record the existing release automation or that no release change is needed. Do not leave an avoidable release-approval gate for implementation.
 
 ## 3. Agree on an estimate
 
@@ -46,7 +52,7 @@ When the frontier is empty, present a concise estimated title and the full descr
 
 - **Context/Goal:** one short paragraph explaining what changes, who benefits, and why. Use one or two plain-language sentences without unnecessary implementation details.
 - **Functional requirements:** specific expected behaviours, boundaries, and exclusions.
-- **Technical guidance:** relevant components or code references, investigated approach and rationale, mandatory constraints versus recommendations, dependencies, risks, and non-blocking questions for the implementer. Omit this section only when there is no useful technical guidance. Do not turn suggestions into requirements.
+- **Technical guidance:** relevant components or code references, investigated approach and rationale, mandatory constraints versus recommendations, dependencies, risks, environment prerequisites, release decisions, and routine choices delegated to the implementer. Omit this section only when there is no useful technical guidance. Do not turn suggestions into requirements.
 - **Definition of done:** observable completion criteria and a **Tests cover** bullet with agreed scenarios, expected outcomes, and automated or manual coverage. Include requirements supplied by the calling workflow and always load Pinelab PR guidelines via MCP. Require the PR to include a handover explaining how the result works, using a textual explanation, reproduction/demo steps, screenshots, screen recording, or diagram as appropriate.
 
 Preserve relevant existing context and record judgment calls. If drafting exposes an unresolved decision, return to question rounds. Ask the user to confirm the full draft; after changes, present it again for confirmation.

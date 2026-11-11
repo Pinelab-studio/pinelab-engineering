@@ -46,7 +46,7 @@ Task intake happens automatically, no need to worry about this.
 
 _If a task is in "Todo" it is already refined, skip this step!_
 
-Refining means agreeing on the goal, functional requirements, test behaviours, and technical guidance so another developer can pick up the task. Investigate feasibility and risks; leave detailed implementation choices to `Plan and Implement` below. When refining a Trello task, the workflow fetches it, asks about unresolved decisions, and moves the confirmed task to "Waiting For Client Approval".
+Refining means agreeing on the goal, requirements, test behaviours, and technical guidance. Investigate feasibility and risks; leave detailed implementation choices to `Plan and Implement` below. When refining a Trello task, the workflow fetches it, asks about unresolved decisions, and moves the confirmed task to "Waiting For Client Approval".
 
 Start refining a task by prompting something like:
 
@@ -55,18 +55,18 @@ Start refining Pinelab task <Trello task link>
 ```
 
 
-## 2. Plan and Implement 
+## 2. Implement 
 
 Use this when starting development on a task that is ready to pick up (in the Todo list when using Trello). Input can also be text, a document, or conversation context. Reuse any confirmed refinement, verify its technical guidance against current code, and resolve only remaining implementation and test-strategy decisions before confirming the plan. This flow includes Pinelab's best practices.
 
 Start working on a task by prompting:
 
 ```text
-Start planning Pinelab task <Trello task link> 
+Start implementing Pinelab task <Trello task link> 
 ```
 
 
-:information_source: _You may use your own `/plan` prompt or planning flow. Just make sure to mention "use Pinelab's best practices" when invoking your own plan-mode._
+:warning: _Always `Pinelab review <gh PR link>` your own PR before asking someone else to review_
 
 ## 3. Review
 
@@ -87,9 +87,9 @@ Handover Pinelab task <link to PR>
 ```
 
 1. Refine a task (might be done already)
-2. Pick up a task using `plan-and-implement` or your own standards-compliant planning flow
+2. Pick up a refined task using `implement`: no upfront interview; choose routine technical details and block only on concrete technical obstacles
 3. Create a Pull Request
-4. Always `/review <gh PR link>` your own implementation before creating a Pull Request
+4. Always `/review <gh PR link>` your own implementation before asking someone else to review
 5. Another developer will `/review` your Pull Request
 
 See [`TOOLS.md`](./mcp/TOOLS.md) for a list of the exposed MCP tools.
