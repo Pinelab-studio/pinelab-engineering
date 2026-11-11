@@ -1,5 +1,5 @@
 ---
-name: Pinelab Repo setup
+name: Pinelab repository setup
 description: Set up repository quality checks, isolated tests, CI, and concise agent instructions for better automated quality assurance.
 category: infrastructure
 ---
