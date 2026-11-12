@@ -13,6 +13,8 @@ let failWrites = false;
 let ambiguousSelections = false;
 let boardLists = [{ id: "todo", name: "Todo" }, { id: "doing", name: "Doing" }];
 let boardCards: Record<string, unknown>[] = [];
+let completionActions: Record<string, any>[] = [];
+let completedCards: Record<string, Record<string, unknown>> = {};
 const fake = createServer(async (request, response) => {
   let text = "";
   for await (const chunk of request) text += chunk;
@@ -54,7 +56,14 @@ const fake = createServer(async (request, response) => {
   if (req.path === "/boards/board/cards") return res.json(boardCards);
   if (req.path.startsWith("/lists/") && req.path.endsWith("/cards"))
     return res.json(boardCards.filter((card) => card.idList === req.path.split("/")[2]));
+  if (req.path === "/boards/board/actions") {
+    const before = completionActions.findIndex((action) => action.id === url.searchParams.get("before"));
+    const offset = before < 0 ? 0 : before + 1;
+    return res.json(completionActions.slice(offset, offset + 1000));
+  }
   if (req.path.endsWith("/actions")) return res.json([]);
+  if (req.path.startsWith("/cards/") && completedCards[req.path.split("/")[2]])
+    return res.json(completedCards[req.path.split("/")[2]]);
   return res.json({
     id: "card",
     idBoard: req.path.includes("foreign") ? "other" : "board",
@@ -86,6 +95,8 @@ async function scenario(
   ambiguousSelections = false;
   boardLists = [{ id: "todo", name: "Todo" }, { id: "doing", name: "Doing" }];
   boardCards = [];
+  completionActions = [];
+  completedCards = {};
   const trello = await listen(fake);
   const server = await createMcpServer({
       apiBase: trello.url,
@@ -137,6 +148,10 @@ test("invalid dispatcher inputs are rejected without reaching Trello", async () 
       { action: "unknown" },
       { action: "get_card", input: {} },
       { action: "list_cards", input: { typo: "Todo" } },
+      { action: "export_finished_tasks", input: { year: 2026, month: 13 } },
+      { action: "export_finished_tasks", input: { year: 2026, month: 0 } },
+      { action: "export_finished_tasks", input: { year: 2026.5, month: 10 } },
+      { action: "export_finished_tasks", input: { month: 10 } },
       { input: { list: "Todo" } },
       { action: "get_board", input: {}, typo: true },
     ]) {
@@ -165,7 +180,7 @@ test("tool discovery exposes only one Trello entry point and loads update semant
     assert.equal(tool.annotations?.destructiveHint, true);
     const response = await client.callTool({ name: "pinelab_trello", arguments: {} });
     const { actions } = JSON.parse((response.content as { text: string }[])[0].text);
-    assert.deepEqual(Object.keys(actions).sort(), ["add_comment", "create_card", "get_board", "get_card", "list_cards", "update_card"]);
+    assert.deepEqual(Object.keys(actions).sort(), ["add_comment", "create_card", "export_finished_tasks", "get_board", "get_card", "list_cards", "update_card"]);
     const fields = actions.update_card.inputSchema.properties;
     assert.match(fields.labels.description, /Replaces all labels/);
     assert.match(fields.assignees.description, /omitted preserves/);
@@ -427,6 +442,7 @@ test("all tools enforce their permission before calling Trello", async () => {
     ["get_board", {}],
     ["list_cards", {}],
     ["get_card", { card: "card" }],
+    ["export_finished_tasks", { year: 2026, month: 10 }],
   ] as const;
   for (const token of [undefined, "invalid", "reader-secret"]) {
     await scenario(token, async (client) => {
@@ -551,6 +567,99 @@ test("reader can read board but cannot create cards", async () =>
     assert.match(JSON.stringify(denied), /Forbidden/);
     assert.equal(records.length, 0);
   }));
+
+test("monthly CSV includes archived cards, Done creations/copies, labels and all assignees across Amsterdam DST boundaries", async () =>
+  scenario("reader-secret", async (client) => {
+    setupCompletedTasks();
+    const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "export_finished_tasks", input: { year: 2026, month: 10 } } });
+    assert.notEqual(result.isError, true);
+    const report = JSON.parse((result.content as { text: string }[])[0].text);
+    assert.equal(report.filename, "finished-tasks-2026-10.csv");
+    assert.equal(report.mimeType, "text/csv;charset=utf-8");
+    assert.equal(report.timeZone, "Europe/Amsterdam");
+    assert.equal(report.start, "2026-09-30T22:00:00.000Z");
+    assert.equal(report.endExclusive, "2026-10-31T23:00:00.000Z");
+    assert.equal(report.count, 3);
+    assert.deepEqual(report.warnings, []);
+    assert.equal(report.csv,
+      '"title","completed_at","assignees","feature","client","amount","url","archived"\r\n' +
+      '"Created (0)","2026-09-30T22:00:00.000Z","","","","0","https://trello.com/c/created","false"\r\n' +
+      '"Fix ""checkout"", café\nflow (100)","2026-10-25T12:00:00.000Z","Ayoub Kermout (@ayoub); Former Developer (@former)","Feature; Bug","Client","100","https://trello.com/c/archived","true"\r\n' +
+      '"Copied (12,5)","2026-10-31T22:59:59.999Z","","","","12.5","https://trello.com/c/copied","false"\r\n');
+    assert.ok(records.every((r) => r.method === "GET"));
+    assert.equal(records.find((r) => r.path.endsWith("/lists"))!.query!.filter, "all");
+    const actions = records.find((r) => r.path === "/boards/board/actions")!;
+    assert.equal(actions.query!.filter, "updateCard:idList,createCard,copyCard");
+    assert.equal(actions.query!.since, "2026-09-30T21:59:59.999Z");
+    assert.equal(actions.query!.before, "2026-10-31T23:00:00.000Z");
+    assert.equal(records.filter((r) => r.path === "/cards/archived").length, 1);
+    assert.equal(records.some((r) => /\/cards\/(before|after|notdone)$/.test(r.path)), false);
+  }));
+
+test("monthly export paginates completion history and keeps only the latest Done entry per card", async () =>
+  scenario("reader-secret", async (client) => {
+    setupCompletedTasks();
+    const latest = completionActions.find((action) => action.id === "latest")!;
+    const older = completionActions.find((action) => action.id === "older")!;
+    completionActions = [
+      ...Array.from({ length: 1000 }, (_, i) => ({ ...latest, id: `action${i}` })),
+      older,
+    ];
+    const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "export_finished_tasks", input: { year: 2026, month: 10 } } });
+    assert.notEqual(result.isError, true);
+    const report = JSON.parse((result.content as { text: string }[])[0].text);
+    assert.equal(report.count, 1);
+    assert.match(report.csv, /2026-10-25T12:00:00.000Z/);
+    assert.doesNotMatch(report.csv, /2026-10-01T12:00:00.000Z/);
+    const pages = records.filter((r) => r.path === "/boards/board/actions");
+    assert.equal(pages.length, 2);
+    assert.equal(pages[1].query!.before, "action999");
+    assert.equal(records.filter((r) => r.path === "/cards/archived").length, 1);
+  }));
+
+test("monthly CSV leaves missing amounts blank with warnings and escapes spreadsheet formulas", async () =>
+  scenario("reader-secret", async (client) => {
+    setupCompletedTasks();
+    completedCards.archived.name = '=HYPERLINK("unsafe")';
+    completionActions = completionActions.filter((action) => action.id === "latest");
+    const result = await client.callTool({ name: "pinelab_trello", arguments: { action: "export_finished_tasks", input: { year: 2026, month: 10 } } });
+    assert.notEqual(result.isError, true);
+    const report = JSON.parse((result.content as { text: string }[])[0].text);
+    assert.deepEqual(report.warnings, ["No numeric amount at the end of the title: https://trello.com/c/archived"]);
+    assert.equal(report.csv,
+      '"title","completed_at","assignees","feature","client","amount","url","archived"\r\n' +
+      '"\'=HYPERLINK(""unsafe"")","2026-10-25T12:00:00.000Z","Ayoub Kermout (@ayoub); Former Developer (@former)","Feature; Bug","Client","","https://trello.com/c/archived","true"\r\n');
+  }));
+
+/** Model historical completion activity independently from current open card listings. */
+function setupCompletedTasks() {
+  boardLists.push({ id: "done", name: "✨Done" });
+  const move = (id: string, card: string, date: string, list = "done") => ({
+    id, type: "updateCard", date,
+    data: { card: { id: card }, listBefore: { id: "doing" }, listAfter: { id: list } },
+  });
+  completionActions = [
+    move("after", "after", "2026-10-31T23:00:00.000Z"),
+    { id: "copy", type: "copyCard", date: "2026-10-31T22:59:59.999Z", data: { card: { id: "copied" }, list: { id: "done" } } },
+    move("latest", "archived", "2026-10-25T12:00:00.000Z"),
+    move("away", "notdone", "2026-10-15T12:00:00.000Z", "todo"),
+    move("older", "archived", "2026-10-01T12:00:00.000Z"),
+    { id: "create", type: "createCard", date: "2026-09-30T22:00:00.000Z", data: { card: { id: "created" }, list: { id: "done" } } },
+    move("before", "before", "2026-09-30T21:59:59.999Z"),
+  ];
+  for (const [id, name] of [["archived", 'Fix "checkout", café\nflow (100)'], ["created", "Created (0)"], ["copied", "Copied (12,5)"]]) {
+    completedCards[id] = { id, name, idBoard: "board", idList: "todo", idMembers: [], members: [], labels: [], url: `https://trello.com/c/${id}`, closed: id === "archived" };
+  }
+  completedCards.archived.idMembers = ["ayoub", "former"];
+  completedCards.archived.members = [
+    { id: "ayoub", username: "ayoub", fullName: "Ayoub Kermout" },
+    { id: "former", username: "former", fullName: "Former Developer" },
+  ];
+  completedCards.archived.labels = [
+    { name: "Feature", color: "blue_dark" }, { name: "Bug", color: "blue_dark" },
+    { name: "Client", color: "green" }, { name: "Other", color: "green_dark" },
+  ];
+}
 
 /** Populate the existing HTTP fixture with distinct lists and cards for public listing tests. */
 function setupCardListing() {

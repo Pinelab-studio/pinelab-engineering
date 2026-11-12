@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Config } from "../mcp.js";
 import { createTrelloHelpers, id, name, pos, cardInput } from "./trello-helpers.js";
+import { exportFinishedTasks } from "./export-finished-tasks.js";
 
 /** Register tool definitions using request-scoped, permission-checked helpers. */
 export function registerTrello(
@@ -58,6 +59,16 @@ export function registerTrello(
       );
       return { lists: boardLists, cards };
     },
+  );
+  tool(
+    "export_finished_tasks",
+    "read",
+    "Export CSV of all cards completed in a given calendar month, including archived cards.",
+    {
+      year: z.number().int().min(1970).max(9998).describe("Calendar year, e.g. 2026."),
+      month: z.number().int().min(1).max(12).describe("Calendar month, 1–12, in Europe/Amsterdam."),
+    },
+    async (args) => exportFinishedTasks(api, config.board, args.year, args.month),
   );
   tool(
     "add_comment",
