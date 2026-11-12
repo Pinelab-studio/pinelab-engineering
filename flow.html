@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project workflow</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xyflow/react@12.8.5/dist/style.css" />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #171d27; background: #fff; }
+    #root { width: 100vw; height: 100dvh; min-height: 440px; }
+    .react-flow { background: radial-gradient(ellipse at 52% 48%, #e8faef88, transparent 48%), #fff; }
+    .stage { width: 178px; background: #ffffffee; border: 1px solid #e8edf0; border-radius: 20px; box-shadow: 0 7px 22px #132b1e05; }
+    .stage-title { padding: 16px 18px; border-bottom: 1px solid #eff2f4; font-size: 14px; font-weight: 650; }
+    .stage-body { display: flex; align-items: center; gap: 9px; padding: 19px 18px; color: #7a8490; font-size: 12px; }
+    .indicator { width: 10px; height: 10px; border-radius: 50%; background: #16a563; box-shadow: 0 0 0 4px #e6f7ee; }
+    .stage .react-flow__handle { visibility: hidden; pointer-events: none; }
+    .endpoint { color: #168454; font-size: 13px; font-weight: 600; }
+    .endpoint .react-flow__handle { opacity: 0; }
+    @keyframes flow-dash { to { stroke-dashoffset: -24; } }
+    .react-flow__edge-path { animation: flow-dash 1.4s linear infinite; }
+    @media (prefers-reduced-motion: reduce) { .react-flow__edge-path { animation: none; } }
+    .edge-label { position: absolute; background: #fff; border: 1px solid #e7f0ea; border-radius: 999px; padding: 6px 13px; color: #178751; font-size: 12px; font-weight: 550; white-space: nowrap; }
+    .heading { position: absolute; top: 34px; left: 38px; z-index: 5; pointer-events: none; }
+    .heading small { color: #169557; font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { font-size: 25px; font-weight: 600; letter-spacing: -.8px; margin: 9px 0; }
+    .heading p { font-size: 13px; color: #87909b; margin: 0; }
+    .react-flow__controls { box-shadow: 0 2px 12px #16291e0c; border: 1px solid #edf0ee; border-radius: 10px; overflow: hidden; }
+    .react-flow__controls-button { border-color: #f1f3f2; }
+  </style>
+  <script type="importmap">
+    {"imports": {
+      "react": "https://esm.sh/react@18.3.1",
+      "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+      "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?external=react",
+      "@xyflow/react": "https://esm.sh/@xyflow/react@12.8.5?external=react,react-dom",
+      "react-dom": "https://esm.sh/react-dom@18.3.1?external=react"
+    }}
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module">
+    import React from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { ReactFlow, Background, Controls, Handle, Position, BaseEdge, EdgeLabelRenderer, getBezierPath, useNodesState, useEdgesState, addEdge } from '@xyflow/react';
+    const h = React.createElement;
+
+    function Stage({ data }) {
+      return h('div', { className: 'stage' },
+        ...['left', 'right', 'top', 'bottom'].flatMap(side => ['source', 'target'].map(type =>
+          h(Handle, { key: side + type, id: side + type, type, position: Position[side[0].toUpperCase() + side.slice(1)] }))),
+        h('div', { className: 'stage-title' }, data.label),
+        h('div', { className: 'stage-body' }, h('span', { className: 'indicator' }), data.description));
+    }
+
+    function Endpoint({ data }) {
+      return h('div', { className: 'endpoint' }, data.label,
+        h(Handle, { type: data.start ? 'source' : 'target', position: Position.Bottom }));
+    }
+
+    function WorkflowEdge(props) {
+      const { sourceX: sx, sourceY: sy, targetX: tx, targetY: ty, data = {} } = props;
+      let path, labelX, labelY;
+      if (data.arc) {
+        const bend = data.arc === 'top' ? -200 : 200;
+        path = `M ${sx},${sy} C ${sx},${sy + bend} ${tx},${ty + bend} ${tx},${ty}`;
+        labelX = (sx + tx) / 2;
+        labelY = (sy + ty) / 2 + bend * .75;
+      } else {
+        [path, labelX, labelY] = getBezierPath(props);
+      }
+      return h(React.Fragment, null,
+        h(BaseEdge, { id: props.id, path, markerEnd: props.markerEnd, style: { stroke: data.arc ? '#26a66b' : '#c5ced0', strokeWidth: 1.8, strokeDasharray: data.feedback ? '2 6' : '5 6' } }),
+        props.label && h(EdgeLabelRenderer, null, h('div', { className: 'edge-label', style: { transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)` } }, props.label)));
+    }
+
+    const nodeTypes = { stage: Stage, endpoint: Endpoint };
+    const edgeTypes = { workflow: WorkflowEdge };
+    const stages = [
+      ['inbox', 'Inbox', 'New requests'],
+      ['approval', 'Awaiting client approval', 'Ready for approval'],
+      ['todo', 'Todo', 'Ready to pick up'],
+      ['doing', 'Doing', 'Work in progress'],
+      ['review', 'In Review', 'Feedback & validation'],
+      ['done', 'Done', 'Ready for handover']
+    ];
+    const initialNodes = stages.map(([id, label, description], i) => ({ id, type: 'stage', position: { x: 160 + i * 205, y: 280 }, data: { label, description } }));
+    initialNodes.push(
+      { id: 'intake', type: 'endpoint', position: { x: 225, y: 110 }, data: { label: 'Intake', start: true } },
+      { id: 'handover', type: 'endpoint', position: { x: 1238, y: 110 }, data: { label: 'Handover' } }
+    );
+    function edge(id, source, target, label, arc, feedback = false) {
+      return { id, source, target, label, type: 'workflow', sourceHandle: source === 'intake' ? undefined : `${arc || 'right'}source`, targetHandle: target === 'handover' ? undefined : `${arc || 'left'}target`, data: { arc, feedback }, markerEnd: ['intake', 'handover'].includes(id) ? { type: 'arrowclosed', color: '#c5ced0', width: 16, height: 16 } : undefined };
+    }
+    const initialEdges = [
+      { ...edge('intake', 'intake', 'inbox'), targetHandle: 'toptarget' },
+      edge('refine', 'inbox', 'approval', 'Refine', 'bottom'),
+      edge('start', 'todo', 'doing', 'Start', 'top'),
+      edge('client-approve', 'approval', 'todo', 'Approve', 'top'),
+      edge('implement', 'doing', 'review', 'Implement', 'top'),
+      edge('feedback', 'review', 'todo', 'Review', 'bottom'),
+      edge('approve', 'review', 'done', 'Review', 'bottom'),
+      { ...edge('handover', 'done', 'handover'), sourceHandle: 'topsource' }
+    ];
+
+    function App() {
+      const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+      const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+      return h(React.Fragment, null,
+        h('header', { className: 'heading' }, h('small', null, 'From intake to handover'), h('h1', null, 'Project workflow'), h('p', null, 'Drag to explore. Scroll to zoom.')),
+        h(ReactFlow, { nodes, edges, nodeTypes, edgeTypes, onNodesChange, onEdgesChange,
+          onConnect: connection => setEdges(current => addEdge({ ...connection, type: 'workflow' }, current)),
+          nodesDraggable: false, nodesConnectable: false, edgesReconnectable: false,
+          elementsSelectable: false, deleteKeyCode: null,
+          fitView: true, fitViewOptions: { padding: .12 }, minZoom: .2, maxZoom: 2,
+          }, h(Background, { color: '#c6cdd1', gap: 24, size: 1 }), h(Controls, { showInteractive: false })));
+    }
+    createRoot(document.getElementById('root')).render(h(App));
+  </script>
+</body>
+</html>

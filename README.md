@@ -37,6 +37,8 @@ These instructions in this MCP are based on our kanban workflow:
 
 Raw cards enter Inbox. Refinement saves confirmed cards to Todo. Implementation moves a linked card through Doing to Ready For Review; human approval is required before Done.
 
+![Pinelab Kanban workflow](workflow.gif)
+
 Use these prompts to make your AI harness live up to Pinelab's way of working and quality standards:
 
 ## 0. Intake
