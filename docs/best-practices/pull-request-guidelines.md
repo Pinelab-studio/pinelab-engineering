@@ -21,9 +21,9 @@ Keep the entire description at 200 words or fewer.
 - Summarize the code's execution flow as a simple pseudocode diagram using arrows and branches.
 - Use at most 10 short steps. Focus on inputs, decisions, actions, and outcomes—not implementation details.
 
-## How to test
+## How to test manually local
 
-- Give numbered steps to reproduce and validate the new functionality.
+- Give numbered steps to reproduce and validate the new functionality by hand.
 - State the expected results and include supporting material where needed to make validation quick and clear.
 
 ## Before merging
@@ -35,3 +35,7 @@ Keep the entire description at 200 words or fewer.
 
 - List deployment steps, environment variables, dashboard configuration, and follow-up actions.
 - Write **None** when no actions apply.
+
+## How to verify after deployment
+
+- Give numbered steps to reproduce and validate the new functionality by hand on the live environment

@@ -62,6 +62,5 @@ After implementation and verification succeed:
 1. Remove temporary task-specific plan files, not unrelated plans or permanent documentation.
 2. Load `get_pull_request_guidelines`. Apply release decisions from refinement; follow existing repository release automation where applicable.
 3. Commit task-related changes, push the task branch, and create or update its PR against the remote default branch. Never push directly to the default or production branch.
-4. Return the PR URL and a brief implementation/verification summary, assumptions, deviations, and reproduction instructions. The PR must explain how the result works and any remaining human review or operational steps.
-
-Do not merge, deploy, or change task status yourself unless the calling workflow authorizes it.
+4. Add the PR URL to the top of the card description.
+5. Move the card to `In Review`
