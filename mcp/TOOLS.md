@@ -3,9 +3,9 @@
 Generated from the server's MCP `tools/list` response. Do not edit manually.
 Regenerate with `cd mcp && npm run build`.
 
-Total: **10 tools**. Names are server-local; clients may add a server prefix.
+Total: **11 tools**. Names are server-local; clients may add a server prefix.
 
-Adds ~780 tokens to context.
+Adds ~843 tokens to context.
 
 ## Best practices
 
@@ -19,6 +19,7 @@ Adds ~780 tokens to context.
 
 | Tool | Description |
 | --- | --- |
+| `get_autonomous_implement` | Autonomously select and implement one card from Pinelab Todo. |
 | `get_implement` | Autonomously implement a Pinelab card from its link, stopping only for blockers. |
 | `get_monthly_client_summary` | Only explicitly trigger when asked to create a monthly summary for a Pinelab client. |
 | `get_refine` | Refine an existing Pinelab card or text input into an implementation plan; new cards await client approval. |
