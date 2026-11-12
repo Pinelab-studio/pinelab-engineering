@@ -76,7 +76,7 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
       try {
         const result = await client.callTool({ name: "get_refine", arguments: {} });
         assert.notEqual(result.isError, true);
-        assert.match(JSON.stringify(result), /Refine a task/);
+        assert.match(JSON.stringify(result), /Refine an existing Pinelab card/);
         assert.equal(requests.length, 0);
       } finally { await client.close(); }
     });
@@ -177,7 +177,7 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
         const help = await client.callTool({ name: "pinelab_trello", arguments: {} });
         assert.notEqual(help.isError, true);
         const guidance = JSON.parse((help.content as { text: string }[])[0].text);
-        assert.match(guidance.guidance, /Completed tasks are read-only/);
+        assert.match(guidance.guidance, /Cards in \*\*✨Done\*\* are read-only/);
         assert.ok(guidance.actions.create_card.inputSchema.properties.title);
         assert.equal(requests.length, before);
       } finally { await client.close(); }

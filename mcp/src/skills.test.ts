@@ -8,7 +8,8 @@ import { createMcpServer, type Article } from "./mcp.js";
 test("guidance is readable through direct tools except on-demand Trello guidance and recipes", async () =>
   scenario(async (client, articles) => {
     const { tools } = await client.listTools();
-    assert.ok(!tools.some(({ name }) => ["list_skills", "get_skill"].includes(name)));
+    assert.ok(!tools.some(({ name }) => ["list_skills", "get_skill", "get_autonomous_implementation"].includes(name)));
+    assert.equal(tools.filter(({ name }) => name === "get_implement").length, 1);
     assert.match(tools.find(({ name }) => name === "pinelab_trello")!.description!, /today's priorities/);
     // Verify every published document against the public tool interface.
     for (const article of articles) {
@@ -50,7 +51,7 @@ test("security scan is discoverable as a recipe without bundled guidance", async
     assert.match(content, /For each upgraded dependency,[^\n]*`Breaking changes: <details>` or `breaking: none`/);
   }));
 
-test("review and planning include global rules once while Vendure remains standalone", async () =>
+test("review and implementation include global rules once while Vendure remains standalone", async () =>
   scenario(async (client) => {
     for (const name of ["get_review", "get_implement"]) {
       const response = text(await client.callTool({ name, arguments: {} }));

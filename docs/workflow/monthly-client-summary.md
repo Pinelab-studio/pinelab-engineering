@@ -3,14 +3,14 @@ name: monthly-client-summary
 description: "Only explicitly trigger when asked to create a monthly summary for a Pinelab client."
 ---
 
-We will create a monthly summary for a specific Pinelab client using tasks from Trello and metrics from the database. The result is a Dutch HTML email whose rendered content the user can copy into an email client. The user must read, verify, and adjust the email as needed before sending it.
+We will create a monthly summary for a specific Pinelab client using cards from Trello and metrics from the database. The result is a Dutch HTML email whose rendered content the user can copy into an email client. The user must read, verify, and adjust the email as needed before sending it.
 
 Required input: the client and the month to summarize. If only a month is given, always use the current calendar year, even if that month is still in the future. Do not ask for the year; use a different year only when explicitly supplied.
 
 ## Procedure
 
-1. Retrieve all Trello tasks moved to the Done list (or created in the Done list) during the selected month, including tasks for other clients.
-2. Summarize what we completed for this client. Use simple, non-technical bullet points. Combine tasks where this improves readability.
+1. Retrieve all Trello cards moved to the Done list (or created in the Done list) during the selected month, including cards for other clients.
+2. Summarize what we completed for this client. Use simple, non-technical bullet points. Combine completed work where this improves readability.
 3. Summarize what we completed for other clients as inspiration for possible improvements and available solutions. Do not mention other clients' names. ONLY fetch non-archived cards.
 4. Use these Trello cards to fill in the variables in the email template below.
 5. Fetch the metrics for this client from the Vendure database with the query below.
@@ -157,10 +157,10 @@ This query returns the following per currency:
 
 - Only fill in the template variables. Do not change the layout, HTML structure, styles, or fixed text.
 - Keep the email content in Dutch.
-- Each bullet point summarizing Trello tasks must be one sentence of at most 25 words, for both this client and other clients.
+- Each bullet point summarizing Trello cards must be one sentence of at most 25 words, for both this client and other clients.
 - Use the corresponding currency symbol in front of amounts: €, £ or $ depending on the currency code.
 - Replace all `{{...}}` placeholders before sending the email.
-- HTML-escape inserted text. Populate `{{finished_tasks_html}}` with a `<ul>` containing `<li>` elements; escape the task text, not the HTML tags.
+- HTML-escape inserted text. Populate `{{finished_tasks_html}}` with a `<ul>` containing `<li>` elements; escape the card text, not the HTML tags.
 - Populate {{other_tasks_html}} with a `<ul>` containing `<li>` elements.
 - Populate `{{client_name}}` with the client's name.
 - The user must fill `{{planning_url}}` with the link to the planning overview. When preparing a draft, keep the visible TODO while this link is missing. Remove the TODO once the link is supplied. Do not send the email with a missing link or TODO.

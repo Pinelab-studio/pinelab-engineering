@@ -35,34 +35,38 @@ Workflow skills are designed to only trigger when you mention  **Pinelab** as to
 
 These instructions in this MCP are based on our kanban workflow:
 
-![Pinelab Kanban workflow](docs/workflow.png)
+Raw cards enter Inbox. Refinement saves confirmed cards to Todo. Implementation moves a linked card through Doing to Ready For Review; human approval is required before Done.
 
 Use these prompts to make your AI harness live up to Pinelab's way of working and quality standards:
 
-## 0. Intake 
-Task intake happens automatically, no need to worry about this.
+## 0. Intake
+Raw card intake happens automatically. You can also start refinement from text to create a new card.
 
 ## 1. Refine
 
-_If a task is in "Todo" it is already refined, skip this step!_
+_If a card is in Todo, it is already refined; skip this step._
 
-Refining means agreeing on the goal, requirements, test behaviours, and technical guidance. Investigate feasibility and risks; leave detailed implementation choices to `Plan and Implement` below. When refining a Trello task, the workflow fetches it, asks about unresolved decisions, and moves the confirmed task to "Waiting For Client Approval".
-
-Start refining a task by prompting something like:
+Refinement accepts an existing card link or text describing new work. It investigates the repository, runs preflight checks, resolves requirements and test behaviours, and records technical guidance and an estimate. After you confirm the full draft and readiness, it updates the existing card or creates a new one in **Todo**. Explicit approval holds must be resolved first.
 
 ```text
-Start refining Pinelab task <Trello task link>
+Refine Pinelab card <Trello card link>
+```
+
+Or create a new card from text:
+
+```text
+Refine this for Pinelab: <description of the work>
 ```
 
 
 ## 2. Implement 
 
-Use this when starting development on a task that is ready to pick up (in the Todo list when using Trello). Input can also be text, a document, or conversation context. Reuse any confirmed refinement, verify its technical guidance against current code, and resolve only remaining implementation and test-strategy decisions before confirming the plan. This flow includes Pinelab's best practices.
+Supply one refined card link. The single `implement` workflow runs autonomously: it moves the card to **Doing**, implements and verifies the change, opens and self-reviews its PR, and links the PR on the card before moving it to **Ready For Review**. It makes routine technical decisions without another interview or plan confirmation. No `pinobi2` label or queue scan is required.
 
-Start working on a task by prompting:
+On a blocker, it stops, records evidence and the required action on the card, applies the existing red `blocked` label, and preserves partial work in a draft PR where safe. It never merges or deploys.
 
 ```text
-Start implementing Pinelab task <Trello task link> 
+Implement Pinelab card <Trello card link>
 ```
 
 
@@ -78,18 +82,8 @@ Please Pinelab review <link to PR>
 
 This will trigger the `pinelab-code-review` flow: Read PR description and comments, checkout the branch locally and reviews the code. It will again interview you, and you can make modification during the review, and push the to the open PR.
 
-4. Handover
+## 4. Handover
 
-After a PR has been approved, you can use this prompt to start handover:
-
-```text
-Handover Pinelab task <link to PR>
-```
-
-1. Refine a task (might be done already)
-2. Pick up a refined task using `implement`: no upfront interview; choose routine technical details and block only on concrete technical obstacles
-3. Create a Pull Request
-4. Always `/review <gh PR link>` your own implementation before asking someone else to review
-5. Another developer will `/review` your Pull Request
+Implementation already adds PR links and verification evidence to the card. Its autonomous self-review does not replace your own interactive review or another developer's review. After human approval, move the card to **✨Done** through `pinelab_trello`; rejected implementations return to **Doing**. Merge and deployment still require explicit authorization.
 
 See [`TOOLS.md`](./mcp/TOOLS.md) for a list of the exposed MCP tools.
