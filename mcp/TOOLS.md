@@ -21,7 +21,7 @@ Adds ~780 tokens to context.
 | --- | --- |
 | `get_implement` | Autonomously implement a Pinelab card from its link, stopping only for blockers. |
 | `get_monthly_client_summary` | Only explicitly trigger when asked to create a monthly summary for a Pinelab client. |
-| `get_refine` | Refine an existing Pinelab card or text input, investigate readiness, and save the confirmed card to Todo. |
+| `get_refine` | Refine an existing Pinelab card or text input into an implementation plan; new cards await client approval. |
 | `get_review` | Interactively review a GitHub PR the Pinelab way. |
 
 ## Other tools

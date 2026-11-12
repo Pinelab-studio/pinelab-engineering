@@ -30,9 +30,9 @@ Manage Pinelab cards through the authenticated `pinelab_trello` MCP tool. This g
 
 ## Labels and assignees
 
-For new cards, aim for one existing type/feature label with color `blue_dark` and one client label with color exactly `green`. Match client names case-insensitively and propose relevant existing labels; never apply uncertain suggestions without approval.
+For new cards, select one existing type/feature label with color `blue_dark` and one client label with color exactly `green`. Match client names case-insensitively and propose relevant existing labels; never apply uncertain suggestions without approval.
 
-Missing labels do not block creation. Create with confirmed labels only, explain what is missing, and suggest available choices. Never invent a label. This guidance applies only to creation, not ordinary updates or moves.
+Refinement requires both labels before creation; resolve missing or ambiguous selections in its question rounds. For other creation requests, missing labels do not block creation: use confirmed labels only, explain omissions, and suggest available choices. Never invent a label. These rules apply only to creation, not updates or moves.
 
 Label and assignee updates replace the complete selection; preserve unrelated selections. New cards have no assignees unless requested.
 
