@@ -4,7 +4,7 @@ description: Set up repository quality checks, isolated tests, CI, and concise a
 category: infrastructure
 ---
 
-Set up a repository for agent-assisted development with automated quality checks, isolated tests, and clear completion commands. Use Biome, Knip, and Dependency Cruiser for JavaScript/TypeScript; agree equivalent tools for other stacks. This recipe applies across Pinelab repositories when setup is explicitly requested. It excludes dotenvx, deployment, broad dependency upgrades, security scanning, coverage thresholds, and unrelated refactoring.
+Set up automated quality checks, isolated tests, and clear completion commands for agent-assisted development. Use Biome, Knip, and Dependency Cruiser for JavaScript/TypeScript; agree equivalents for other stacks. Apply when repository setup is requested. Exclude dotenvx, deployment, broad dependency upgrades, security scanning, coverage thresholds, and unrelated refactoring.
 
 ## 1. Inspect and agree
 
@@ -42,20 +42,22 @@ Use framework-aware checks where needed, such as `astro check` for Astro. Ensure
 
 ## 3. Establish the test setup
 
+Colocate unit tests with their source files. Put API/e2e suites and fixtures in each application's `test/` directory, not alongside production code. Update runner paths, imports and documented commands when moving tests.
+
 **Vendure:** follow the official [testing guide](https://docs.vendure.io/current/framework/developer-guide/testing). Set up E2E suites per feature using compatible `@vendure/testing`, `createTestEnvironment`, test configuration, and isolated database fixtures. Keep relevant Vendure services real; exercise behaviour through Shop/Admin APIs. Replace external payment, email, and shipping integrations with test doubles. Configure test discovery, server teardown, and database/state isolation so suites can run independently. An isolated lightweight database does not prove production-database-specific behaviour.
 
 **Storefronts:** use Playwright against the actual storefront and a local HTTP mock API server, never a real Vendure testing server. Point both SSR and browser API requests at the mock; browser interception alone misses SSR. Use supported endpoint configuration; report a blocker if unavailable. Start and stop both processes through the test runner, waiting for readiness. Define explicit responses, reset state between tests, and fail on unexpected API operations. Isolate parallel workers or serialize shared mock state. Keep fixtures aligned with API contracts, with no fallback to live services. Include agreed success, empty, and consequential error states. These tests do not prove real storefront–Vendure compatibility.
 
-Provide single-feature and full-suite commands. Retain Playwright traces and screenshots on failure.
+Provide single-feature, full-suite and headed-browser commands (`playwright test --headed`). Document the runtime and browser installation (`npx playwright install --with-deps chromium`). Retain Playwright traces and screenshots on failure.
 
 ## 4. Document and enforce
 
-Update the applicable `AGENTS.md` with a short test-setup description: runner, real versus mocked services, test/fixture locations, and exact single-feature/full-suite commands with working directories. Include required completion checks and instructions to load the applicable MCP best practices. Describe only the setup present; avoid a second testing guide.
+Keep one project-owned `AGENTS.md` at the repository root. Describe project structure, test principles and locations, real versus mocked services, and exact verification commands with working directories. Include required completion checks and instructions to load applicable MCP best practices. Avoid duplicating this guidance in application or feature directories.
 
-Require CI to install from lockfiles and run quality checks and agreed tests. Keep checks read-only and local hooks optional.
+Require CI to install from lockfiles and run quality checks and agreed tests for changes to either application. Generate required code before tools resolve its imports, locally and in CI. Keep checks read-only and local hooks optional.
 
 ## 5. Verify and hand over
 
-From each owning package root, run `npm run check-all`, the documented tests, and relevant builds, using that package's manager. In temporary controlled changes, confirm lint/type errors, unused code, and forbidden imports cause nonzero exits. Confirm representative test assertion failures and unexpected mock operations fail the test command. Remove probes and rerun successfully.
+Verify from clean lockfile installs, not only an existing working tree. From each package root, run its quality checks, documented tests and relevant builds. In temporary controlled changes, confirm lint/type errors, unused code, and forbidden imports cause nonzero exits. Confirm representative test assertion failures and unexpected mock operations fail the test command. Remove probes and rerun successfully.
 
 Report commands actually tested, pre-existing failures, coverage gaps, and approved deferred cleanup. Never disable rules broadly or claim hardening is complete while required checks remain failing or unverified.
