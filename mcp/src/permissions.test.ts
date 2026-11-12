@@ -121,7 +121,7 @@ test("discover guidance then list Todo cards through the compact Trello entry po
     const help = await client.callTool({ name: "pinelab_trello", arguments: {} });
     assert.notEqual(help.isError, true);
     const discovery = JSON.parse((help.content as { text: string }[])[0].text);
-    assert.match(discovery.guidance, /Completed tasks are read-only/);
+    assert.match(discovery.guidance, /Cards in \*\*✨Done\*\* are read-only/);
     assert.equal(discovery.actions.list_cards.inputSchema.properties.list.type, "string");
     assert.equal(records.length, 0);
     const response = await client.callTool({ name: "pinelab_trello", arguments: { action: "list_cards", input: { list: "Todo" } } });
