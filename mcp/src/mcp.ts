@@ -90,6 +90,31 @@ export async function createMcpServer(
         : { ...result("Unknown recipe"), isError: true };
     },
   );
+  server.registerTool(
+    "list_plugins",
+    {
+      description: "Lists Pinelab Vendure plugins with names, descriptions and README URLs. Read relevant READMEs before implementing.",
+      inputSchema: {},
+      annotations: { readOnlyHint: true, openWorldHint: true },
+    },
+    async () => {
+      try {
+        const response = await fetch("https://engineering.pinelab.studio/resources_index.md", {
+          signal: AbortSignal.timeout(15_000),
+        });
+        if (!response.ok) return { ...result(`Plugin index returned HTTP ${response.status}`), isError: true };
+        const markdown = await response.text();
+        const plugins = markdown.split(/^## Plugins\s*$/m)[1]?.split(/^## /m)[0];
+        if (!plugins) return { ...result("Plugin index is missing its Plugins section"), isError: true };
+        return result(Array.from(
+          plugins.matchAll(/^- \[([^\]]+)\]\((https:\/\/[^)]+)\) — (.+)$/gm),
+          ([, name, url, description]) => ({ name, description, url }),
+        ));
+      } catch {
+        return { ...result("Unable to fetch the plugin index"), isError: true };
+      }
+    },
+  );
   registerTrello(server, config, authorization, trelloWorkflows.length ? trelloWorkflows.flatMap((article) => includedDocuments(article, catalogue)).map(({ text }) => text).join("\n\n---\n\n") : "Kanban guidance is unavailable in this catalogue.");
   return server;
 }

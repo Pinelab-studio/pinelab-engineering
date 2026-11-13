@@ -48,6 +48,10 @@ Supported actions are `list_cards`, `get_card`, `get_board`, `create_card`, `upd
 
 The small entry-point definition remains visible in tool discovery. Detailed guidance and operation schemas load on demand; this does not enforce conditional visibility or agent compliance.
 
+## Listing plugins
+
+`list_plugins({})` fetches `https://engineering.pinelab.studio/resources_index.md` and lists entries from its Plugins section. Like `list_recipes`, it returns a structured list, with `name`, `description`, and a README `url` for each plugin. Read the relevant README before implementing. Fetch failures return a tool error.
+
 ## Loading best practices
 
 Add this instruction to your agent/project setup: **Before implementing or reviewing any code, call `get_coding_best_practices`. For Vendure work, also call `get_vendure_best_practices`.** No Pinelab mention is required for best practices. The MCP server cannot force an agent to call a tool.

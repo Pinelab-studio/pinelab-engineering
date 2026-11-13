@@ -80,6 +80,26 @@ test("recipes are discoverable and readable only through the recipe tools", asyn
     }
   }));
 
+test("list_plugins returns plugins from mocked Markdown", async (t) => {
+  t.mock.method(globalThis, "fetch", async () => new Response([
+    "# Resources index",
+    "## Recipes",
+    "- [SEO guide](https://example.com/seo.md) — Audit storefront SEO.",
+    "## Plugins",
+    "- [Shipping plugin](https://example.com/shipping/README.md) — Configure shipping calculators.",
+  ].join("\n")));
+
+  await scenario(async (client) => {
+    const response = await client.callTool({ name: "list_plugins", arguments: {} });
+    assert.notEqual(response.isError, true);
+    assert.deepEqual(JSON.parse(text(response)), [{
+      name: "Shipping plugin",
+      description: "Configure shipping calculators.",
+      url: "https://example.com/shipping/README.md",
+    }]);
+  });
+});
+
 /** Exercise public MCP tools using the real generated catalogue, not agent compliance. */
 async function scenario(run: (client: Client, articles: Article[]) => Promise<void>) {
   const articles: Article[] = JSON.parse(await readFile(new URL("./generated/skills.json", import.meta.url), "utf8"));
