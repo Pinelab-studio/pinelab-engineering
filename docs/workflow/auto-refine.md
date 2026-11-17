@@ -7,6 +7,8 @@ description: Autonomously refine a Pinelab card or text input, asking only for r
 
 Refine one supplied Pinelab card or text input using the included `refine-task` workflow. Investigate and prepare the same implementation-ready plan without a routine interview. The included workflow remains authoritative for investigation, readiness, plan content, estimates, board safety, and saving. Only the interaction and confirmation rules below override it. Do not implement the task or select unrelated work.
 
+Set the thread title to the name of the task being defined as soon as its scope is known, and update it if the task name changes. Use a specific task name, never a generic status such as `Refinement input needed`. When human action is needed, keep that task name and prefix it with `⚠️` as described below.
+
 ## Continue without routine confirmations
 
 Invocation authorizes refinement and saving an existing card to **Todo / top** once its requirements are settled. It replaces the included workflow's final existing-card draft confirmation, not client approval or any explicit approval hold. New cards still go to **Waiting For Client Approval / top**; pending client approval there does not block creation.
