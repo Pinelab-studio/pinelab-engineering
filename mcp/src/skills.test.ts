@@ -8,7 +8,7 @@ import { createMcpServer, type Article } from "./mcp.js";
 test("guidance is readable through direct tools except on-demand Trello guidance and recipes", async () =>
   scenario(async (client, articles) => {
     const { tools } = await client.listTools();
-    assert.ok(!tools.some(({ name }) => ["list_skills", "get_skill", "get_autonomous_implementation"].includes(name)));
+    assert.ok(!tools.some(({ name }) => ["list_skills", "get_skill", "get_auto_implementation"].includes(name)));
     assert.equal(tools.filter(({ name }) => name === "get_implement").length, 1);
     assert.match(tools.find(({ name }) => name === "pinelab_trello")!.description!, /today's priorities/);
     // Verify every published document against the public tool interface.
@@ -60,6 +60,24 @@ test("review and implementation include global rules once while Vendure remains 
     const vendure = text(await client.callTool({ name: "get_vendure_best_practices", arguments: {} }));
     assert.equal(vendure.split("Document: ").length - 1, 1);
     assert.ok(!vendure.includes("Document: docs/best-practices/coding-best-practices.md"));
+  }));
+
+test("auto-refine bundles shared refinement once and includes the human-answer thread instruction", async () =>
+  scenario(async (client, articles) => {
+    const response = await client.callTool({ name: "get_auto_refine", arguments: {} });
+    assert.notEqual(response.isError, true);
+    const content = text(response);
+    assert.deepEqual(content.match(/^Document: .+$/gm), [
+      "Document: docs/workflow/auto-refine.md",
+      "Document: docs/workflow/refine.md",
+    ]);
+    const refine = articles.find(({ id }) => id === "workflow/refine");
+    assert.ok(refine);
+    assert.ok(content.includes(refine.text));
+    const standalone = await client.callTool({ name: "get_refine", arguments: {} });
+    assert.notEqual(standalone.isError, true);
+    assert.deepEqual(text(standalone).match(/^Document: .+$/gm), ["Document: docs/workflow/refine.md"]);
+    assert.ok(!text(standalone).includes("Rename thread to ⚠️"));
   }));
 
 test("recipes are discoverable and readable only through the recipe tools", async () =>
