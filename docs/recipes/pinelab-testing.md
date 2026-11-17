@@ -4,7 +4,7 @@ description: Set up isolated storefront browser tests and Vendure unit and featu
 category: infrastructure
 ---
 
-Set up self-contained tests using Playwright with mocked APIs for storefronts, and unit tests plus the Vendure testing framework for backends. This guide covers test structure, boundaries, fixtures, and verification, regardless of storefront framework.
+Set up self-contained tests using Playwright with mocked APIs for storefronts, and unit tests plus the Vendure testing framework for backends. This framework-independent guide covers test structure, boundaries, fixtures, and verification.
 
 ## 1. Inspect and choose coverage
 
@@ -12,7 +12,15 @@ Load `get_coding_best_practices` for scenario approval, independent expectations
 
 Use deep-module testing: enter through a small public interface with internal collaborators kept real. Replace only external or nondeterministic boundaries, not every internal component or function. Do not expose private helpers solely for tests.
 
-Colocate unit tests with source. Keep E2E suites and fixtures in each application's `test/` directory. Update discovery and imports when moving tests. Group suites by cohesive feature modules, such as configurator pricing, checkout, or customer accounts—not individual methods and not one generic application-wide file.
+Colocate unit tests with source; keep E2E suites and fixtures in each application's `test/` directory. Update discovery and imports when moving tests.
+
+### Separate frontend and backend scenario data
+
+Separate storefront and Vendure E2E datasets: they test different behaviours. Storefront mock responses target rendering and interactions, including empty, error, and delayed-response states. Vendure fixtures seed a real test database to exercise business rules, permissions, and persistence; they are not mocked backend results.
+
+Independent datasets cover each layer's cases without coupling frontend scenarios to backend setup. Share API types or schemas, not one scenario dataset; both must follow the API contract. Still share storefront fixtures between SSR and browser mocks.
+
+This applies [Playwright's isolation and controlled-response guidance](https://playwright.dev/docs/best-practices) alongside [Vendure's API-to-database testing model](https://docs.vendure.io/current/framework/developer-guide/testing).
 
 ## 2. Set up storefront tests
 
@@ -26,8 +34,8 @@ Colocate unit tests with source. Keep E2E suites and fixtures in each applicatio
 ## 3. Set up Vendure tests
 
 1. Require **both unit tests and E2E tests**. Unit-test complex domain functions, strategies, calculations, and validation through public interfaces. Use E2E tests for module-level behaviour, permissions, persistence, and collaboration between real services; avoid repeating every assertion at both levels.
-2. Follow the official [Vendure testing guide](https://docs.vendure.io/current/framework/developer-guide/testing). From the Vendure package root, configure compatible `@vendure/testing`, a unit runner, E2E discovery, test configuration, and fixture data. Use `createTestEnvironment` with its Shop/Admin API clients and test server; initialize the server from fixtures and destroy it during teardown.
-3. Create **multiple feature-module E2E suites**, for example `test/configurator-pricing.e2e-spec.ts` and `test/customer-accounts.e2e-spec.ts`. Each contains related success, failure, and regression cases—not one tiny suite per function or one long generic E2E file. Reuse setup helpers without coupling suites or requiring an execution order.
+2. Follow Vendure's testing guide above. From its package root, configure compatible `@vendure/testing`, unit/E2E runners, test configuration, and fixture data. Use `createTestEnvironment` with its Shop/Admin API clients and test server; initialize the server from fixtures and destroy it during teardown.
+3. Create **multiple feature-module E2E suites**, for example `test/configurator-pricing.e2e-spec.ts` and `test/customer-accounts.e2e-spec.ts`. Group related success, failure, and regression cases—not individual functions or the whole application. Reuse helpers without coupling suites or requiring execution order.
 4. Keep relevant Vendure services, plugins, and database behaviour real. Replace external payment, email, shipping, and other integrations with doubles. Give independent suites isolated database fixture directories, ports, and sessions; reset mutable case state. Configure safe parallelism or serialization.
 5. Prefer Shop/Admin GraphQL queries and mutations; direct public service calls are allowed when clearer or more isolated. Use `gql` from `graphql-tag`, never GraphQL template comments. Put documents below cases. Wait for observable conditions with bounded helpers, never arbitrary sleeps.
 
