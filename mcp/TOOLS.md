@@ -5,7 +5,7 @@ Regenerate with `cd mcp && npm run build`.
 
 Total: **13 tools**. Names are server-local; clients may add a server prefix.
 
-Adds ~998 tokens to context.
+Adds ~1,008 tokens to context.
 
 ## Best practices
 
@@ -20,7 +20,7 @@ Adds ~998 tokens to context.
 | Tool | Description |
 | --- | --- |
 | `get_auto_implement` | Autonomously select and implement one card from Pinelab Todo. |
-| `get_auto_refine` | Autonomously refine a Pinelab card or text input, asking only for required human answers. |
+| `get_auto_refine` | Autonomously refine a supplied Pinelab card or text, or the first unblocked Inbox card, asking only for required human answers. |
 | `get_implement` | Autonomously implement a Pinelab card from its link, stopping only for blockers. |
 | `get_monthly_client_summary` | Only explicitly trigger when asked to create a monthly summary for a Pinelab client. |
 | `get_refine` | Refine an existing Pinelab card or text input into an implementation plan; new cards await client approval. |

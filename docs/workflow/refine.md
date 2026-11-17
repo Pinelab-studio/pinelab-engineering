@@ -3,7 +3,7 @@ name: refine-task
 description: Refine an existing Pinelab card or text input into an implementation plan; new cards await client approval.
 ---
 
-Refine a Trello card or text input into an agreed, technically ready-to-implement plan. Proactively investigate requirements, code, dependencies, and environment readiness to uncover and resolve blockers before handoff. New cards await client approval; existing-card updates require final confirmation. `get_implement` starts approved cards from **Todo**. Do not implement the feature during refinement.
+Refine a Trello card or text input into an agreed, technically ready-to-implement plan. Proactively investigate requirements, code, dependencies, and environment readiness to uncover and resolve blockers before handoff. All refined cards await client approval; existing-card updates require final confirmation. `get_implement` starts approved cards from **Todo**. Do not implement the feature during refinement.
 
 ## 1. Gather context and investigate
 
@@ -52,7 +52,7 @@ Load `get_pull_request_guidelines` during refinement. If the project requires a 
 
 Every refined card must have a user-confirmed numeric estimate in its title, in parentheses: `Card title (100)`. Here, `100` is an example, not a fixed value. Estimates do NOT have units; do not ask for those. Agree on the estimate once the scope and Definition of Done are clear. If the estimation convention is unknown, ask rather than assume.
 
-Include the agreed estimate in the final title. Replace an existing estimate rather than appending a second one, preserving unrelated title content. Do not save a card as refined or move it to **Todo** without an agreed estimate in its title.
+Include the agreed estimate in the final title. Replace an existing estimate rather than appending a second one, preserving unrelated title content. Do not save a card as refined or move it to **Waiting For Client Approval** without an agreed estimate in its title.
 
 ## 4. Finalize the plan and destination
 
@@ -67,7 +67,7 @@ Preserve existing context and judgment calls. If drafting exposes unresolved dec
 
 For new cards, save to **Waiting For Client Approval / top** once all questions, including the estimate and label choices, are resolved; do not request another draft confirmation. Pending client approval does not block creation in this list, but prevents implementation.
 
-For existing cards, present the full estimated title, description, and **Todo / top** destination for confirmation. Wait before saving or moving; after changes, present the draft again. Resolve any explicit client-approval hold first; never invent approval.
+For existing cards, present the full estimated title, description, and **Waiting For Client Approval / top** destination for confirmation. Wait before saving or moving; after changes, present the draft again. Resolve any explicit client-approval hold first; never invent approval.
 
 Reuse decisions already agreed in this conversation rather than repeating the interview; obtain any missing estimate, labels, or update confirmation.
 
