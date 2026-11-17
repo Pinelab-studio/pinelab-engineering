@@ -42,13 +42,7 @@ Use framework-aware checks where needed, such as `astro check` for Astro. Ensure
 
 ## 3. Establish the test setup
 
-Colocate unit tests with their source files. Put API/e2e suites and fixtures in each application's `test/` directory, not alongside production code. Update runner paths, imports and documented commands when moving tests.
-
-**Vendure:** follow the official [testing guide](https://docs.vendure.io/current/framework/developer-guide/testing). Set up E2E suites per feature using compatible `@vendure/testing`, `createTestEnvironment`, test configuration, and isolated database fixtures. Keep relevant Vendure services real; exercise behaviour through Shop/Admin APIs. Replace external payment, email, and shipping integrations with test doubles. Configure test discovery, server teardown, and database/state isolation so suites can run independently. An isolated lightweight database does not prove production-database-specific behaviour.
-
-**Storefronts:** use Playwright against the actual storefront and a local HTTP mock API server, never a real Vendure testing server. Point both SSR and browser API requests at the mock; browser interception alone misses SSR. Use supported endpoint configuration; report a blocker if unavailable. Start and stop both processes through the test runner, waiting for readiness. Define explicit responses, reset state between tests, and fail on unexpected API operations. Isolate parallel workers or serialize shared mock state. Keep fixtures aligned with API contracts, with no fallback to live services. Include agreed success, empty, and consequential error states. These tests do not prove real storefront–Vendure compatibility.
-
-Provide single-feature, full-suite and headed-browser commands (`playwright test --headed`). Document the runtime and browser installation (`npx playwright install --with-deps chromium`). Retain Playwright traces and screenshots on failure.
+Load `get_recipe` with ID `recipes/pinelab-testing` and follow its setup and verification steps for each application. It owns test locations, storefront SSR/browser mocks, required Vendure unit and feature-module E2E suites, isolation, and verification commands. Use the scenarios agreed in step 1; record supported commands and coverage limits in the project handover.
 
 ## 4. Document and enforce
 
@@ -58,6 +52,6 @@ Require CI to install from lockfiles and run quality checks and agreed tests for
 
 ## 5. Verify and hand over
 
-Verify from clean lockfile installs, not only an existing working tree. From each package root, run its quality checks, documented tests and relevant builds. In temporary controlled changes, confirm lint/type errors, unused code, and forbidden imports cause nonzero exits. Confirm representative test assertion failures and unexpected mock operations fail the test command. Remove probes and rerun successfully.
+Verify from clean lockfile installs, not only an existing working tree. From each package root, run its quality checks, documented tests and relevant builds. In temporary controlled changes, confirm lint/type errors, unused code, and forbidden imports cause nonzero exits. Complete the testing recipe's verification from step 3. Remove temporary probes and rerun successfully.
 
 Report commands actually tested, pre-existing failures, coverage gaps, and approved deferred cleanup. Never disable rules broadly or claim hardening is complete while required checks remain failing or unverified.

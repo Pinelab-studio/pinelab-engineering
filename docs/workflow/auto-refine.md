@@ -24,7 +24,16 @@ Complete independent investigation and supported safe recovery before stopping. 
 When an unresolved decision, missing task input, access problem, readiness failure, or approval hold requires human action:
 
 1. Summarize verified findings and what remains unresolved. Ask the whole answerable frontier using the included workflow's numbered choices and recommendations. For access or environment failures, include evidence, attempted recovery, and the specific human action needed.
-2. Rename thread to "⚠️ <task title>"" if it requires human answers. Use the known task title, or a short description if none exists. If thread renaming is unavailable, report that limitation; do not claim it succeeded.
+2. Keep the session open and rename the thread to `⚠️ <task title>` if it requires human answers or action. Use the known task title, or a short description if none exists.
 3. Preserve the draft and existing card placement. Do not save an unresolved plan as refined or move it to **Todo**. Wait for answers, then resume from the recorded decisions without repeating settled questions.
 
 If nothing requires a human answer, finish saving and return the title, description, and card URL through the included workflow. Do not pause merely to present a plan or request a start, continuation, or final-save confirmation.
+
+## Finish the thread
+
+At every stopping point, use one of two outcomes:
+
+- **Human action needed in this session:** keep the thread open, rename it to `⚠️ <task title>`, and state the required answers or action. Never settle an unresolved blocker.
+- **No further action needed in this session:** after reporting the result, automatically settle the thread using T3 MCP if available. A successfully saved card awaiting client approval in its designated list is a completed handoff, not an unanswered question in this session. Settling the thread does not grant client approval or mark the card done.
+
+Use the available T3 MCP tools for thread operations. If a required rename or settlement tool is unavailable or fails, report the limitation and leave the thread open; do not claim success or use a workaround.

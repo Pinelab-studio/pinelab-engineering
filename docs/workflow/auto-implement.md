@@ -11,7 +11,7 @@ You are an autonomous agent. Select one eligible Pinelab card from **Todo** and 
 
 1. Load `pinelab_trello` without arguments for board rules and action schemas. Fetch cards from the exact **Todo** list with `list_cards` and use `get_board` for existing labels as needed.
 2. Only select cards with the existing **Pinobi2** label and without the **blocked** label. Do not select cards from other lists or remove `blocked` to make a card eligible. If a required list or label is ambiguous, stop and report the configuration blocker rather than guessing.
-3. If no eligible card exists, stop immediately. No action is needed: do not change cards, repositories, branches, or PRs.
+3. If no eligible card exists, stop immediately and apply **Finish the thread** below. No task action is needed: do not change cards, repositories, branches, or PRs.
 4. Select the first eligible card in board order. Use its URL as the linked card for the included workflow. Fetch its full description and all activity, then re-read its current list and labels before starting. If it is no longer eligible, stop without starting it. Do not override an approval hold. Only one worker may implement a card at a time; there is no atomic claim.
 5. When starting implementation, move the selected card to **Doing**. Implement only this card during this run.
 
@@ -39,3 +39,12 @@ This does not authorize automatically removing an existing `blocked` label. A hu
 If a blocker other than pending human manual verification arises, follow the included workflow's blocker procedure: preserve partial work, add the existing **blocked** label while preserving other labels, and leave the card in its current list. A card already moved to **Doing** stays there; do not return it to **Todo**.
 
 Add a signed comment to the card with the blocker reason and context, supporting evidence, attempted recovery, required external action, unverified checks, partial-work references, and a copyable resume prompt. Verify that both the comment and label were saved. Report any update failure accurately. Never remove `blocked` automatically or start another card after a blocker.
+
+## Finish the thread
+
+At every stopping point, use one of two outcomes:
+
+- **Human action needed in this session:** keep the thread open, rename it to `⚠️ <task title>`, and state the required answers or action. Use a short description if no task title exists. Never settle an unresolved blocker.
+- **No further action needed in this session:** after reporting the result, automatically settle the thread using T3 MCP if available. This includes an empty eligible queue or a completed handover to **Ready For Review**. Manual checks assigned to the reviewing human are part of that handover, not an unanswered question in this session. Settling the thread does not grant review approval or mark the card done.
+
+Use the available T3 MCP tools for thread operations. If a required rename or settlement tool is unavailable or fails, report the limitation and leave the thread open; do not claim success or use a workaround.

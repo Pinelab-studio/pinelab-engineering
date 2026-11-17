@@ -7,7 +7,7 @@ We will restore the existing React Dashboard Insights layout each night by copyi
 
 ## Scope and prerequisites
 
-This approach was verified against Vendure **3.6.3**. Read the [Vendure best practices](../best-practices/vendure-best-practices.md) before implementing it, and the [coding and testing best practices](../best-practices/coding-best-practices.md) before writing tests.
+This approach was verified against Vendure **3.6.3**. Load `get_vendure_best_practices` before implementing it and `get_coding_best_practices` before writing tests.
 
 Enable `DashboardPlugin` and `DefaultSchedulerPlugin`, and run a worker. Choose a template account and have it save an Insights layout. The plain cron `0 3 * * *` uses the scheduler's default timezone; it does not explicitly select Amsterdam or implement daylight-saving handling.
 
@@ -84,7 +84,7 @@ Replace the example identifier with the chosen account's login. Deploy the serve
 
 ## Verification
 
-3. Add an e2e test using `createTestEnvironment`, SQL.js, `DashboardPlugin`, and `DefaultSchedulerPlugin`. For this server-only test, set `runTasksInWorkerOnly: false` and a short `manualTriggerCheckInterval`.
+3. Load `get_recipe` with ID `recipes/pinelab-testing` for the shared Vendure test setup. Add these cases to the Insights layout feature-module E2E suite using SQL.js, `DashboardPlugin`, and `DefaultSchedulerPlugin`. For this server-only test, set `runTasksInWorkerOnly: false` and a short `manualTriggerCheckInterval`.
 
 4. Create a recipient administrator through GraphQL. Save different template and recipient preferences through `setSettingsStoreValue`. As superadmin, call:
 

@@ -54,7 +54,7 @@ The small entry-point definition remains visible in tool discovery. Detailed gui
 
 ## Loading best practices
 
-Add this instruction to your agent/project setup: **Before implementing or reviewing any code, call `get_coding_best_practices`. For Vendure work, also call `get_vendure_best_practices`.** No Pinelab mention is required for best practices. The MCP server cannot force an agent to call a tool.
+Add this instruction to your agent/project setup: **Before implementing or reviewing any code, call `get_coding_best_practices`. For Vendure work, also call `get_vendure_best_practices`. When setting up, extending, or reviewing storefront or Vendure tests, load `get_recipe` with ID `recipes/pinelab-testing`.** No Pinelab mention is required for best practices. The MCP server cannot force an agent to call a tool.
 
 Articles can declare multiple full repository-relative Markdown paths in a frontmatter block list (plain, unquoted paths):
 
