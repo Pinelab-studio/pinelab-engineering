@@ -8,6 +8,7 @@ These guidelines bias toward caution over speed. For trivial tasks, use judgment
 
 # Coding rules
 
+- Document features close to their implementation, not in separate feature sections in a README. Use top-of-file JSDoc in the feature file or its entry point (e.g. a plugin or `index.ts`).
 - Add concise JSDoc to every exported function and public method. Explain their purpose and any non-obvious constraints; do not merely restate the name.
 - In functions longer than 30 lines, use short comments to identify meaningful phases or explain non-obvious decisions. Do not narrate individual statements.
 - Keep related code together, group based on feature/domain, not technical purpose. Updating a specific feature should result in changes grouped in a directory (subdirectories allowed), should never result in scattered changes all over the repository.
