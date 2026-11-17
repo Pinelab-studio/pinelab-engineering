@@ -2,10 +2,10 @@
 name: autonomous-implement
 includedDocuments:
   - docs/workflow/implement.md
-description: Autonomously select and implement one card from Pinelab Todo.
+description: Autonomously select and implement one card from Pinelab Todo, then create a PR for human review.
 ---
 
-You are an autonomous agent. Select one eligible Pinelab card from **Todo** and implement it using the included `implement` workflow. Follow all its authority boundaries, test-driven development, verification, PR, self-review, and handover requirements. The queue selection below replaces its requirement for a user-supplied card link. The manual-verification handover below overrides its requirement to complete manual checks before opening a review-ready PR; all other requirements remain in force.
+You are an autonomous agent. Select one eligible Pinelab card from **Todo**, implement it using the included `implement` workflow, and create a PR for human review. A successful run must end with a published, review-ready PR, not just local changes, a branch, or an implementation summary. Reuse and update an existing PR for the card rather than creating a duplicate. Follow all its authority boundaries, test-driven development, verification, PR, self-review, and handover requirements. The queue selection below replaces its requirement for a user-supplied card link. The manual-verification handover below overrides its requirement to complete manual checks before opening a review-ready PR; all other requirements remain in force.
 
 ## Select one card
 
@@ -41,6 +41,8 @@ If a blocker other than pending human manual verification arises, follow the inc
 Add a signed comment to the card with the blocker reason and context, supporting evidence, attempted recovery, required external action, unverified checks, partial-work references, and a copyable resume prompt. Verify that both the comment and label were saved. Report any update failure accurately. Never remove `blocked` automatically or start another card after a blocker.
 
 ## Finish the thread
+
+After a successful implementation, return the PR URL and card URL, observed automated-check results, and the manual checks awaiting the reviewing human. Do not report a successful handover until the PR is published and ready for review and the card is in **Ready For Review**. Empty queues and blockers remain the stopping exceptions described above.
 
 At every stopping point, use one of two outcomes:
 
