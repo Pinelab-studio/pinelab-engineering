@@ -49,6 +49,8 @@ If a runtime setup failure occurs, follow refinement's documented setup and reco
 
 Run the recorded regression, lint, type, build, and required manual checks. Compare against the full Definition of Done. Missing mandatory implementation verification is a blocker; pending human PR review is an expected handover step, not a blocker.
 
+Always create a PR after implementation, or update the existing PR for the branch. Implementation is not complete until a PR exists; do not stop after local changes, commits, or a push. If PR creation is blocked, follow section 4 and report the blocker.
+
 After implementation checks succeed:
 
 1. Remove temporary card-specific plan files, not unrelated plans or permanent documentation.
