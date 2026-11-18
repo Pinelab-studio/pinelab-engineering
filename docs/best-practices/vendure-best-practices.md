@@ -10,6 +10,7 @@ Apply these guidelines when implementing or reviewing Vendure code, plugins, or 
 - Place resolvers only in `resolvers: []`, not in `providers: []`.
 - Do not create a plugin whose only purpose is to inject Vendure configuration or strategies. Set them explicitly in `vendureConfig` so the enabled configuration and strategies are visible rather than silently injected.
 - Make behaviour configurable through a strategy when consumers may reasonably need to change it; avoid speculative abstractions. For example, expose `sendToAnalytics: (order) => ...` so consumers control how orders are formatted and sent.
+- Webhooks use at-least-once delivery. Make incoming webhook handlers idempotent so duplicate deliveries do not repeat side effects.
 - Do not update order custom fields in `OrderPlacedEvent` handlers. Concurrent updates by Vendure and the handler can cause race conditions, leaving orders unsettled or active.
 - Always prefer built-in or ready-made config, strategies, services, React components, etc. supplied by Vendure over creating new custom code, even if that means sacrificing some functionality.
 
