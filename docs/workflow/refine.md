@@ -3,7 +3,7 @@ name: refine-task
 description: Refine an existing Pinelab card or text input into an implementation plan; new cards await client approval.
 ---
 
-Refine a Trello card or text input into an agreed, technically ready-to-implement plan. Proactively investigate requirements, code, dependencies, and environment readiness to uncover and resolve blockers before handoff. All refined cards await client approval; existing-card updates require final confirmation. `get_implement` starts approved cards from **Todo**. Do not implement the feature during refinement.
+Refine a Trello card or text input into an agreed, technically ready-to-implement plan. Proactively investigate requirements, code, dependencies, and environment readiness to uncover and resolve blockers before handoff. Do not implement the feature during refinement.
 
 ## 1. Gather context and investigate
 
@@ -65,7 +65,7 @@ When the frontier is empty, assemble the estimated title and description in this
 
 Preserve existing context and judgment calls. If drafting exposes unresolved decisions, return to question rounds.
 
-For new cards, save to **Waiting For Client Approval / top** once all questions, including the estimate and label choices, are resolved; do not request another draft confirmation. Pending client approval does not block creation in this list, but prevents implementation.
+For new cards, save to **Waiting For Client Approval / top** once all questions, including the estimate and label choices, are resolved; do not request another draft confirmation. Pending client approval does not block creation in this list. Refinement alone does not authorize implementation; use `get_implement` for its start rules.
 
 For existing cards, present the full estimated title, description, and **Waiting For Client Approval / top** destination for confirmation. Wait before saving or moving; after changes, present the draft again. Resolve any explicit client-approval hold first; never invent approval.
 

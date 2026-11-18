@@ -13,7 +13,7 @@ Set the thread title to the name of the task being defined as soon as its scope 
 
 ## Continue without routine confirmations
 
-Invocation authorizes refinement and saving all successfully refined cards, including existing Inbox cards, to **Waiting For Client Approval / top** once their requirements are settled. This replaces the included workflow's final existing-card draft confirmation, not client approval or any explicit approval hold. Pending client approval in the designated list does not block saving; it prevents implementation.
+Invocation authorizes refinement and saving all successfully refined cards, including existing Inbox cards, to **Waiting For Client Approval / top** once their requirements are settled. This replaces the included workflow's final existing-card draft confirmation, not client approval or any explicit approval hold. Pending client approval in the designated list does not block saving. Refinement alone does not authorize implementation; use `get_implement` for its start rules.
 
 Use the included workflow's design tree to track decisions, but resolve questions from the supplied requirements, prior agreements, repository evidence, and established project policies before asking the human. Record evidence-backed decisions and delegated judgment calls in the plan. Choose routine in-scope technical and testing details yourself; do not ask for permission to investigate, run authorized readiness checks, draft, or save.
 
