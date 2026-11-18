@@ -1,6 +1,6 @@
 ---
 name: refine-task
-description: Refine an existing Pinelab card or text input into an implementation plan; new cards await client approval.
+description: Refine an existing Pinelab card or text input into an implementation plan.
 ---
 
 Refine a Trello card or text input into an agreed, technically ready-to-implement plan. Proactively investigate requirements, code, dependencies, and environment readiness to uncover and resolve blockers before handoff. Do not implement the feature during refinement.
@@ -46,7 +46,7 @@ Explicitly ask which behaviours should be tested, proposing normal, edge, and fa
 
 Investigate suitable public test seams, runners, fixtures, and required services. Explain what the proposed coverage catches and misses. Resolve human choices about coverage, manual versus automated checks, compatibility, public interfaces, data changes, and consequential trade-offs here. Agree the intended outcomes and mandatory testing constraints, delegating routine implementation and testing choices, including seams, fixtures, commands, and in-scope test cases, to the implementer. Do not require approval of every implementation detail.
 
-Load `get_pull_request_guidelines` during refinement. If the project requires a manually maintained version/changelog update, agree the release policy or proposed semantic bump here, including package version and changelog scope. Otherwise record the existing release automation or that no release change is needed. Do not leave an avoidable release-approval gate for implementation.
+If the project requires a manually maintained version/changelog update, agree the release policy or proposed semantic bump here, including package version and changelog scope. Otherwise record the existing release automation or that no release change is needed. Do not leave an avoidable release-approval gate for implementation.
 
 ## 3. Agree on an estimate
 

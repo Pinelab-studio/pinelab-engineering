@@ -3,14 +3,14 @@ import { includedDocuments } from "../included-documents.ts";
 
 /**
  * Build the Workers article catalogue from repository Markdown.
- * Bundle workflows, best practices and on-demand recipes; arbitrary paths are excluded.
+ * Bundle workflows, inclusion-only references, best practices and on-demand recipes; arbitrary paths are excluded.
  * Runs before checks/tests and during Wrangler builds; output is generated, not committed.
  * Paths use import.meta.url so generation does not depend on the invoking shell's cwd.
  */
 const root = new URL("../../../docs/", import.meta.url);
 const generated = new URL("../generated/", import.meta.url);
 const articles = [];
-for (const folder of ["workflow", "best-practices", "recipes"]) {
+for (const folder of ["workflow", "workflow/references", "best-practices", "recipes"]) {
   for (const file of (await readdir(new URL(folder, root))).sort()) {
     if (!file.endsWith(".md")) continue;
     articles.push({

@@ -15,6 +15,7 @@
     "precheck": "npm run generate:skills",
     "check": "tsc --noEmit",
     "dev:worker": "wrangler dev",
+    "dev:no-auth": "wrangler dev src/no-auth-worker.ts --local --ip 127.0.0.1 --port 8787",
     "build:worker": "wrangler deploy --dry-run",
     "deploy": "wrangler deploy"
   },

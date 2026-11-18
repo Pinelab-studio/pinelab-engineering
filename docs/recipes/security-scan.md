@@ -67,6 +67,6 @@ Report every project by path, including scan commit, lookback/baseline, check st
 
 Priorities: P0 critical security; P1 high security/broken functionality; P2 moderate risk/maintenance; P3 minor improvements. Include relevant bugs, missing tests, duplication, and performance findings without unrelated cleanup.
 
-Review diffs for secrets and unrelated/generated artifacts; remove only temporary plan files created for this task. Commit/push intended fixes and create one PR per changed project following [PR guidelines](../best-practices/pull-request-guidelines.md). Identify the project path. No fixes means no empty commit/PR. Do not merge or deploy; report actual completion and blockers.
+Review diffs for secrets and unrelated/generated artifacts; remove only temporary plan files created for this task. Commit/push intended fixes and create one PR per changed project following the Pull Request Guidelines. Identify the project path. No fixes means no empty commit/PR. Do not merge or deploy; report actual completion and blockers.
 
 For each upgraded dependency, document old → new version, release links, relevant changes, `Breaking changes: <details>` or `breaking: none`, migration findings (explicitly state none or uncertainty), operational steps, and test results. Include deferred updates/approvals. Respect the PR description limit; link larger reports in a PR comment. Return PR links by project and reproduction commands.

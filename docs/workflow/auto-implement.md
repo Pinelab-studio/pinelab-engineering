@@ -1,52 +1,30 @@
 ---
 name: autonomous-implement
 includedDocuments:
-  - docs/workflow/implement.md
+  - docs/workflow/references/implementation.md
 description: Autonomously select and implement one card from Pinelab Todo, then create a PR for human review.
 ---
 
-You are an autonomous agent. Select one eligible Pinelab card from **Todo**, implement it using the included `implement` workflow, and create a PR for human review. A successful run must end with a published, review-ready PR, not just local changes, a branch, or an implementation summary. Reuse and update an existing PR for the card rather than creating a duplicate. Follow all its authority boundaries, test-driven development, verification, PR, self-review, and handover requirements. The queue selection below replaces its requirement for a user-supplied card link. The manual-verification handover below overrides its requirement to complete manual checks before opening a review-ready PR; all other requirements remain in force.
+Select one eligible Pinelab card from **Todo** and implement it using the included shared implementation flow.
 
 ## Select one card
 
-1. Load `pinelab_trello` without arguments for board rules and action schemas. Fetch cards from the exact **Todo** list with `list_cards` and use `get_board` for existing labels as needed.
-2. Only select cards with the existing **Pinobi2** label and without the **blocked** label. Do not select cards from other lists or remove `blocked` to make a card eligible. If a required list or label is ambiguous, stop and report the configuration blocker rather than guessing.
-3. If no eligible card exists, stop immediately and apply **Finish the thread** below. No task action is needed: do not change cards, repositories, branches, or PRs.
-4. Select the first eligible card in board order. Use its URL as the linked card for the included workflow. Fetch its full description and all activity, then re-read its current list and labels before starting. If it is no longer eligible, stop without starting it. Do not override an approval hold. Only one worker may implement a card at a time; there is no atomic claim.
-5. When starting implementation, move the selected card to **Doing**. Implement only this card during this run.
+1. Fetch cards from the exact **Todo** list with `list_cards` and use `get_board` for existing labels as needed.
+2. Only select cards with the existing **Pinobi2** label and without the **blocked** label.
+3. If no eligible card exists, stop immediately and apply **Finish the thread** below. Do not change cards, repositories, branches, or PRs.
+4. Select the first eligible card in board order and pass its URL to the shared flow.
 
-## Identify autonomous work
+## Manual verification: reviewing human
 
-Append this exact line to every PR description and agent-authored PR or Trello comment, including blocker comments:
+Manual verification belongs to the reviewing human, including integrated full-stack journeys required by the card. Pending manual checks alone are not an implementation blocker; do not provision an environment solely for them, wait for results, keep the PR draft, or add `blocked` for that reason.
 
-```text
-Written by Pinobi2
-```
-
-## Hand manual verification to the reviewing human
-
-Manual verification belongs to the reviewing human, including integrated full-stack journeys explicitly required by the card. Pending manual checks alone are not an implementation blocker, even when a safe connected environment has not been established. Do not spend the run provisioning an environment solely for human manual verification. This exception does not waive required automated tests or other implementation checks, excuse known defects, or permit unsafe environment changes.
-
-1. Complete required automated checks and autonomous self-review. Report exactly what each check proves and its limitations; mocked browser tests and separate API tests do not prove a connected full-stack journey. Do not wait for human manual-test results during self-review.
-2. In the PR description, add **Manual verification required — reviewing human** with unchecked, executable steps, prerequisites, test data or roles, and expected results. Include the complete required journey and consequential failure or access-isolation cases. Clearly identify checks not performed and any unknown environment setup; never invent a working environment or claim manual verification passed.
-3. When implementation, automated checks, and self-review are complete, open or mark the PR ready for human review and move the card to **Ready For Review** using the included workflow's handover procedure. Link the manual checklist in the signed card handover. Do not keep the PR draft or add `blocked` solely because manual verification is pending.
-4. The reviewing human must perform these checks and record the results before review sign-off. Do not claim the full Definition of Done is satisfied, human approval, or completion before that verification. Observed failures and known defects still require resolution; they are not merely pending manual checks.
-
-This does not authorize automatically removing an existing `blocked` label. A human must resolve earlier blocker notes and explicitly return the card to an eligible state.
-
-## Record blockers and stop
-
-If a blocker other than pending human manual verification arises, follow the included workflow's blocker procedure: preserve partial work, add the existing **blocked** label while preserving other labels, and leave the card in its current list. A card already moved to **Doing** stays there; do not return it to **Todo**.
-
-Add a signed comment to the card with the blocker reason and context, supporting evidence, attempted recovery, required external action, unverified checks, partial-work references, and a copyable resume prompt. Verify that both the comment and label were saved. Report any update failure accurately. Never remove `blocked` automatically or start another card after a blocker.
+In the PR description, add **Manual verification required — reviewing human** with unchecked steps covering the complete required journey, consequential failure/access-isolation cases, prerequisites, test data/roles, and expected results. Identify unperformed checks and unknown environment setup. The reviewer must perform these checks and record results before sign-off.
 
 ## Finish the thread
-
-After a successful implementation, return the PR URL and card URL, observed automated-check results, and the manual checks awaiting the reviewing human. Do not report a successful handover until the PR is published and ready for review and the card is in **Ready For Review**. Empty queues and blockers remain the stopping exceptions described above.
 
 At every stopping point, use one of two outcomes:
 
 - **Human action needed in this session:** keep the thread open, rename it to `⚠️ <task title>`, and state the required answers or action. Use a short description if no task title exists. Never settle an unresolved blocker.
-- **No further action needed in this session:** after reporting the result, automatically settle the thread using T3 MCP if available. This includes an empty eligible queue or a completed handover to **Ready For Review**. Manual checks assigned to the reviewing human are part of that handover, not an unanswered question in this session. Settling the thread does not grant review approval or mark the card done.
+- **No further action needed in this session:** after reporting the result, automatically settle the thread using T3 MCP if available, including for an empty eligible queue or completed handover. Reviewer-assigned checks do not keep this session open; settlement is not approval or card completion.
 
 Use the available T3 MCP tools for thread operations. If a required rename or settlement tool is unavailable or fails, report the limitation and leave the thread open; do not claim success or use a workaround.

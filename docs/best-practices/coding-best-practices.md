@@ -10,8 +10,8 @@ These guidelines bias toward caution over speed. For trivial tasks, use judgment
 
 - Document features close to their implementation, not in separate feature sections in a README. Use top-of-file JSDoc in the feature file or its entry point (e.g. a plugin or `index.ts`).
 - Add concise JSDoc to every exported function and public method. Explain their purpose and any non-obvious constraints; do not merely restate the name.
-- In functions longer than 30 lines, use short comments to identify meaningful phases or explain non-obvious decisions. Do not narrate individual statements.
 - Keep related code together, group based on feature/domain, not technical purpose. Updating a specific feature should result in changes grouped in a directory (subdirectories allowed), should never result in scattered changes all over the repository.
+- DO NOT implement workarounds; let me know if what I am asking is not possible withing the current framework/hooks.
 
 ## Think Before Coding
 
@@ -35,24 +35,13 @@ Before implementing:
 
 Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
 
-## Surgical Changes
-
-**Touch only what you must. Clean up only your own mess.**
-
-When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-
-The test: Every changed line should trace directly to the user's request.
-
 # Testing rules
 
 Apply these rules to all unit, integration, and end-to-end tests.
 
 - Tests are always self-contained, no external network requests. Use manual scripts (no `.spec.ts` or `.test.ts`) to test if connecting to external platforms work.
 - Avoid Over-Testing: Focus on behavior, not implementation details. Don’t test internal state or private functions.
-- Tests are for humans to understand and review. Agree intended behaviours and outcomes during refinement. When using `get_implement`, reuse that scope and choose in-scope cases, public seams, and fixtures without further approval. Outside that workflow, obtain approval before writing new test scenarios.
+- Tests are for humans to understand and review. Agree intended behaviours and outcomes during refinement/planning.
 - Prefer integration or end-to-end tests for user-facing behaviour. Add focused unit tests for complex logic or edge cases not meaningfully covered in e2e or integration; avoid duplicating assertions across levels.
-- Use helpers for readability, but place them below the test cases: the cases are what readers need to understand first.
+- Use helpers for readability, but always place them below the test cases: the cases are what readers need to understand first.
 - Use hardcoded expected values so tests detect contract changes: compare `result === 'expected-string'`, not `result === SOME_CONSTANT` imported from the implementation.

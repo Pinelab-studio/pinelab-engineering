@@ -3,16 +3,15 @@
 Generated from the server's MCP `tools/list` response. Do not edit manually.
 Regenerate with `cd mcp && npm run build`.
 
-Total: **13 tools**. Names are server-local; clients may add a server prefix.
+Total: **11 tools**. Names are server-local; clients may add a server prefix.
 
-Adds ~997 tokens to context.
+Adds ~863 tokens to context.
 
 ## Best practices
 
 | Tool | Description |
 | --- | --- |
 | `get_coding_best_practices` | Always load these coding and testing best practices before writing or reviewing any code or tests. |
-| `get_pull_request_guidelines` | Load when creating pull requests for Pinelab. |
 | `get_vendure_best_practices` | Load this when implementing or reviewing any code in Vendure, Vendure plugins or the Vendure React dashboard |
 
 ## Workflows
@@ -20,11 +19,10 @@ Adds ~997 tokens to context.
 | Tool | Description |
 | --- | --- |
 | `get_auto_implement` | Autonomously select and implement one card from Pinelab Todo, then create a PR for human review. |
-| `get_auto_refine` | Autonomously refine the first unblocked Inbox card. |
-| `get_implement` | Autonomously implement a Pinelab card from its link, stopping only for blockers. |
+| `get_implement` | Implement a Pinelab card from its link |
 | `get_monthly_client_summary` | Only explicitly trigger when asked to create a monthly summary for a Pinelab client. |
-| `get_refine` | Refine an existing Pinelab card or text input into an implementation plan; new cards await client approval. |
-| `get_review` | Interactively review a GitHub PR the Pinelab way. |
+| `get_refine` | Refine an existing Pinelab card or text input into an implementation plan. |
+| `get_review` | Interactively review and improve a GitHub PR the Pinelab way. |
 
 ## Other tools
 

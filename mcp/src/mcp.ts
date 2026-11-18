@@ -46,11 +46,11 @@ export async function createMcpServer(
   });
   const catalogue = await articles();
   const render = (article: Article) => result(
-    `MCP usage: use authenticated Trello tools, not shell/curl. Load related guidance through its direct tool; use list_recipes/get_recipe for feature-specific resources.\n\n${includedDocuments(article, catalogue).map((document) => `Document: docs/${document.id}.md\n\n${document.text}`).join("\n\n---\n\n")}`,
+    `MCP usage: use authenticated Trello tools, not shell/curl. Included guidance is labelled below; apply domain-specific guidance only within its stated scope.\n\n${includedDocuments(article, catalogue).map((document) => `Document: docs/${document.id}.md\n\n${document.text}`).join("\n\n---\n\n")}`,
   );
-  // Trello workflows load through one entry point rather than separate tools.
+  // Board guidance uses one entry point; references are inclusion-only.
   const trelloWorkflows = catalogue.filter(({ id }) => ["workflow/pinelab-trello-kanban", "workflow/kanban-priorities"].includes(id));
-  for (const article of catalogue.filter(({ id }) => /^(best-practices|workflow)\//.test(id) && !trelloWorkflows.some((article) => article.id === id))) {
+  for (const article of catalogue.filter(({ id }) => /^(best-practices|workflow)\//.test(id) && !id.startsWith("workflow/references/") && !trelloWorkflows.some((article) => article.id === id))) {
     const name = `get_${article.id.split("/").at(-1)!.replace(/-/g, "_")}`;
     server.registerTool(name, {
       description: article.text.match(/^description: (.+)$/m)?.[1]?.replace(/^"|"$/g, "") ?? article.id,

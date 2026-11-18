@@ -1,11 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createMcpServer, type Article } from "./mcp.js";
 
-test("guidance is readable through direct tools except on-demand Trello guidance and recipes", async () =>
+test("guidance is readable through direct tools except board guidance, references and recipes", async () =>
   scenario(async (client, articles) => {
     const { tools } = await client.listTools();
     assert.ok(!tools.some(({ name }) => ["list_skills", "get_skill", "get_auto_implementation"].includes(name)));
@@ -21,7 +21,8 @@ test("guidance is readable through direct tools except on-demand Trello guidance
         assert.ok(JSON.parse(text(response)).guidance.includes(article.text));
         continue;
       }
-      if (article.id.startsWith("recipes/")) {
+      if (article.id.startsWith("recipes/")) continue;
+      if (article.id.startsWith("workflow/references/")) {
         assert.ok(!tools.some((tool) => tool.name === name));
         continue;
       }
@@ -34,68 +35,75 @@ test("guidance is readable through direct tools except on-demand Trello guidance
     }
   }));
 
-test("security scan is discoverable as a recipe without bundled guidance", async () =>
+test("review includes PR guidance while refinement and Vendure remain standalone", async () =>
   scenario(async (client) => {
-    const { tools } = await client.listTools();
-    assert.ok(!tools.some(({ name }) => name === "get_security_scan"));
-    const recipes = JSON.parse(text(await client.callTool({ name: "list_recipes", arguments: {} }))) as { id: string }[];
-    assert.ok(recipes.some(({ id }) => id === "recipes/security-scan"));
-    const response = await client.callTool({ name: "get_recipe", arguments: { id: "recipes/security-scan" } });
-    assert.notEqual(response.isError, true);
-    const content = text(response);
-    assert.ok(content.includes("Review the last 7 days unless given another positive whole number"));
-    assert.ok(!content.includes("includedDocuments:"));
-    assert.ok(!content.includes("## Think Before Coding"));
-    assert.ok(!content.includes("Keep the entire description at 200 words or fewer."));
-    assert.ok(content.includes("Before **every** update, inspect official changelogs across the installed-to-target range"));
-    assert.match(content, /For each upgraded dependency,[^\n]*`Breaking changes: <details>` or `breaking: none`/);
-  }));
-
-test("review and implementation include global rules once while Vendure remains standalone", async () =>
-  scenario(async (client) => {
-    for (const name of ["get_review", "get_implement"]) {
-      const response = text(await client.callTool({ name, arguments: {} }));
-      assert.equal(response.split("Document: docs/best-practices/coding-best-practices.md").length - 1, 1);
-    }
-    const vendure = text(await client.callTool({ name: "get_vendure_best_practices", arguments: {} }));
-    assert.equal(vendure.split("Document: ").length - 1, 1);
-    assert.ok(!vendure.includes("Document: docs/best-practices/coding-best-practices.md"));
-  }));
-
-test("auto-refine bundles shared refinement once and includes the human-answer thread instruction", async () =>
-  scenario(async (client, articles) => {
-    const response = await client.callTool({ name: "get_auto_refine", arguments: {} });
-    assert.notEqual(response.isError, true);
-    const content = text(response);
-    assert.deepEqual(content.match(/^Document: .+$/gm), [
-      "Document: docs/workflow/auto-refine.md",
-      "Document: docs/workflow/refine.md",
+    const review = text(await client.callTool({ name: "get_review", arguments: {} }));
+    assert.deepEqual(review.match(/^Document: .+$/gm), [
+      "Document: docs/workflow/review.md",
+      "Document: docs/workflow/references/pull-request-guidelines.md",
     ]);
-    const refine = articles.find(({ id }) => id === "workflow/refine");
-    assert.ok(refine);
-    assert.ok(content.includes(refine.text));
-    const standalone = await client.callTool({ name: "get_refine", arguments: {} });
-    assert.notEqual(standalone.isError, true);
-    assert.deepEqual(text(standalone).match(/^Document: .+$/gm), ["Document: docs/workflow/refine.md"]);
-    assert.ok(!text(standalone).includes("Rename thread to ⚠️"));
+    const refinement = text(await client.callTool({ name: "get_refine", arguments: {} }));
+    assert.deepEqual(refinement.match(/^Document: .+$/gm), ["Document: docs/workflow/refine.md"]);
+    const vendure = text(await client.callTool({ name: "get_vendure_best_practices", arguments: {} }));
+    assert.deepEqual(vendure.match(/^Document: .+$/gm), ["Document: docs/best-practices/vendure-best-practices.md"]);
   }));
 
-test("recipes are discoverable and readable only through the recipe tools", async () =>
+test("both implementation entry points include the shared implementation guide and PR guidelines", async () =>
   scenario(async (client) => {
+    for (const [name, entry] of [
+      ["get_implement", "implement"],
+      ["get_auto_implement", "auto-implement"],
+    ]) {
+      const response = await client.callTool({ name, arguments: {} });
+      assert.notEqual(response.isError, true);
+      assert.deepEqual(text(response).match(/^Document: .+$/gm), [
+        `Document: docs/workflow/${entry}.md`,
+        "Document: docs/workflow/references/implementation.md",
+        "Document: docs/workflow/references/pull-request-guidelines.md",
+      ]);
+    }
+  }));
+
+test("references are included but never exposed as tools", async () =>
+  scenario(async (client, articles) => {
+    const fragments = articles.filter(({ id }) => id.startsWith("workflow/references/"));
+    assert.ok(fragments.some(({ id }) => id === "workflow/references/implementation"));
+    assert.ok(fragments.some(({ id }) => id === "workflow/references/pull-request-guidelines"));
     const { tools } = await client.listTools();
-    assert.match(tools.find(({ name }) => name === "list_recipes")!.description!, /Lists Pinelab Vendure and storefront recipes/);
+    for (const { id } of fragments) {
+      const name = `get_${id.split("/").at(-1)!.replace(/-/g, "_")}`;
+      assert.ok(!tools.some((tool) => tool.name === name), name);
+    }
+  }));
+
+test("implementation entry points retain distinct selection and manual-verification policies", async () =>
+  scenario(async (client) => {
+    const linked = text(await client.callTool({ name: "get_implement", arguments: {} })).split("Document: docs/workflow/references/implementation.md")[0];
+    const automatic = text(await client.callTool({ name: "get_auto_implement", arguments: {} })).split("Document: docs/workflow/references/implementation.md")[0];
+    assert.match(linked, /Accept one card link/);
+    assert.match(linked, /caller is responsible for supplying a refined card/);
+    assert.match(linked, /regardless of its current list, labels, or approval state/);
+    assert.match(linked, /## Manual verification: implementer/);
+    assert.match(linked, /Complete required manual checks as well as automated verification/);
+    assert.ok(!linked.includes("Written by Pinobi2"));
+    assert.match(automatic, /first eligible card in board order/);
+    assert.match(automatic, /existing \*\*Pinobi2\*\* label and without the \*\*blocked\*\* label/);
+    assert.match(automatic, /## Manual verification: reviewing human/);
+    assert.match(automatic, /Pending manual checks alone are not an implementation blocker/);
+    assert.match(automatic, /Manual verification required — reviewing human/);
+    assert.ok(!automatic.includes("Written by Pinobi2"));
+    assert.match(automatic, /Never settle an unresolved blocker/);
+    assert.ok(!automatic.includes("## Manual verification: implementer"));
+  }));
+
+test("recipes are included in list_recipes", async () =>
+  scenario(async (client) => {
+    const files = await readdir(new URL("../../docs/recipes/", import.meta.url));
+    const expected = files.filter((file) => file.endsWith(".md")).map((file) => `recipes/${file.slice(0, -3)}`).sort();
     const response = await client.callTool({ name: "list_recipes", arguments: {} });
-    const recipes = JSON.parse(text(response)) as { id: string; description: string }[];
-    assert.ok(recipes.some(({ id }) => id === "recipes/storefront-seo"));
-    // Read every advertised recipe and reject paths outside the recipe catalogue.
-    for (const recipe of recipes) {
-      assert.ok(recipe.id.startsWith("recipes/"));
-      assert.ok(recipe.description);
-      assert.notEqual((await client.callTool({ name: "get_recipe", arguments: { id: recipe.id } })).isError, true);
-    }
-    for (const id of ["../README", "workflow/review", "best-practices/vendure-best-practices"]) {
-      assert.equal((await client.callTool({ name: "get_recipe", arguments: { id } })).isError, true);
-    }
+    assert.notEqual(response.isError, true);
+    const recipes = JSON.parse(text(response)) as { id: string }[];
+    assert.deepEqual(recipes.map(({ id }) => id).sort(), expected);
   }));
 
 test("list_plugins returns plugins from mocked Markdown", async (t) => {

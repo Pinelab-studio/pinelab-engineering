@@ -1,61 +1,42 @@
-# Documentation authoring
-
-These rules govern changes under `docs/`; they are not project-wide agent setup.
-Keep this file at 100 physical lines or fewer, including blank lines.
+- Documentation is exposed through MCP. Do not link to local files or tell consumers to read repository paths.# Pinelab Engineering
 
 * Always run `npm run build` in dir `mcp/` after making changes, so that the documentation and MCP is up to date.
 
-## Writing style
-
-- Start every article by clearly stating what we will build or set up and which approach we will use. Explain alternatives only after that.
-- Use simple language and short sentences. Prefer everyday words; use technical terms only when needed to explain or implement something accurately.
-- Keep the tone friendly and helpful. Write like you are guiding a colleague, not trying to sound impressive or overly technical.
-
 ## Choose the right guide
 
-- `best-practices/`: durable engineering rules for agents, kept in context across Pinelab projects.
-- `recipes/`: task-specific guides loaded on demand, not permanent context.
+- `best-practices/`: durable engineering rules for agents that apply to all projects.
+- `recipes/`: task-specific guides loaded on demand.
 - `workflow/`: Pinelab's way of working, including approvals, testing, review, and handover.
-- Keep each rule in one authoritative document; reference it from other guides with an explicit reading trigger.
-- Documentation is exposed through MCP. Do not link to local files or tell consumers to read repository paths. Reference the MCP tool (and recipe ID where needed) that loads the guide instead.
+- Keep each rule in one authoritative document; include shared guidance through `includedDocuments` rather than duplicating it.
+
+
+## `includedDocuments`
+
+- `includedDocuments` may contain only Markdown paths under `docs/workflow/references/`, never workflows, best practices, recipes, or other documents outside that directory. Keep references inclusion-only; do not expose them as MCP tools or recipes.
+- Only include absolutely mandatory documents; allow harnesses to discover other resources themselves when needed, not forcing it in context via includedDocuments.
+- Do not reference other tool calls or local files. Include required guidance with `includedDocuments`.
+- Documentation is exposed through MCP. Do not link to local files or tell consumers to read repository paths.
 
 ## Best practices
 
-- Keep them short, concise, and information-dense: every rule must change an agent's decisions or prevent a plausible mistake.
-- State actionable constraints and relevant exceptions; omit generic advice, repeated explanations, and directory inventories.
-- Move lengthy examples and task-specific procedures into recipes; retain essential boundaries in the best practice.
-- Best practices may always be loaded, without the user mentioning Pinelab. State applicability without adding a keyword gate.
-- Project or agent setup must load the best practices; neither this file nor a link guarantees automatic loading.
+- Max 60 lines per best practice; use explicit clear instructions.
 
+## Workflows
+
+- Workflows provide instructions on the way of working: loading best practices, coding standards etc are up to the consuming harness/ai/llm.
+- Explicit included instructions only; never reference other tool calls or local files.
+  
 ## Recipes
 
 - Keep recipes between 200 and 800 words; exceed 800 only when necessary for a complete, reproducible guide or explicitly requested.
 - Give the intended outcome, scope, prerequisites, and necessary decisions before implementation.
 - Use ordered, executable steps with explicit inputs, commands, working directories, and expected outcomes where relevant.
-- Include verification of the successful path and consequential failure cases, plus known limitations.
 - Distinguish reusable instructions from project-specific examples; never include secrets or private operational details.
-- Reference applicable best practices through their MCP tools rather than duplicating them. Recipes do not require a Pinelab mention.
-
-## Workflows and developer freedom
-
-- Make required outcomes, approval gates, and safety boundaries distinct from recommended prompts or interview mechanics.
-- Before changing task refinement, read [Refine a task](workflow/refine.md).
-- Before changing task lifecycle or Trello operations, read [Pinelab Kanban](workflow/pinelab-trello-kanban.md).
-- Before changing review or prioritization, read [Review](workflow/review.md) or [Kanban priorities](workflow/sanitize-kanban.md), respectively.
-- Preserve existing requirements unless their change is explicitly approved; do not silently relax them when simplifying wording.
-
-## Publication and metadata
-
-- Recipes and best practices are published on `plugins.pinelab.studio`; write for both human readers and agents.
-- Every recipe and knowledge article (best practice) must have a clear, specific title in frontmatter `name` and a non-empty, single-line frontmatter `description` explaining its purpose and when to use it.
+- Recipes and best practices are published on `engineering.pinelab.studio`; write for both human readers and agents.
+- Every recipe must have a clear, specific title in frontmatter `name` and a non-empty, single-line frontmatter `description` explaining its purpose and when to use it.
 - Make the title understandable outside this repository. Start the body with paragraph text, never a heading or a repeated title; use headings only after the introductory paragraph.
-- Preserve existing category metadata and stable paths unless a change is intentional; update references when renaming.
-- Keep workflow and best-practice descriptions short to minimize MCP context-window usage; retain essential applicability and trigger requirements.
-- Workflow names are skill identifiers; their descriptions must retain the explicit Pinelab trigger.
 
 ## Sources, generated files, and checks
 
-- Verify commands against relevant scripts/configuration; distinguish tested steps from unverified recommendations.
-- Edit source Markdown, not generated catalogues. See [the index generator](generate-index.js) and [MCP bundler](../mcp/src/scripts/generate-skills.mjs).
+- Edit source Markdown in `/docs`, not generated files `mcp/src/generated` catalogues.
 - For MCP catalogue/discovery changes, run `npm test` and `npm run check` from `mcp/`; both regenerate the catalogue.
-- A push to `main` triggers the website build via the GitHub Actions secret `WEBSITE_BUILD_HOOK`; never call the live hook merely to validate documentation.

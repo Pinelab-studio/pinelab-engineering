@@ -19,11 +19,11 @@ test("catalogue generation rejects inclusion cycles", async () => {
 });
 
 test("multiple inclusions retain declaration order and deduplicate transitive documents", () => {
-  const root = { id: "workflow/review", text: "---\nincludedDocuments:\n  - docs/best-practices/global.md\n  - docs/best-practices/vendure.md\n---\nReview" };
-  const global = { id: "best-practices/global", text: "Global" };
-  const vendure = { id: "best-practices/vendure", text: "---\nincludedDocuments:\n  - docs/best-practices/global.md\n---\nVendure" };
+  const root = { id: "workflow/review", text: "---\nincludedDocuments:\n  - docs/workflow/references/global.md\n  - docs/workflow/references/vendure.md\n---\nReview" };
+  const global = { id: "workflow/references/global", text: "Global" };
+  const vendure = { id: "workflow/references/vendure", text: "---\nincludedDocuments:\n  - docs/workflow/references/global.md\n---\nVendure" };
   assert.deepEqual(includedDocuments(root, [root, global, vendure]).map(({ id }) => id), [
-    "workflow/review", "best-practices/global", "best-practices/vendure",
+    "workflow/review", "workflow/references/global", "workflow/references/vendure",
   ]);
 });
 
@@ -38,7 +38,7 @@ async function generate(includedDocument: string) {
   try {
     // Preserve repository layout because generation resolves paths relative to its own script.
     await mkdir(join(root, "mcp/src/scripts"), { recursive: true });
-    await mkdir(join(root, "docs/workflow"), { recursive: true });
+    await mkdir(join(root, "docs/workflow/references"), { recursive: true });
     await mkdir(join(root, "docs/recipes"), { recursive: true });
     await mkdir(join(root, "docs/best-practices"), { recursive: true });
     await copyFile(new URL("./scripts/generate-skills.mjs", import.meta.url), join(root, "mcp/src/scripts/generate-skills.mjs"));

@@ -30,7 +30,9 @@ Connect your MCP client using **Streamable HTTP**:
 - URL: `http://localhost:8787/mcp`
 - Header: `Authorization: Bearer <your-MCP_TOKEN>`
 
-All requests require the MCP token. Trello credentials are only needed for Trello tools; skill tools work without them. Local Trello calls affect the real board—use a test board.
+Normal startup requires the MCP token for all requests. Trello credentials are only needed for Trello tools; skill tools work without them. Local Trello calls affect the real board—use a test board.
+
+For document evaluation without credentials, run `npm run dev:eval` from `mcp/` instead. It serves `http://localhost:8787/mcp` without authentication, bound to `127.0.0.1`. The separate evaluation entry point ignores all credentials, including `.dev.vars`: document tools and Trello guidance work, but live Trello actions are denied even with a valid bearer token. Normal startup and deployment remain authenticated.
 
 To explore tools visually, run `npx @modelcontextprotocol/inspector` and connect using its default proxy mode.
 
@@ -56,18 +58,20 @@ The small entry-point definition remains visible in tool discovery. Detailed gui
 
 Add this instruction to your agent/project setup: **Before implementing or reviewing any code, call `get_coding_best_practices`. For Vendure work, also call `get_vendure_best_practices`. When setting up, extending, or reviewing storefront or Vendure tests, load `get_recipe` with ID `recipes/pinelab-testing`.** No Pinelab mention is required for best practices. The MCP server cannot force an agent to call a tool.
 
-Articles can declare multiple full repository-relative Markdown paths in a frontmatter block list (plain, unquoted paths):
+Articles can include shared guidance through a frontmatter block list of plain, unquoted repository-relative Markdown paths. Declare only documents under `docs/workflow/references/`, never other workflows, best practices, or recipes:
 
 ```yaml
 includedDocuments:
-  - docs/best-practices/coding-best-practices.md
-  - docs/best-practices/vendure-best-practices.md
+  - docs/workflow/references/coding-rules.md
+  - docs/workflow/references/vendure-rules.md
 ```
 
-Each document under `docs/best-practices/` and `docs/workflow/` gets a direct, no-argument tool, except the Kanban workflow, which is loaded through `pinelab_trello`. Tool names are `get_` plus the document filename without its extension, with hyphens replaced by underscores, for example `get_review` or `get_coding_best_practices`. Category directories are not included. Descriptions come from article frontmatter; workflows retain their explicit Pinelab trigger. These replace `list_skills` and `get_skill`.
+Each top-level document under `docs/best-practices/` and `docs/workflow/` gets a direct, no-argument tool, except the Kanban workflow, which is loaded through `pinelab_trello`. Documents under `docs/workflow/references/` are inclusion-only: the generator bundles them, but they have no direct tool or recipe entry. Tool names are `get_` plus the document filename without its extension, with hyphens replaced by underscores, for example `get_review` or `get_coding_best_practices`. Category directories are not included. Descriptions come from article frontmatter; workflows retain their explicit Pinelab trigger. These replace `list_skills` and `get_skill`.
+
+The `implement` and `auto-implement` entry points both include the implementation reference; neither includes the other. Entry points own card selection, manual-verification responsibility, attribution, and session finishing rules. The shared flow owns moving to Doing, implementation, PR creation, self-review, blockers, and handover to Ready For Review, including implementation-specific board safety. Both implementation bundles include coding, Vendure, PR, and review references, not the Kanban guide; Vendure rules apply only to Vendure work. Coding, Vendure, and review tools keep their public entry points and include their authoritative reference documents.
 
 Recipes have no individual tools. `list_recipes` lists feature-specific Vendure or storefront resources, including their IDs and descriptions; `get_recipe({ id: "recipes/storefront-seo" })` reads one on demand.
 
-Document tools return the requested document and transitive inclusions in one response with labelled sections, each document once. Only documents in the approved workflow/best-practices/recipes catalogue can be included. Generation rejects missing references and cycles. Planning and review include their declared documents. Document IDs are unchanged; clients must refresh tool discovery after deployment.
+Document tools return the requested document and transitive inclusions in one response with labelled sections, each document once. Inclusions must point to the approved references directory. Generation rejects missing references and cycles. Planning and review include their declared documents. Public tool names are unchanged; reference IDs follow their new paths. Clients must refresh tool discovery after deployment.
 
 For deployment instructions, see [docs/mcp.md](../docs/mcp.md).

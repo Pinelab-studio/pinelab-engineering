@@ -5,11 +5,11 @@ description: "Manage Pinelab Trello cards with shared board safety, placement, a
 
 Manage Pinelab cards through the authenticated `pinelab_trello` MCP tool. This guide owns shared board rules, not refinement, implementation, or review procedures. Use **card** for a board item; **task** may describe generic work.
 
-## Load the workflow for the operation
+## Workflow ownership
 
-- When refining an existing card or creating one from text, load `get_refine`. It owns investigation, preflight, estimates, content, confirmation, and saving the refined card.
-- When implementing a linked card, load `get_implement`. It owns implementation progress, PRs, autonomous self-review, blockers, and handover.
-- When reviewing a PR interactively, load `get_review`. It owns review evidence, findings, verification, and sign-off.
+- Refinement owns investigation, preflight, estimates, content, confirmation, and saving the refined card.
+- Implementation entry points own card selection and verification responsibility. Their included shared implementation flow owns progress, PRs, blockers, and handover. It defines implementation-specific list transitions; this guide owns general board safety.
+- Interactive review owns review evidence, findings, verification, and human sign-off.
 - For ordinary card edits or moves, use this guide directly; do not start a refinement interview.
 
 ## Board operations and safety
@@ -27,7 +27,7 @@ Manage Pinelab cards through the authenticated `pinelab_trello` MCP tool. This g
 
 - Raw intake belongs in **Inbox**. Other new cards default to **Todo / top** unless the user requests another destination. Workflow-specific placement is defined by the workflow, not this default.
 - Ordinary updates preserve list and position unless requested. Moves preserve positioning unless an explicit instruction specifies otherwise.
-- After human approval, a card may move to **✨Done**; rejected implementations return to **Doing**. A self-review comment is not human approval. Do not infer approval or move cards merely because a PR exists.
+- After human approval, a card may move to **✨Done**; rejected implementations return to **Doing**. An agent's completion report is not human approval. Do not infer approval or move cards merely because a PR exists.
 
 ## Labels and assignees
 

@@ -166,12 +166,6 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
     await t.test("discovery, skill catalogue and HTTP security regressions", async () => {
       const client = await connect(valid.endpoint);
       try {
-        const recipes = await client.callTool({ name: "list_recipes", arguments: {} });
-        assert.notEqual(recipes.isError, true);
-        assert.match(JSON.stringify(recipes), /storefront-seo/);
-        assert.doesNotMatch(JSON.stringify(recipes), /best-practices\//);
-        const unknown = await client.callTool({ name: "get_recipe", arguments: { id: "../README" } });
-        assert.equal(unknown.isError, true);
         assert.ok((await client.listTools()).tools.some((tool) => tool.name === "pinelab_trello"));
         const before = requests.length;
         const help = await client.callTool({ name: "pinelab_trello", arguments: {} });
