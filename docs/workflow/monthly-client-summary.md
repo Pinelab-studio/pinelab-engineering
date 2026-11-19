@@ -18,6 +18,19 @@ Required input: the client and the month to summarize. If only a month is given,
 7. Write a one or two sentence conclusion for the metrics, and insert in {{metric_conclusions}}
 8. Return the filled-in HTML template in chat inside a fenced code block starting with ```html and ending with ```, so the user can easily copy it. Outside the code block, mention anything the user still needs to replace.
 
+## Monthly CSV export
+
+- Use the authenticated `pinelab_trello` MCP tool with `action: "export_finished_tasks"` and numeric `input.year` and `input.month` (1–12).
+- The export includes archived cards and activity entering **✨Done**, including creation/copy into Done.
+- Each card appears once, using its latest Done entry that month—even if later reopened.
+- Month boundaries use Europe/Amsterdam; completion timestamps are UTC.
+- Assignees, feature labels (`blue_dark`), client labels (exactly `green`), and the trailing unitless numeric title amount are current values, not historical snapshots.
+- Missing amounts remain blank with warnings.
+- The response contains `filename`, `csv`, `count`, and warnings; save the CSV text as UTF-8 and report the count and warnings.
+- Spreadsheet formula-like text is prefixed with an apostrophe.
+- Deleted, inaccessible, or moved-off-board cards cause an error, never a partial export.
+- The export includes archived cards; exclude those when selecting other clients' work for the email.
+
 ## SQL query for metrics
 
 This query returns the following per currency:

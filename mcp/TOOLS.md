@@ -5,7 +5,7 @@ Regenerate with `cd mcp && npm run build`.
 
 Total: **11 tools**. Names are server-local; clients may add a server prefix.
 
-Adds ~863 tokens to context.
+Adds ~854 tokens to context.
 
 ## Best practices
 
@@ -31,5 +31,5 @@ Adds ~863 tokens to context.
 | `get_recipe` | Read a feature-specific Vendure or storefront resource by its recipe ID from list_recipes. Load only when relevant to the current feature or task. |
 | `list_plugins` | Lists Pinelab Vendure plugins with names, descriptions and README URLs. Read relevant READMEs before implementing. |
 | `list_recipes` | Lists Pinelab Vendure and storefront recipes (guides). Use get_recipe to read a recipe. |
-| `pinelab_trello` | Manage Pinelab Trello cards and recommend today's priorities. Call without action to load workflows and action parameters, then call with action and input for operations. |
+| `pinelab_trello` | Manage Pinelab Trello cards. Call without action to load workflows and action parameters, then call with action and input for operations. |
 
