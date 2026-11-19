@@ -155,7 +155,6 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
         const { tools } = await client.listTools();
         const workflows = ["get_review", "get_refine", "get_implement", "pinelab_trello"];
         assert.ok(!tools.some(({ name }) => name === "get_kanban_priorities"));
-        assert.match(tools.find(({ name }) => name === "pinelab_trello")!.description!, /today's priorities/);
         for (const name of [...workflows, "get_coding_best_practices"]) {
           assert.ok(tools.some((tool) => tool.name === name), `Missing tool: ${name}`);
         }
@@ -171,7 +170,7 @@ test("MCP end-to-end through workerd with a mock Trello HTTP boundary", { timeou
         const help = await client.callTool({ name: "pinelab_trello", arguments: {} });
         assert.notEqual(help.isError, true);
         const guidance = JSON.parse((help.content as { text: string }[])[0].text);
-        assert.match(guidance.guidance, /Cards in \*\*✨Done\*\* are read-only/);
+        assert.match(guidance.guidance, /✨Done cards are read-only/);
         assert.ok(guidance.actions.create_card.inputSchema.properties.title);
         assert.equal(requests.length, before);
       } finally { await client.close(); }

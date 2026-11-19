@@ -10,7 +10,7 @@ Select one eligible Pinelab card from **Todo** and implement it using the includ
 ## Select one card
 
 1. Fetch cards from the exact **Todo** list with `list_cards` and use `get_board` for existing labels as needed.
-2. Only select cards with the existing **Pinobi2** label and without the **blocked** label.
+2. Only select cards with the existing **pinobi2** label and without the **blocked** label.
 3. If no eligible card exists, stop immediately and apply **Finish the thread** below. Do not change cards, repositories, branches, or PRs.
 4. Select the first eligible card in board order and pass its URL to the shared flow.
 

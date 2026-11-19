@@ -10,7 +10,7 @@ test("guidance is readable through direct tools except board guidance, reference
     const { tools } = await client.listTools();
     assert.ok(!tools.some(({ name }) => ["list_skills", "get_skill", "get_auto_implementation"].includes(name)));
     assert.equal(tools.filter(({ name }) => name === "get_implement").length, 1);
-    assert.match(tools.find(({ name }) => name === "pinelab_trello")!.description!, /today's priorities/);
+    assert.match(tools.find(({ name }) => name === "pinelab_trello")!.description!, /Call without action to load workflows and action parameters/);
     // Verify every published document against the public tool interface.
     for (const article of articles) {
       const name = `get_${article.id.split("/").at(-1)!.replace(/-/g, "_")}`;
@@ -87,7 +87,7 @@ test("implementation entry points retain distinct selection and manual-verificat
     assert.match(linked, /Complete required manual checks as well as automated verification/);
     assert.ok(!linked.includes("Written by Pinobi2"));
     assert.match(automatic, /first eligible card in board order/);
-    assert.match(automatic, /existing \*\*Pinobi2\*\* label and without the \*\*blocked\*\* label/);
+    assert.match(automatic, /existing \*\*pinobi2\*\* label and without the \*\*blocked\*\* label/);
     assert.match(automatic, /## Manual verification: reviewing human/);
     assert.match(automatic, /Pending manual checks alone are not an implementation blocker/);
     assert.match(automatic, /Manual verification required — reviewing human/);
