@@ -23,9 +23,11 @@ Before checkout, reread the card and confirm it remains eligible in **Ready For 
 
 Complete the included PR checkout and diff preparation for each distinct linked PR, assessing each pinned head separately even when PRs share a repository.
 
-This unattended workflow takes precedence over shared preparation's stopping and escalation instructions. Every failure, stop, or need for developer input in shared preparation must return to **Technical blockers**, then **Finish the thread**. Never exit directly from shared preparation, wait for answers, guess a repository, or silently change comparison scope.
+This unattended workflow takes precedence over shared preparation's stopping and escalation instructions. First attempt safe recovery from local tooling mistakes or temporary failures: correct command syntax, use available equivalent tools, or retry transient read failures. An unavailable `python`, standalone parser, or unsupported CLI option is not itself a blocker. Do not install dependencies, execute PR code, bypass authentication or permissions, overwrite local work, or silently change comparison scope. Keep recovery attempts bounded; do not repeat an unchanged failing command indefinitely.
 
-Summarize intended behaviour and inspect the diff, relevant surrounding code, callers, applicable repository instructions, and tests. Use recorded CI results as evidence; do not execute PR code or tests. Pending manual testing or missing test coverage alone is uncertainty, not a technical error; classify conservatively. A failed evidence-fetch command is a technical error even if some evidence was retrieved.
+Summarize intended behaviour and inspect each pinned diff, relevant surrounding code, callers, repository instructions, and tests. Use available discussion and recorded CI results as supporting evidence; unavailable CI or discussion, missing coverage, or pending manual testing alone do not block classification. Report these gaps and classify conservatively; never claim unverified checks passed.
+
+Only an unresolved inability to safely check out and inspect every linked PR, establish its pinned comparison, or reliably apply and verify the risk label is a technical blocker. Missing PR links also block classification. Route these cases to **Technical blockers**, then **Finish the thread**; never exit directly from shared preparation or wait for developer input.
 
 ## 3. Classify conservatively
 
@@ -43,7 +45,7 @@ Use the highest applicable risk for each PR, then the highest across **all** lin
 
 For other changes, judge likelihood and impact of failure, blast radius, security, data integrity, compatibility, integrations, and rollback difficulty. When unsure, choose higher. Higher-risk rules override simple mappings.
 
-A successful, inspectable checkout must result in a classification; do not abstain merely because the change is unfamiliar. **Technical errors are the exception:** if any linked PR cannot be checked out or inspected, do not apply a risk label or use `High risk` as an error fallback. Record a blocker instead.
+If all linked PRs can be safely checked out and inspected, assign a risk level even when the change is unfamiliar or supporting evidence is incomplete. If checkout or inspection remains impossible after safe recovery, record a blocker without a risk label; never use `High risk` as an error fallback.
 
 ## 4. Apply the Trello risk label
 
@@ -55,7 +57,7 @@ Read back the card and confirm exactly one risk label was applied and unrelated 
 
 ## Technical blockers
 
-For a missing PR link, checkout or inspection failure, label-write failure, or any other technical error:
+Use this path only for missing PR links or unresolved failures that prevent safe PR inspection or reliable risk labelling after bounded recovery. Do not mark the card blocked merely because an initial command failed.
 
 1. Stop classification without applying a risk label. Preserve partial evidence and local work.
 2. If a card was selected, reread it. If it is now **✨Done**, make no further card mutations, including comments. If no card was selected or its current list cannot be verified, report the limitation without card mutations. In these cases, continue directly to **Finish the thread**.
