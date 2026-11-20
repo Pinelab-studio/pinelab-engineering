@@ -35,12 +35,19 @@ test("guidance is readable through direct tools except board guidance, reference
     }
   }));
 
-test("review includes PR guidance while refinement and Vendure remain standalone", async () =>
+test("review and risk classification include shared PR preparation with scoped guidance", async () =>
   scenario(async (client) => {
     const review = text(await client.callTool({ name: "get_review", arguments: {} }));
     assert.deepEqual(review.match(/^Document: .+$/gm), [
       "Document: docs/workflow/review.md",
+      "Document: docs/workflow/references/pr-checkout-and-diff.md",
       "Document: docs/workflow/references/pull-request-guidelines.md",
+    ]);
+    const classification = await client.callTool({ name: "get_auto_classify_pr_risk", arguments: {} });
+    assert.notEqual(classification.isError, true);
+    assert.deepEqual(text(classification).match(/^Document: .+$/gm), [
+      "Document: docs/workflow/auto-classify-pr-risk.md",
+      "Document: docs/workflow/references/pr-checkout-and-diff.md",
     ]);
     const refinement = text(await client.callTool({ name: "get_refine", arguments: {} }));
     assert.deepEqual(refinement.match(/^Document: .+$/gm), ["Document: docs/workflow/refine.md"]);
