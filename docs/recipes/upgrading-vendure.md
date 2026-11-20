@@ -23,6 +23,8 @@ Update all installed first-party `@vendure/*` release packages to the same targe
 
 Reinstall, check dependency resolution, and rebuild the server and dashboard using the project's actual scripts. Keep required generated artifacts; inspect patches and avoid unrelated lockfile changes. Passing compilation does not prove runtime compatibility.
 
+**Always check breaking changes and manual steps needed in the release notes: https://github.com/vendurehq/vendure/releases**. Add breaking changes and manual steps to the Pull Request.
+
 ## 3. Generate and review migrations
 
 Only with approval, generate against an isolated copy of the current deployed schema, using the same database engine/version and relevant settings. Use the project's configured migration-generation script; verify its output directory and database target first. Never infer safety from an empty migration directory.

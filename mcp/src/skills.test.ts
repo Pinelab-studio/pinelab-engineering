@@ -10,6 +10,8 @@ test("guidance is readable through direct tools except board guidance, reference
     const { tools } = await client.listTools();
     assert.ok(!tools.some(({ name }) => ["list_skills", "get_skill", "get_auto_implementation"].includes(name)));
     assert.equal(tools.filter(({ name }) => name === "get_implement").length, 1);
+    assert.equal(tools.filter(({ name }) => name === "get_auto_classify_pr_risk").length, 1);
+    assert.ok(!tools.some(({ name }) => name === "get_classify_pr_risk"));
     assert.match(tools.find(({ name }) => name === "pinelab_trello")!.description!, /Call without action to load workflows and action parameters/);
     // Verify every published document against the public tool interface.
     for (const article of articles) {
