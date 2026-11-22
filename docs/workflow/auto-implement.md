@@ -25,6 +25,6 @@ In the PR description, add **Manual verification required — reviewing human** 
 At every stopping point, use one of two outcomes:
 
 - **Human action needed in this session:** keep the thread open, rename it to `⚠️ <task title>`, and state the required answers or action. Use a short description if no task title exists. Never settle an unresolved blocker.
-- **No further action needed in this session:** after reporting the result, automatically settle the thread using T3 MCP if available, including for an empty eligible queue or completed handover. Reviewer-assigned checks do not keep this session open; settlement is not approval or card completion.
+- **No further action needed in this session:** after successful implementation handover, first rename the thread to `Implemented: <card title>` using the actual card title. Do not use this title for blocked or partial work, or an empty eligible queue. After reporting the result, automatically settle the thread using T3 MCP if available, including for an empty eligible queue or completed handover. Reviewer-assigned checks do not keep this session open; the title and settlement are not approval or card completion.
 
 Use the available T3 MCP tools for thread operations. If a required rename or settlement tool is unavailable or fails, report the limitation and leave the thread open; do not claim success or use a workaround.
