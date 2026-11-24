@@ -1,6 +1,6 @@
 ---
 name: Coding Best Practices
-description: Always load these coding and testing best practices before writing or reviewing any code or tests.
+description: Always load these coding best practices before writing or reviewing any code
 # Based on https://github.com/multica-ai/andrej-karpathy-skills
 ---
 
@@ -34,14 +34,3 @@ Before implementing:
 - If an edge case is rare and its impact very low, exclude that edge case from implementation if that means we end up with simpler code.
 
 Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
-
-# Testing rules
-
-Apply these rules to all unit, integration, and end-to-end tests.
-
-- Tests are always self-contained, no external network requests. Use manual scripts (no `.spec.ts` or `.test.ts`) to test if connecting to external platforms work.
-- Avoid Over-Testing: Focus on behavior, not implementation details. Don’t test internal state or private functions.
-- Tests are for humans to understand and review. Agree intended behaviours and outcomes during refinement/planning.
-- Prefer integration or end-to-end tests for user-facing behaviour. Add focused unit tests for complex logic or edge cases not meaningfully covered in e2e or integration; avoid duplicating assertions across levels.
-- Use helpers for readability, but always place them below the test cases: the cases are what readers need to understand first.
-- Use hardcoded expected values so tests detect contract changes: compare `result === 'expected-string'`, not `result === SOME_CONSTANT` imported from the implementation.

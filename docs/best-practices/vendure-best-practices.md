@@ -54,7 +54,6 @@ Logger.info(`Order ${order.code} has been processed`, loggerCtx);
 # Testing
 
 - Prefer GraphQL queries and mutations; call services directly when this makes cases more readable or isolated.
-- Never use arbitrary sleeps such as waiting ten seconds. Wait for an observable condition, for example `await waitFor(() => someCondition === true)`, using the test framework's bounded condition-wait helper.
 - Always use `gql` from `graphql-tag` for GraphQL documents in tests. Never use `/* GraphQL */` template literal comments.
 - Place graphql queries at the bottom of the file, below test cases.
 

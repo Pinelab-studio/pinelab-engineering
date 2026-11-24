@@ -3,15 +3,16 @@
 Generated from the server's MCP `tools/list` response. Do not edit manually.
 Regenerate with `cd mcp && npm run build`.
 
-Total: **12 tools**. Names are server-local; clients may add a server prefix.
+Total: **13 tools**. Names are server-local; clients may add a server prefix.
 
-Adds ~920 tokens to context.
+Adds ~983 tokens to context.
 
 ## Best practices
 
 | Tool | Description |
 | --- | --- |
-| `get_coding_best_practices` | Always load these coding and testing best practices before writing or reviewing any code or tests. |
+| `get_coding_best_practices` | Always load these coding best practices before writing or reviewing any code |
+| `get_testing_best_practices` | Apply when planning, writing, or reviewing unit, integration, or end-to-end tests |
 | `get_vendure_best_practices` | Load this when implementing or reviewing any code in Vendure, Vendure plugins or the Vendure React dashboard |
 
 ## Workflows

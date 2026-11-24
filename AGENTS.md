@@ -4,9 +4,9 @@
 
 ## Choose the right guide
 
-- `best-practices/`: durable engineering rules for agents that apply to all projects.
+- `best-practices/`: durable engineering rules for agents that apply to all projects. References not drivers.
 - `recipes/`: task-specific guides loaded on demand.
-- `workflow/`: Pinelab's way of working, including approvals, testing, review, and handover.
+- `workflow/`: Pinelab's way of working, including approvals, testing, review, and handover. These are drivers, dictating agents to follow a given workflow.
 - Keep each rule in one authoritative document; include shared guidance through `includedDocuments` rather than duplicating it.
 
 
