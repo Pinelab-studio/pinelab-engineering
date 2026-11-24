@@ -3,12 +3,17 @@ name: code-review
 includedDocuments:
   - docs/workflow/references/pr-checkout-and-diff.md
   - docs/workflow/references/pull-request-guidelines.md
+  - docs/workflow/references/retro.md
 description: Interactively review and improve a GitHub PR the Pinelab way.
 ---
 
 Review a GitHub pull request locally together with the developer. Complete the included PR checkout and diff preparation before starting the interactive review.
 
 ## 1. Establish the spec and standards
+
+### Start with the client value
+
+Once PR evidence is available, open with a short explanation of what the PR introduces functionally and what is in it for the client, before asking any review questions. Use plain language: at most one short paragraph, preferably 2–3 brief bullets or steps instead. Distinguish demonstrated benefits from assumed intent; avoid implementation details unless they explain a client-facing effect.
 
 ### Spec
 
@@ -18,7 +23,7 @@ Ask specific questions about ambiguous behaviour; do not broadly request a task 
 
 ### Standards
 
-For each changed file, find and read the applicable `AGENTS.md` files: repository root, parent directories, and nearest scoped instructions. More specific instructions take precedence within their scope.
+For each changed file, find and read the applicable `AGENTS.md` and `CODING_STANDARDS.md` files: repository root, parent directories, and nearest scoped instructions. More specific instructions take precedence within their scope. Apply the included retrospective guidance to check for coding standards misplaced in `AGENTS.md`.
 
 Load any tools, best practices and skills that are available and might apply to this code review, including MCP.
 
@@ -35,7 +40,7 @@ Discuss **requirements, engineering principles, correctness, testing, and handov
 
 Report evidence-backed findings with axis, severity, file/line, impact, supporting rule or requirement, and proposed action. Prioritize serious risks; distinguish documented violations from judgement calls and avoid duplicating automated style checks.
 
-Implement agreed fixes before moving on and run relevant tests. Track findings as fixed, explicitly accepted with a reason, or unresolved. Silence is not acceptance; do not expand scope without agreement.
+Implement agreed fixes before moving on and run relevant tests. After every agreed review change, apply the included retrospective guidance and ask whether to capture the lesson in `CODING_STANDARDS.md`; recommend an automated check instead for mechanical rules. Wait for agreement before changing shared guidance or adding checks. Track findings as fixed, explicitly accepted with a reason, or unresolved. Silence is not acceptance; do not expand scope without agreement.
 
 ### General correctness
 

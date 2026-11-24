@@ -44,6 +44,7 @@ test("review and risk classification include shared PR preparation with scoped g
       "Document: docs/workflow/review.md",
       "Document: docs/workflow/references/pr-checkout-and-diff.md",
       "Document: docs/workflow/references/pull-request-guidelines.md",
+      "Document: docs/workflow/references/retro.md",
     ]);
     const classification = await client.callTool({ name: "get_auto_classify_pr_risk", arguments: {} });
     assert.notEqual(classification.isError, true);
