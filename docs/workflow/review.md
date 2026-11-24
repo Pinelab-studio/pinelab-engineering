@@ -11,9 +11,17 @@ Review a GitHub pull request locally together with the developer. Complete the i
 
 ## 1. Establish the spec and standards
 
-### Start with the client value
+### Always open with a feature summary and data-flow walkthrough
 
-Once PR evidence is available, open with a short explanation of what the PR introduces functionally and what is in it for the client, before asking any review questions. Use plain language: at most one short paragraph, preferably 2–3 brief bullets or steps instead. Distinguish demonstrated benefits from assumed intent; avoid implementation details unless they explain a client-facing effect.
+Once PR evidence is available, always present the following two sections, in this order, before asking any review questions or discussing findings. Base both sections on the inspected code and PR evidence; distinguish demonstrated behaviour from assumed intent and explicitly flag unknowns.
+
+**Feature summary**
+
+Use at most five bullets, each containing one or two short sentences. Explain in plain language what the feature does, its value for the client, and the functional flow of data: what starts the flow, what information is processed or changed, and what result the user or client receives. Keep implementation details for the next section.
+
+**Technical data flow**
+
+Follow the summary with an ordered, file-level walkthrough of the same flow, from entry point to result. Name the actual files and explain which file calls or passes data to which other file, what each component is responsible for, and what data crosses each boundary. Include relevant validation, transformation, persistence, external services, and return paths where they affect understanding; explain asynchronous or event-driven handoffs rather than implying direct calls. Include unchanged files when needed to connect the flow, but omit unrelated files. Stay at file/component level, not individual functions or a line-by-line explanation. Use separate paths for materially different flows, and mark any connection that cannot be verified rather than inventing it.
 
 ### Spec
 
