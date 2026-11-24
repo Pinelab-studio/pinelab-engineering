@@ -21,7 +21,17 @@ Use at most five bullets, each containing one or two short sentences. Explain in
 
 **Technical summary and data flow**
 
-Start with an explicit inventory of newly introduced technical elements, including custom fields, entities, resolvers, services, plugins, API endpoints, events, and background jobs where applicable. For each, give its name, defining file, and a brief explanation of its purpose; for custom fields, also identify the entity they extend. Do not make the reviewer infer these additions from the walkthrough. If no new technical elements are introduced, say so.
+Start with an explicit inventory of newly introduced technical elements:
+
+* custom fields
+* entities
+* resolvers or controllers
+* graphql schema changes
+* services
+* plugins
+* jobs or jobqueues
+ 
+For each, give its name, defining file, and a brief explanation of its purpose; for custom fields, also identify the entity they extend. Do not make the reviewer infer these additions from the walkthrough. If no new technical elements are introduced, say so.
 
 Follow the summary with an ordered, file-level walkthrough of the same flow, from entry point to result. Name the actual files and explain which file calls or passes data to which other file, what each component is responsible for, and what data crosses each boundary. Include relevant validation, transformation, persistence, external services, and return paths where they affect understanding; explain asynchronous or event-driven handoffs rather than implying direct calls. Include unchanged files when needed to connect the flow, but omit unrelated files. Stay at file/component level, not individual functions or a line-by-line explanation. Use separate paths for materially different flows, and mark any connection that cannot be verified rather than inventing it.
 
