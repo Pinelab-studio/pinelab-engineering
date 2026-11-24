@@ -5,7 +5,7 @@ Regenerate with `cd mcp && npm run build`.
 
 Total: **13 tools**. Names are server-local; clients may add a server prefix.
 
-Adds ~981 tokens to context.
+Adds ~990 tokens to context.
 
 ## Best practices
 
@@ -19,7 +19,7 @@ Adds ~981 tokens to context.
 
 | Tool | Description |
 | --- | --- |
-| `get_auto_classify_pr_risk` | Autonomously classify Pinelab PR risk. Should be explicitly invoked. |
+| `get_auto_classify_pr_risk` | Classify the linked PRs of the supplied Trello card and apply a risk label. Should be explicitly invoked. |
 | `get_auto_implement` | Implement the supplied task, add the pinobi2 label, and create a PR for human review. |
 | `get_implement` | Implement a Pinelab card from its link |
 | `get_monthly_client_summary` | Only explicitly trigger when asked to create a monthly summary for a Pinelab client. |
