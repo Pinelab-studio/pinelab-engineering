@@ -50,7 +50,7 @@ Discuss **requirements, engineering principles, correctness, testing, and handov
 
 Report evidence-backed findings with axis, severity, file/line, impact, supporting rule or requirement, and proposed action. Prioritize serious risks; distinguish documented violations from judgement calls and avoid duplicating automated style checks.
 
-Implement agreed fixes before moving on and run relevant tests. After every agreed review change, apply the included retrospective guidance and ask whether to capture the lesson in `CODING_STANDARDS.md`; recommend an automated check instead for mechanical rules. Wait for agreement before changing shared guidance or adding checks. Track findings as fixed, explicitly accepted with a reason, or unresolved. Silence is not acceptance; do not expand scope without agreement.
+Implement agreed fixes before moving on and run relevant tests. After each agreed review change, apply the included retrospective guidance and identify any reusable lesson. Propose additions to `CODING_STANDARDS.md` only for concrete, reusable technical coding standards that apply beyond the feature under review. Do not add feature-specific requirements, business rules, implementation summaries, or generic process advice. If no qualifying technical standard exists, do not propose an addition. Recommend an automated check instead for mechanical rules. Wait for agreement before changing shared guidance or adding checks. Track findings as fixed, explicitly accepted with a reason, or unresolved. Silence is not acceptance; do not expand scope without agreement.
 
 ### General correctness
 
