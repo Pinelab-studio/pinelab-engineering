@@ -19,7 +19,9 @@ Once PR evidence is available, always present the following two sections, in thi
 
 Use at most five bullets, each containing one or two short sentences. Explain in plain language what the feature does, its value for the client, and the functional flow of data: what starts the flow, what information is processed or changed, and what result the user or client receives. Keep implementation details for the next section.
 
-**Technical data flow**
+**Technical summary and data flow**
+
+Start with an explicit inventory of newly introduced technical elements, including custom fields, entities, resolvers, services, plugins, API endpoints, events, and background jobs where applicable. For each, give its name, defining file, and a brief explanation of its purpose; for custom fields, also identify the entity they extend. Do not make the reviewer infer these additions from the walkthrough. If no new technical elements are introduced, say so.
 
 Follow the summary with an ordered, file-level walkthrough of the same flow, from entry point to result. Name the actual files and explain which file calls or passes data to which other file, what each component is responsible for, and what data crosses each boundary. Include relevant validation, transformation, persistence, external services, and return paths where they affect understanding; explain asynchronous or event-driven handoffs rather than implying direct calls. Include unchanged files when needed to connect the flow, but omit unrelated files. Stay at file/component level, not individual functions or a line-by-line explanation. Use separate paths for materially different flows, and mark any connection that cannot be verified rather than inventing it.
 
