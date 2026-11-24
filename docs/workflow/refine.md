@@ -21,7 +21,7 @@ Inspect runners, fixtures, local services, and regression/lint/type/build comman
 
 Routine isolated local setup is authorized: use the project's package manager and existing lockfile to restore dependencies, run documented setup, and start documented test services. Diagnose failures, attempt supported safe repairs, and rerun the failed command. Preserve manifests, lockfiles, partial work, and data. Do not upgrade dependencies, touch shared/production services, bypass access controls, or introduce unsupported workarounds. Stop retrying when the same failure repeats without new evidence or no supported repair remains.
 
-Record reproducible setup and recovery instructions, dependencies, and limitations in the card's technical guidance. If access, environment, feasibility, or required refinement-approval issues remain blocking, report the evidence and required action; leave an existing card in its current list and do not create a new card. Refinement is not complete until these blockers are resolved. Pending client approval of implementation is not a refinement blocker.
+Record reproducible setup and recovery instructions, dependencies, and limitations in the card's technical guidance. If access, environment, feasibility, or unresolved refinement decisions remain blocking, report the evidence and required action; leave an existing card in its current list and do not create a new card. Refinement is not complete until these blockers are resolved. Pending client approval of implementation is not a refinement blocker.
 
 ## 2. Resolve decisions in question rounds
 
@@ -65,11 +65,11 @@ When the frontier is empty, assemble the estimated title and description in this
 
 Preserve existing context and judgment calls. If drafting exposes unresolved decisions, return to question rounds.
 
-Every successfully refined card, new or existing, must end in **Waiting For Client Approval / top**. For new cards, save there once all questions, including the estimate and label choices, are resolved; do not request another draft confirmation. Pending client approval of implementation does not block saving either new or existing cards in this list. Refinement alone does not authorize implementation; use `get_implement` for its start rules.
+Every successfully refined card, new or existing, must end in **Waiting For Client Approval / top**. Once all questions, including the estimate and any required label choices, are resolved and no readiness blockers remain, immediately save the final title and description and move the card there. Do not ask for final draft confirmation or wait for separate approval to create, update, or move the refined card. If drafting exposes new unresolved decisions, resolve those first rather than requesting blanket approval of the draft.
 
-For existing cards, present the full estimated title, description, and **Waiting For Client Approval / top** destination for confirmation. Wait before saving or moving; after changes, present the draft again. Respect explicit instructions not to edit or move a card; never invent approval. Confirmation to save the refinement is distinct from client approval to implement.
+Respect explicit instructions not to edit or move a card. Pending client approval of implementation does not block saving either new or existing cards in this list. Saving the refinement does not authorize implementation.
 
-Reuse decisions already agreed in this conversation rather than repeating the interview; obtain any missing estimate, labels, or update confirmation.
+Reuse decisions already agreed in this conversation rather than repeating the interview; obtain only missing decisions, such as the estimate or required label choices.
 
 ## 5. Save the refined card
 
