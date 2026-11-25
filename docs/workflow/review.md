@@ -70,6 +70,10 @@ Implement agreed fixes before moving on and run relevant tests. After each agree
 - Optional: are version and changelog changes required by the repository's release process, and included where required?
 
 
+### Testing
+
+Always validate the test cases against the project's applicable testing best practices. Find and read those practices, check the tests for compliance, and report deviations with the supporting rule.
+
 ### Description
 
 Apply only the description requirements in the included PR guidelines; the creation instructions do not apply to this review. Do not create another PR.
