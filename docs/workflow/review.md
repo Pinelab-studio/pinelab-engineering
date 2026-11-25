@@ -72,7 +72,7 @@ Implement agreed fixes before moving on and run relevant tests. After each agree
 
 ### Testing
 
-Always validate the test cases against the project's applicable testing best practices. Find and read those practices, check the tests for compliance, and report deviations with the supporting rule.
+Always validate the test cases against the project's applicable testing best practices. Find and read those practices, check the tests for compliance, and report deviations with the supporting rule. Did any existing testcase change, if so, is it justified?
 
 ### Description
 
