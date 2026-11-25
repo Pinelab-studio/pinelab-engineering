@@ -13,16 +13,6 @@ Investigate the card-specified repository in preference to the current checkout.
 
 Identify a feasible approach, dependencies, compatibility or data constraints, and risks that could change scope or estimates. Distinguish verified findings from suggestions and open questions, and carry them into the final **Technical guidance**.
 
-### Preflight and readiness
-
-Verify the selected checkout and Git remote before investigation; never guess between ambiguous repositories. Record the repository reference so implementation does not need to rediscover it. Load `get_vendure_best_practices` for Vendure work and relevant recipes through `list_recipes` / `get_recipe`.
-
-Inspect runners, fixtures, local services, and regression/lint/type/build commands. Run focused baselines and verify required browser/integration services start. Record commands, observed results, existing failures, and checks not run. These are readiness findings, not a substitute for implementation's final verification.
-
-Routine isolated local setup is authorized: use the project's package manager and existing lockfile to restore dependencies, run documented setup, and start documented test services. Diagnose failures, attempt supported safe repairs, and rerun the failed command. Preserve manifests, lockfiles, partial work, and data. Do not upgrade dependencies, touch shared/production services, bypass access controls, or introduce unsupported workarounds. Stop retrying when the same failure repeats without new evidence or no supported repair remains.
-
-Record reproducible setup and recovery instructions, dependencies, and limitations in the card's technical guidance. If access, environment, feasibility, or unresolved refinement decisions remain blocking, report the evidence and required action; leave an existing card in its current list and do not create a new card. Refinement is not complete until these blockers are resolved. Pending client approval of implementation is not a refinement blocker.
-
 ## 2. Resolve decisions in question rounds
 
 Track settled decisions, open questions, and pending investigations as a **design tree**. The **frontier** contains every unresolved decision whose prerequisites are settled. Ask the whole frontier in one round, then wait. Dependent questions wait for the prerequisite answer or investigation; unrelated questions can proceed.
