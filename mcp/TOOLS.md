@@ -3,9 +3,9 @@
 Generated from the server's MCP `tools/list` response. Do not edit manually.
 Regenerate with `cd mcp && npm run build`.
 
-Total: **13 tools**. Names are server-local; clients may add a server prefix.
+Total: **14 tools**. Names are server-local; clients may add a server prefix.
 
-Adds ~990 tokens to context.
+Adds ~1,057 tokens to context.
 
 ## Best practices
 
@@ -23,6 +23,7 @@ Adds ~990 tokens to context.
 | `get_auto_implement` | Implement the supplied task, add the pinobi2 label, and create a PR for human review. |
 | `get_implement` | Implement a Pinelab card from its link |
 | `get_monthly_client_summary` | Only explicitly trigger when asked to create a monthly summary for a Pinelab client. |
+| `get_read_gcloud_logging` | Read application logs from deployed Pinelab services on Google Cloud (Gcloud). |
 | `get_refine` | Refine an existing Pinelab card or text input into an implementation plan. |
 | `get_review` | Interactively review and improve a GitHub PR the Pinelab way. |
 
