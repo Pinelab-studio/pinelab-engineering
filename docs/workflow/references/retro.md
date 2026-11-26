@@ -3,11 +3,19 @@ name: review-retrospective
 description: Identify reusable improvements from review changes and coding sessions, with approval before updating standards or tooling.
 ---
 
-Improve future agent runs using evidence from the current session, or another session explicitly selected by the developer. Keep suggestions short and proportionate; do not invent lessons or add rules automatically.
+Improve future agent runs using evidence from the current session. Keep suggestions short and proportionate; do not invent lessons or add rules automatically.
 
-## After each review change
+## After review
 
-Briefly identify the reusable lesson, if any, and ask: “Should we add this lesson to `CODING_STANDARDS.md`?” If there is no reusable lesson, say so. For mechanical rules, recommend an automated check instead and explain why. Obtain agreement before making either change; do not turn a local fix into a universal rule.
+Briefly identify the reusable lesson, if any, and ask: “Should we add this lesson to `CODING_STANDARDS.md` or automated checks?” If there is no reusable lesson, say so. Prefer automated checks first, if not possible, write in `CODING_STANDARDS.md`.
+
+Example of where to add automated checks:
+
+- UNit or e2e tests
+- `dependency-cruiser` rules
+- Linting/biome checks
+
+Obtain agreement before making either change; do not turn a local fix into a universal rule.
 
 When an addition to `CODING_STANDARDS.md` is approved, also inspect all applicable `AGENTS.md` files for remaining coding standards and move them to the corresponding `CODING_STANDARDS.md`, preserving scope and removing duplicates. Scripts, check commands, instructions for running them, and basic folder structure or navigation are operational guidance, not coding standards; leave them in `AGENTS.md`.
 
