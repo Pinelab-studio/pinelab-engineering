@@ -5,7 +5,7 @@ Regenerate with `cd mcp && npm run build`.
 
 Total: **14 tools**. Names are server-local; clients may add a server prefix.
 
-Adds ~1,057 tokens to context.
+Adds ~1,063 tokens to context.
 
 ## Best practices
 
@@ -25,7 +25,7 @@ Adds ~1,057 tokens to context.
 | `get_monthly_client_summary` | Only explicitly trigger when asked to create a monthly summary for a Pinelab client. |
 | `get_read_gcloud_logging` | Read application logs from deployed Pinelab services on Google Cloud (Gcloud). |
 | `get_refine` | Refine an existing Pinelab card or text input into an implementation plan. |
-| `get_review` | Interactively review and improve a GitHub PR the Pinelab way. |
+| `get_review` | Review a GitHub PR the Pinelab way and apply evidence-backed fixes before handover. |
 
 ## Other tools
 
